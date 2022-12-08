@@ -3,17 +3,20 @@
 
 """Timeseries resampler."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import math
 from collections import deque
+from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
-from typing import Callable, Deque, Dict, Sequence, Union, cast
+from typing import Callable, Deque, Dict, Sequence, Union
 
 from frequenz.channels.util import Timer
 
 from ..util.asyncio import cancel_and_await
-from . import Sample, Sink, Source
+from . import Sample
 
 _logger = logging.Logger(__name__)
 
@@ -45,7 +48,7 @@ Returns:
 class SourceStoppedError(RuntimeError):
     """A timeseries stopped producing samples."""
 
-    def __init__(self, source: Source) -> None:
+    def __init__(self, source: AsyncIterator[Sample]) -> None:
         """Create an instance.
 
         Args:
@@ -68,36 +71,36 @@ class SourceStoppedError(RuntimeError):
 class ResamplingError(RuntimeError):
     """An Error ocurred while resampling.
 
-    This error is a container for errors raised by the underlying sources and
-    or sinks.
+    This error provides information on which samples were succesfully produced
+    and which failed. Successful samples are stored in `samples` and failing
+    timeseries have their exceptions resported in `exceptions`.
     """
 
     def __init__(
-        self, exceptions: Dict[Source, Union[Exception, asyncio.CancelledError]]
+        self,
+        samples: Dict[AsyncIterator[Sample], Sample],
+        exceptions: Dict[
+            AsyncIterator[Sample], Union[Exception, asyncio.CancelledError]
+        ],
     ) -> None:
         """Create an instance.
 
         Args:
-            exceptions: A mapping of timeseries source and the exception
-                encountered while resampling that timeseries. Note that the
-                error could be raised by the sink, while trying to send
-                a resampled data for this timeseries, the source key is only
-                used to identify the timeseries with the issue, it doesn't
-                necessarily mean that the error was raised by the source. The
-                underlying exception should provide information about what was
+            samples: The samples from the timeseries that could be successfully
+                calculated.
+            exceptions: The exceptions raised by failing timeseries.
+                encountered while resampling that timeseries.
                 the actual source of the exception.
         """
         super().__init__(f"Some error were found while resampling: {exceptions}")
-        self.exceptions = exceptions
-        """A mapping of timeseries source and the exception encountered.
 
-        Note that the error could be raised by the sink, while trying to send
-        a resampled data for this timeseries, the source key is only used to
-        identify the timeseries with the issue, it doesn't necessarily mean
-        that the error was raised by the source. The underlying exception
-        should provide information about what was the actual source of the
-        exception.
-        """
+        self.samples: Dict[AsyncIterator[Sample], Sample] = samples
+        """The samples from the timeseries that could be successfully calculated."""
+
+        self.exceptions: Dict[
+            AsyncIterator[Sample], Union[Exception, asyncio.CancelledError]
+        ] = exceptions
+        """The exceptions raised by failing timeseries."""
 
     def __repr__(self) -> str:
         """Return the representation of the instance.
@@ -105,15 +108,15 @@ class ResamplingError(RuntimeError):
         Returns:
             The representation of the instance.
         """
-        return f"{self.__class__.__name__}({self.exceptions=})"
+        return f"{self.__class__.__name__}({self.samples=}, {self.exceptions=})"
 
 
 class Resampler:
     """A timeseries resampler.
 
-    In general timeseries [`Source`][frequenz.sdk.timeseries.Source]s don't
-    necessarily come at periodic intervals. You can use this class to normalize
-    timeseries to produce `Sample`s at regular periodic intervals.
+    In general timeseries don't necessarily come at periodic intervals. You can
+    use this class to normalize timeseries to produce `Sample`s at regular
+    periodic intervals.
 
     This class uses
     a [`ResamplingFunction`][frequenz.sdk.timeseries.ResamplingFunction] to
@@ -149,14 +152,14 @@ class Resampler:
         self._resampling_period_s = resampling_period_s
         self._max_data_age_in_periods: float = max_data_age_in_periods
         self._resampling_function: ResamplingFunction = resampling_function
-        self._resamplers: Dict[Source, _StreamingHelper] = {}
+        self._resamplers: Dict[AsyncIterator[Sample], _StreamingHelper] = {}
         self._timer: Timer = Timer(self._resampling_period_s)
 
     async def stop(self) -> None:
         """Cancel all receiving tasks."""
         await asyncio.gather(*[helper.stop() for helper in self._resamplers.values()])
 
-    def add_timeseries(self, source: Source, sink: Sink) -> bool:
+    def add_timeseries(self, source: AsyncIterator[Sample]) -> bool:
         """Start resampling a new timeseries.
 
         Args:
@@ -178,12 +181,11 @@ class Resampler:
                 resampling_function=self._resampling_function,
             ),
             source,
-            sink,
         )
         self._resamplers[source] = resampler
         return True
 
-    def remove_timeseries(self, source: Source) -> bool:
+    def remove_timeseries(self, source: AsyncIterator[Sample]) -> bool:
         """Stop resampling the timeseries produced by `source`.
 
         Args:
@@ -200,15 +202,11 @@ class Resampler:
             return False
         return True
 
-    async def resample(self, *, one_shot: bool = False) -> None:
+    async def resample(self) -> AsyncIterator[Dict[AsyncIterator[Sample], Sample]]:
         """Start resampling all known timeseries.
 
         This method will run forever unless there is an error while receiving
         from a source or sending to a sink (or `one_shot` is used).
-
-        Args:
-            one_shot: Wether the resampling should run only for one resampling
-                period.
 
         Raises:
             ResamplingError: If some timseries source or sink encounters any
@@ -223,23 +221,28 @@ class Resampler:
                 *[r.resample(timer_timestamp) for r in self._resamplers.values()],
                 return_exceptions=True,
             )
-            # We need to cast this because Python is not smart enough to figure
-            # out the key value can't be None (not even adding another
-            # condition checking for None in the dict expression).
-            exceptions = cast(
-                Dict[Source, Union[Exception, asyncio.CancelledError]],
-                {
-                    source: results[i]
-                    for i, source in enumerate(self._resamplers)
-                    # CancelledError inherits from BaseException, but we don't want
-                    # to catch *all* BaseExceptions here.
-                    if isinstance(results[i], (Exception, asyncio.CancelledError))
-                },
-            )
+
+            samples: Dict[AsyncIterator[Sample], Sample] = {}
+            exceptions: Dict[
+                AsyncIterator[Sample], Union[Exception, asyncio.CancelledError]
+            ] = {}
+            for i, source in enumerate(self._resamplers):
+                if isinstance(results[i], (Exception, asyncio.CancelledError)):
+                    exceptions[source] = results[i]
+                elif isinstance(results[i], Sample):
+                    samples[source] = results[i]
+                elif isinstance(results[i], BaseException):
+                    raise results[i]
+                else:
+                    assert False, (
+                        f"Resampling result for source {source!r} "
+                        "is not an exception or Sample: {results[i]!r}"
+                    )
+
             if exceptions:
-                raise ResamplingError(exceptions)
-            if one_shot:
-                break
+                raise ResamplingError(samples, exceptions)
+
+            yield samples
 
 
 class _ResamplingHelper:
@@ -342,8 +345,7 @@ class _StreamingHelper:
     def __init__(
         self,
         helper: _ResamplingHelper,
-        source: Source,
-        sink: Sink,
+        source: AsyncIterator[Sample],
     ) -> None:
         """Initialize an instance.
 
@@ -353,8 +355,7 @@ class _StreamingHelper:
             sink: The sink to use to send the resampled data.
         """
         self._helper: _ResamplingHelper = helper
-        self._source: Source = source
-        self._sink: Sink = sink
+        self._source: AsyncIterator[Sample] = source
         self._receiving_task: asyncio.Task = asyncio.create_task(
             self._receive_samples()
         )
@@ -373,7 +374,7 @@ class _StreamingHelper:
             if sample.value is not None and not math.isnan(sample.value):
                 self._helper.add_sample(sample)
 
-    async def resample(self, timestamp: datetime) -> None:
+    def resample(self, timestamp: datetime) -> Sample:
         """Calculate a new sample for the passed `timestamp` and send it.
 
         The helper is used to calculate the new sample and the sender is used
@@ -402,4 +403,4 @@ class _StreamingHelper:
                 raise recv_exception
             raise SourceStoppedError(self._source)
 
-        await self._sink(self._helper.resample(timestamp))
+        return self._helper.resample(timestamp)

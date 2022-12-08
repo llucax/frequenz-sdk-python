@@ -3,10 +3,12 @@
 
 """ComponentMetricsResamplingActor used to subscribe for resampled component metrics."""
 
+from __future__ import annotations
+
 import asyncio
 import dataclasses
 import logging
-from typing import Sequence, Set
+from collections.abc import AsyncIterator, Sequence
 
 from frequenz.channels import Receiver, Sender
 
@@ -142,11 +144,12 @@ class ComponentMetricsResamplingActor:
         self._resampling_period_s = resampling_period_s
         self._max_data_age_in_periods: float = max_data_age_in_periods
         self._resampling_function: ResamplingFunction = resampling_function
-        self._resampler = Resampler(
+        self._resampler: Resampler = Resampler(
             resampling_period_s=resampling_period_s,
             max_data_age_in_periods=max_data_age_in_periods,
             resampling_function=resampling_function,
         )
+        self._senders: dict[AsyncIterator[Sample], Sender[Sample]] = {}
 
     async def _subscribe(self, request: ComponentMetricRequest) -> None:
         """Subscribe for data for a specific time series.
@@ -160,21 +163,55 @@ class ComponentMetricsResamplingActor:
         data_source_channel_name = data_source_request.get_channel_name()
         await self._subscription_sender.send(data_source_request)
         receiver = self._channel_registry.new_receiver(data_source_channel_name)
-
-        # This is a temporary hack until the Sender implementation uses
-        # exceptions to report errors.
         sender = self._channel_registry.new_sender(request.get_channel_name())
 
-        async def sink_adapter(sample: Sample) -> None:
-            if not await sender.send(sample):
-                raise Exception(f"Error while sending with sender {sender}", sender)
-
-        self._resampler.add_timeseries(receiver, sink_adapter)
+        self._senders[receiver] = sender
+        self._resampler.add_timeseries(receiver)
 
     async def _process_resampling_requests(self) -> None:
         """Process resampling data requests."""
         async for request in self._subscription_receiver:
             await self._subscribe(request)
+
+    async def _resample(self) -> None:
+        """Do the resampling."""
+        while True:
+            try:
+                async for samples in self._resampler.resample():
+                    await asyncio.gather(
+                        *[
+                            self._senders[source].send(sample)
+                            for source, sample in samples.items()
+                        ]
+                    )
+            except ResamplingError as err:
+                # Send whatever we got
+                if err.samples:
+                    await asyncio.gather(
+                        *[
+                            self._senders[source].send(sample)
+                            for source, sample in err.samples.items()
+                        ]
+                    )
+                # Remove failing timeseries
+                for source, source_error in err.exceptions.items():
+                    logger.exception(
+                        "Error resampling source %s, removing source...",
+                        source,
+                        exc_info=source_error,
+                    )
+                    removed = self._resampler.remove_timeseries(source)
+                    popped = self._senders.pop(source, None)
+                    if not removed or not popped:
+                        logger.warning(
+                            "Got an exception from an unknown source: "
+                            "source=%r, exception=%r resampler=%s, senders=%s",
+                            source,
+                            source_error,
+                            removed,
+                            popped,
+                            exc_info=source_error,
+                        )
 
     async def run(self) -> None:
         """Resample known component metrics and process resampling requests.
@@ -190,7 +227,7 @@ class ComponentMetricsResamplingActor:
 
         # noqa: DAR401 error
         """
-        tasks_to_cancel: Set[asyncio.Task] = set()
+        tasks_to_cancel: set[asyncio.Task] = set()
         try:
             subscriptions_task = asyncio.create_task(
                 self._process_resampling_requests()
@@ -198,7 +235,7 @@ class ComponentMetricsResamplingActor:
             tasks_to_cancel.add(subscriptions_task)
 
             while True:
-                resampling_task = asyncio.create_task(self._resampler.resample())
+                resampling_task = asyncio.create_task(self._resample())
                 tasks_to_cancel.add(resampling_task)
                 done, _ = await asyncio.wait(
                     [resampling_task, subscriptions_task],
@@ -217,28 +254,12 @@ class ComponentMetricsResamplingActor:
                     error = resampling_task.exception()
                     assert (
                         error is not None
-                    ), "The resample() function shouldn't exit normally."
+                    ), "The resample() function shouldn't exit without an exception."
 
-                    # We don't know what to do with something other than
-                    # ResamplingError, so propagate the exception if that is the
-                    # case.
-                    if not isinstance(error, ResamplingError):
-                        raise error
-                    for source, source_error in error.exceptions.items():
-                        logger.exception(
-                            "Error resampling source %s, removing source...",
-                            source,
-                            exc_info=source_error,
-                        )
-                        removed = self._resampler.remove_timeseries(source)
-                        if not removed:
-                            logger.warning(
-                                "Got an exception from an unknown source: "
-                                "source=%r, exception=%r",
-                                source,
-                                source_error,
-                                exc_info=source_error,
-                            )
+                    # We don't know what to do with whatever error comes that
+                    # wasn't handled in self._resample(), so propagate the
+                    # exception if that is the case.
+                    raise error
                     # The resampling_task will be re-created if we reached this point
         finally:
             await asyncio.gather(*[cancel_and_await(t) for t in tasks_to_cancel])
