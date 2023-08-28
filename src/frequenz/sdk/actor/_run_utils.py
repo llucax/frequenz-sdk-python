@@ -31,6 +31,9 @@ async def run(*actors: Actor) -> None:
         else:
             _logger.info("Actor %s: Starting...", actor)
             actor.start()
+            _logger.info("Actor %s: Started...", actor)
+
+    await asyncio.sleep(0.5)  # Give the actors some time to start
 
     # Wait until all actors are done
     pending_tasks = {asyncio.create_task(a.wait(), name=str(a)) for a in actors}
