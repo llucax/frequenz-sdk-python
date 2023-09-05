@@ -305,13 +305,13 @@ class Quantity:
         return f"{value_str} {unit_str}"
 
     def __add__(self, other: Self) -> Self:
-        """Return the sum of this quantity and another.
+        """Add this quantity to another.
 
         Args:
-            other: The other quantity.
+            other: The other quantity to add.
 
         Returns:
-            The sum of this quantity and another.
+            The resulting quantity.
         """
         if not type(other) is type(self):
             return NotImplemented
@@ -320,13 +320,13 @@ class Quantity:
         return summe
 
     def __sub__(self, other: Self) -> Self:
-        """Return the difference of this quantity and another.
+        """Subtract another quantity from this one.
 
         Args:
-            other: The other quantity.
+            other: The other quantity to subtract.
 
         Returns:
-            The difference of this quantity and another.
+            The resulting quantity.
         """
         if not type(other) is type(self):
             return NotImplemented
@@ -443,10 +443,10 @@ class Quantity:
         return self._base_value == other._base_value
 
     def __neg__(self) -> Self:
-        """Return the negation of this quantity.
+        """Negate this quantity.
 
         Returns:
-            The negation of this quantity.
+            The resulting quantity.
         """
         negation = type(self).__new__(type(self))
         negation._base_value = -self._base_value
@@ -616,46 +616,18 @@ class Power(
     # https://github.com/python/mypy/issues/4985#issuecomment-389692396
     @overload  # type: ignore[override]
     def __mul__(self, scalar: float, /) -> Self:
-        """Scale this power by a scalar.
-
-        Args:
-            scalar: The scalar by which to scale this power.
-
-        Returns:
-            The scaled power.
-        """
+        """Return the this power scaled by `scalar`."""
 
     @overload
     def __mul__(self, percent: Percentage, /) -> Self:
-        """Scale this power by a percentage.
-
-        Args:
-            percent: The percentage by which to scale this power.
-
-        Returns:
-            The scaled power.
-        """
+        """Return the this power scaled by `percent`."""
 
     @overload
-    def __mul__(self, other: timedelta, /) -> Energy:
-        """Return an energy from multiplying this power by the given duration.
-
-        Args:
-            other: The duration to multiply by.
-
-        Returns:
-            The calculated energy.
-        """
+    def __mul__(self, duration: timedelta, /) -> Energy:
+        """Return the energy resulting from multiplying this power by `duration`."""
 
     def __mul__(self, other: float | Percentage | timedelta, /) -> Self | Energy:
-        """Return a power or energy from multiplying this power by the given value.
-
-        Args:
-            other: The scalar, percentage or duration to multiply by.
-
-        Returns:
-            A power or energy.
-        """
+        """Return the resulting power or energy from multiplying this power by `other`."""
         match other:
             case float() | Percentage():
                 return super().__mul__(other)
@@ -666,34 +638,34 @@ class Power(
 
     @overload
     def __truediv__(self, other: Current) -> Voltage:
-        """Return a voltage from dividing this power by the given current.
+        """Divide this power by a current.
 
         Args:
             other: The current to divide by.
 
         Returns:
-            A voltage from dividing this power by the a current.
+            The resulting voltage.
         """
 
     @overload
     def __truediv__(self, other: Voltage) -> Current:
-        """Return a current from dividing this power by the given voltage.
+        """Divide this power by a voltage.
 
         Args:
             other: The voltage to divide by.
 
         Returns:
-            A current from dividing this power by a voltage.
+            The resulting current.
         """
 
     def __truediv__(self, other: Current | Voltage) -> Voltage | Current:
-        """Return a current or voltage from dividing this power by the given value.
+        """Divide this power by a current or voltage.
 
         Args:
             other: The current or voltage to divide by.
 
         Returns:
-            A current or voltage from dividing this power by the given value.
+            The resulting current or voltage.
 
         Raises:
             TypeError: If the given value is not a current or voltage.
@@ -790,25 +762,11 @@ class Current(
         """
 
     @overload
-    def __mul__(self, other: Voltage, /) -> Power:
-        """Multiply the current by a voltage to get a power.
-
-        Args:
-            other: The voltage.
-
-        Returns:
-            The calculated power.
-        """
+    def __mul__(self, voltage: Voltage, /) -> Power:
+        """Return the power resulting from multiplying this current by `voltage`."""
 
     def __mul__(self, other: float | Percentage | Voltage, /) -> Self | Power:
-        """Return a current or power from multiplying this current by the given value.
-
-        Args:
-            other: The scalar, percentage or voltage to multiply by.
-
-        Returns:
-            A current or power.
-        """
+        """Return the current or power resulting from multiplying this current by `other`."""
         match other:
             case float() | Percentage():
                 return super().__mul__(other)
@@ -918,25 +876,11 @@ class Voltage(
         """
 
     @overload
-    def __mul__(self, other: Current, /) -> Power:
-        """Multiply the voltage by the current to get the power.
-
-        Args:
-            other: The current to multiply the voltage with.
-
-        Returns:
-            The calculated power.
-        """
+    def __mul__(self, current: Current, /) -> Power:
+        """Return the power resulting from multiplying this voltage by a `current`."""
 
     def __mul__(self, other: float | Percentage | Current, /) -> Self | Power:
-        """Return a voltage or power from multiplying this voltage by the given value.
-
-        Args:
-            other: The scalar, percentage or current to multiply by.
-
-        Returns:
-            The calculated voltage or power.
-        """
+        """Return a voltage or power resulting from multiplying this voltage by `other`."""
         match other:
             case float() | Percentage():
                 return super().__mul__(other)
@@ -1045,34 +989,34 @@ class Energy(
 
     @overload
     def __truediv__(self, other: timedelta) -> Power:
-        """Return a power from dividing this energy by the given duration.
+        """Divide this energy by a duration.
 
         Args:
             other: The duration to divide by.
 
         Returns:
-            A power from dividing this energy by the given duration.
+            The resulting power.
         """
 
     @overload
     def __truediv__(self, other: Power) -> timedelta:
-        """Return a duration from dividing this energy by the given power.
+        """Divide this energy by a power.
 
         Args:
             other: The power to divide by.
 
         Returns:
-            A duration from dividing this energy by the given power.
+            The resulting duration.
         """
 
     def __truediv__(self, other: timedelta | Power) -> Power | timedelta:
-        """Return a power or duration from dividing this energy by the given value.
+        """Divide this energy by a duration or power.
 
         Args:
             other: The power or duration to divide by.
 
         Returns:
-            A power or duration from dividing this energy by the given value.
+            The resulting power or duration.
 
         Raises:
             TypeError: If the given value is not a power or duration.
