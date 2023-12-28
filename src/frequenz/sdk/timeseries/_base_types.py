@@ -29,8 +29,26 @@ class Sample(Generic[QuantityT]):
     timestamp: datetime
     """The time when this sample was generated."""
 
-    value: QuantityT | None = None
-    """The value of this sample."""
+    raw_value: QuantityT | None = None
+    """The raw value of this sample.
+
+    The underlaying value can be any floating point value, including `NaN` and `inf`.
+    """
+
+    @property
+    def value(self) -> QuantityT | None:
+        """The interpreted value of this sample.
+
+        This value can never be `NaN` or `inf`, but can be `None` if the raw value
+        is `None`, `NaN` or `inf`.
+        """
+        return (
+            None
+            if self.raw_value is None
+            or self.raw_value.isinf()
+            or self.raw_value.isnan()
+            else self.raw_value
+        )
 
 
 @dataclass(frozen=True)
