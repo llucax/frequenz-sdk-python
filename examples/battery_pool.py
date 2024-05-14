@@ -22,6 +22,9 @@ async def main() -> None:
     logging.basicConfig(
         level=logging.DEBUG, format="%(asctime)s %(name)s %(levelname)s:%(message)s"
     )
+    # Reduce undesired noise from hpack
+    logging.getLogger("hpack.hpack").setLevel(logging.INFO)
+
     await microgrid.initialize(
         host=HOST,
         port=PORT,
