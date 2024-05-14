@@ -16,8 +16,6 @@ import math
 from dataclasses import dataclass, replace
 from datetime import datetime
 
-import frequenz.api.microgrid.battery_pb2 as battery_pb
-import frequenz.api.microgrid.inverter_pb2 as inverter_pb
 from frequenz.client.microgrid import (
     BatteryData,
     EVChargerCableState,
@@ -26,8 +24,10 @@ from frequenz.client.microgrid import (
     InverterData,
     MeterData,
 )
-
-# pylint: disable=no-member
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import battery as battery_pb
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import (
+    inverter as inverter_pb,
+)
 
 
 class BatteryDataWrapper(BatteryData):
@@ -46,10 +46,10 @@ class BatteryDataWrapper(BatteryData):
         power_inclusion_upper_bound: float = math.nan,
         power_exclusion_upper_bound: float = math.nan,
         temperature: float = math.nan,
-        _relay_state: battery_pb.RelayState.ValueType = (
+        _relay_state: battery_pb.RelayState = (
             battery_pb.RelayState.RELAY_STATE_UNSPECIFIED
         ),
-        _component_state: battery_pb.ComponentState.ValueType = (
+        _component_state: battery_pb.ComponentState = (
             battery_pb.ComponentState.COMPONENT_STATE_UNSPECIFIED
         ),
         _errors: list[battery_pb.Error] | None = None,
@@ -118,7 +118,7 @@ class InverterDataWrapper(InverterData):
             math.nan,
         ),
         frequency: float = 50.0,
-        _component_state: inverter_pb.ComponentState.ValueType = (
+        _component_state: inverter_pb.ComponentState = (
             inverter_pb.ComponentState.COMPONENT_STATE_UNSPECIFIED
         ),
         _errors: list[inverter_pb.Error] | None = None,

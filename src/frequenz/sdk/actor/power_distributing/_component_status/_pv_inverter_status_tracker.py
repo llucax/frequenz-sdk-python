@@ -7,18 +7,17 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-# Component state for inverters and batteries is not wrapped by the
-# microgrid client currently, so it needs to be imported directly from
-# the api repo.
-# pylint: disable=no-name-in-module
-from frequenz.api.microgrid.inverter_pb2 import (
-    ComponentState as PbInverterComponentState,
-)
-
 # pylint: enable=no-name-in-module
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
 from frequenz.client.microgrid import InverterData
+
+# Component state for inverters and batteries is not wrapped by the
+# microgrid client currently, so it needs to be imported directly from
+# the api repo.
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import (
+    inverter as pb_inverter,
+)
 from typing_extensions import override
 
 from ....microgrid import connection_manager
@@ -90,10 +89,10 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
     def _is_working(self, pv_data: InverterData) -> bool:
         """Return whether the given data indicates that the PV inverter is working."""
         return pv_data._component_state in (  # pylint: disable=protected-access
-            PbInverterComponentState.COMPONENT_STATE_DISCHARGING,
-            PbInverterComponentState.COMPONENT_STATE_CHARGING,
-            PbInverterComponentState.COMPONENT_STATE_IDLE,
-            PbInverterComponentState.COMPONENT_STATE_STANDBY,
+            pb_inverter.ComponentState.COMPONENT_STATE_DISCHARGING,
+            pb_inverter.ComponentState.COMPONENT_STATE_CHARGING,
+            pb_inverter.ComponentState.COMPONENT_STATE_IDLE,
+            pb_inverter.ComponentState.COMPONENT_STATE_STANDBY,
         )
 
     async def _run_forever(self) -> None:
