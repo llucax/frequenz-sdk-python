@@ -8,7 +8,7 @@ import collections.abc
 import logging
 from datetime import datetime, timedelta, timezone
 
-import grpc
+import grpclib
 from frequenz.channels import Broadcast, Sender, merge, select, selected_from
 from frequenz.client.microgrid import ApiClient, ComponentCategory, EVChargerData
 from typing_extensions import override
@@ -335,7 +335,7 @@ class EVChargerManager(ComponentManager):
                     _logger.warning(
                         "Timeout while setting power to EV charger %s", component_id
                     )
-                case grpc.aio.AioRpcError() as err:
+                case grpclib.GRPCError() as err:
                     _logger.warning(
                         "Error while setting power to EV charger %s: %s",
                         component_id,

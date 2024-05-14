@@ -10,7 +10,7 @@ import math
 import typing
 from datetime import timedelta
 
-import grpc
+import grpclib
 from frequenz.channels import Receiver, Sender
 from frequenz.client.microgrid import BatteryData, ComponentCategory, InverterData
 from typing_extensions import override
@@ -649,10 +649,10 @@ class BatteryManager(ComponentManager):
             battery_ids = self._inv_bats_map[inverter_id]
             try:
                 aws.result()
-            except grpc.aio.AioRpcError as err:
+            except grpclib.GRPCError as err:
                 failed_power += distribution[inverter_id]
                 failed_batteries = failed_batteries.union(battery_ids)
-                if err.code() == grpc.StatusCode.OUT_OF_RANGE:
+                if err.status == grpclib.Status.OUT_OF_RANGE:
                     _logger.debug(
                         "Set power for battery %s failed, error %s",
                         battery_ids,

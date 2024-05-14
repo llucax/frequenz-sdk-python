@@ -8,7 +8,7 @@ import collections.abc
 import logging
 from datetime import timedelta
 
-import grpc
+import grpclib
 from frequenz.channels import Broadcast, Sender
 from frequenz.client.microgrid import ComponentCategory, InverterData, InverterType
 from typing_extensions import override
@@ -196,7 +196,7 @@ class PVManager(ComponentManager):
                     _logger.warning(
                         "Timeout while setting power to PV inverter %s", component_id
                     )
-                case grpc.aio.AioRpcError() as err:
+                case grpclib.GRPCError() as err:
                     _logger.warning(
                         "Error while setting power to PV inverter %s: %s",
                         component_id,
