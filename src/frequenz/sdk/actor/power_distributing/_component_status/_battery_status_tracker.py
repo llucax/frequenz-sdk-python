@@ -21,12 +21,6 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-# pylint: disable=no-name-in-module
-from frequenz.api.microgrid.battery_pb2 import ComponentState as BatteryComponentState
-from frequenz.api.microgrid.battery_pb2 import RelayState as BatteryRelayState
-from frequenz.api.microgrid.common_pb2 import ErrorLevel
-from frequenz.api.microgrid.inverter_pb2 import ComponentState as InverterComponentState
-
 # pylint: enable=no-name-in-module
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
@@ -35,6 +29,13 @@ from frequenz.client.microgrid import (
     ComponentCategory,
     ComponentData,
     InverterData,
+)
+
+# pylint: disable=no-name-in-module
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import battery as pb_battery
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import common as pb_common
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import (
+    inverter as pb_inverter,
 )
 from typing_extensions import override
 
@@ -72,29 +73,29 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
     Status updates are sent out only when there is a status change.
     """
 
-    _battery_valid_relay: set[BatteryRelayState.ValueType] = {
-        BatteryRelayState.RELAY_STATE_CLOSED
+    _battery_valid_relay: set[pb_battery.RelayState] = {
+        pb_battery.RelayState.RELAY_STATE_CLOSED
     }
     """The list of valid relay states of a battery.
 
     A working battery in any other battery relay state will be reported as failing.
     """
 
-    _battery_valid_state: set[BatteryComponentState.ValueType] = {
-        BatteryComponentState.COMPONENT_STATE_IDLE,
-        BatteryComponentState.COMPONENT_STATE_CHARGING,
-        BatteryComponentState.COMPONENT_STATE_DISCHARGING,
+    _battery_valid_state: set[pb_battery.ComponentState] = {
+        pb_battery.ComponentState.COMPONENT_STATE_IDLE,
+        pb_battery.ComponentState.COMPONENT_STATE_CHARGING,
+        pb_battery.ComponentState.COMPONENT_STATE_DISCHARGING,
     }
     """The list of valid states of a battery.
 
     A working battery in any other battery state will be reported as failing.
     """
 
-    _inverter_valid_state: set[InverterComponentState.ValueType] = {
-        InverterComponentState.COMPONENT_STATE_STANDBY,
-        InverterComponentState.COMPONENT_STATE_IDLE,
-        InverterComponentState.COMPONENT_STATE_CHARGING,
-        InverterComponentState.COMPONENT_STATE_DISCHARGING,
+    _inverter_valid_state: set[pb_inverter.ComponentState] = {
+        pb_inverter.ComponentState.COMPONENT_STATE_STANDBY,
+        pb_inverter.ComponentState.COMPONENT_STATE_IDLE,
+        pb_inverter.ComponentState.COMPONENT_STATE_CHARGING,
+        pb_inverter.ComponentState.COMPONENT_STATE_DISCHARGING,
     }
     """The list of valid states of an inverter.
 
@@ -370,7 +371,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         Returns:
             True if message has no critical error, False otherwise.
         """
-        critical = ErrorLevel.ERROR_LEVEL_CRITICAL
+        critical = pb_common.ErrorLevel.ERROR_LEVEL_CRITICAL
         # pylint: disable=protected-access
         critical_err = next((err for err in msg._errors if err.level == critical), None)
         if critical_err is not None:
@@ -400,7 +401,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
                 _logger.warning(
                     "Inverter %d has invalid state: %s",
                     msg.component_id,
-                    InverterComponentState.Name(state),
+                    state.name,
                 )
             return False
         return True
@@ -422,7 +423,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
                 _logger.warning(
                     "Battery %d has invalid state: %s",
                     self.battery_id,
-                    BatteryComponentState.Name(state),
+                    state.name,
                 )
             return False
 
@@ -434,7 +435,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
                 _logger.warning(
                     "Battery %d has invalid relay state: %s",
                     self.battery_id,
-                    BatteryRelayState.Name(relay_state),
+                    relay_state.name,
                 )
             return False
         return True

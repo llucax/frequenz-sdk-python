@@ -13,20 +13,13 @@ from datetime import datetime, timedelta, timezone
 from typing import Generic, TypeVar
 
 import pytest
-
-# pylint: disable=no-name-in-module
-from frequenz.api.microgrid.battery_pb2 import ComponentState as BatteryState
-from frequenz.api.microgrid.battery_pb2 import Error as BatteryError
-from frequenz.api.microgrid.battery_pb2 import ErrorCode as BatteryErrorCode
-from frequenz.api.microgrid.battery_pb2 import RelayState as BatteryRelayState
-from frequenz.api.microgrid.common_pb2 import ErrorLevel
-from frequenz.api.microgrid.inverter_pb2 import ComponentState as InverterState
-from frequenz.api.microgrid.inverter_pb2 import Error as InverterError
-from frequenz.api.microgrid.inverter_pb2 import ErrorCode as InverterErrorCode
-
-# pylint: enable=no-name-in-module
 from frequenz.channels import Broadcast, Receiver
 from frequenz.client.microgrid import BatteryData, InverterData
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import battery as battery_pb
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import common as common_pb
+from frequenz.microgrid.betterproto.frequenz.api.microgrid import (
+    inverter as inverter_pb,
+)
 from pytest_mock import MockerFixture
 from time_machine import TimeMachineFixture
 
@@ -45,9 +38,9 @@ from ....utils.receive_timeout import Timeout, receive_timeout
 def battery_data(  # pylint: disable=too-many-arguments
     component_id: int,
     timestamp: datetime | None = None,
-    relay_state: BatteryRelayState.ValueType = BatteryRelayState.RELAY_STATE_CLOSED,
-    component_state: BatteryState.ValueType = BatteryState.COMPONENT_STATE_CHARGING,
-    errors: Iterable[BatteryError] | None = None,
+    relay_state: battery_pb.RelayState = battery_pb.RelayState.RELAY_STATE_CLOSED,
+    component_state: battery_pb.ComponentState = battery_pb.ComponentState.COMPONENT_STATE_CHARGING,
+    errors: Iterable[battery_pb.Error] | None = None,
     capacity: float = 0,
 ) -> BatteryData:
     """Create BatteryData with given arguments.
@@ -61,9 +54,9 @@ def battery_data(  # pylint: disable=too-many-arguments
         timestamp: Timestamp of the component message.
             Defaults to datetime.now(tz=timezone.utc).
         relay_state: Battery relay state.
-            Defaults to BatteryRelayState.RELAY_STATE_CLOSED.
+            Defaults to battery_pb.RelayState.RELAY_STATE_CLOSED.
         component_state: Component state.
-            Defaults to BatteryState.COMPONENT_STATE_CHARGING.
+            Defaults to battery_pb.ComponentState.COMPONENT_STATE_CHARGING.
         errors: List of the components error. By default empty list will be created.
         capacity: Battery capacity.
 
@@ -83,8 +76,8 @@ def battery_data(  # pylint: disable=too-many-arguments
 def inverter_data(
     component_id: int,
     timestamp: datetime | None = None,
-    component_state: InverterState.ValueType = InverterState.COMPONENT_STATE_CHARGING,
-    errors: list[InverterError] | None = None,
+    component_state: inverter_pb.ComponentState = inverter_pb.ComponentState.COMPONENT_STATE_CHARGING,  # noqa: E501 (line too long)
+    errors: list[inverter_pb.Error] | None = None,
 ) -> InverterData:
     """Create InverterData with given arguments.
 
@@ -97,7 +90,7 @@ def inverter_data(
         timestamp: Timestamp of the component message.
             Defaults to datetime.now(tz=timezone.utc).
         component_state: Component state.
-            Defaults to InverterState.CHARGING.
+            Defaults to inverter_pb.ComponentState.CHARGING.
         errors: List of the components error. By default empty list will be created.
 
     Returns:
@@ -185,11 +178,11 @@ class TestBatteryStatus:
                 tracker._get_new_status_if_changed() is ComponentStatusEnum.NOT_WORKING
             )
 
-            # --- BatteryRelayState is invalid. ---
+            # --- battery_pb.RelayState is invalid. ---
             tracker._handle_status_battery(
                 battery_data(
                     component_id=BATTERY_ID,
-                    relay_state=BatteryRelayState.RELAY_STATE_OPENED,
+                    relay_state=battery_pb.RelayState.RELAY_STATE_OPENED,
                 )
             )
             assert tracker._get_new_status_if_changed() is None
@@ -205,29 +198,29 @@ class TestBatteryStatus:
             tracker._handle_status_inverter(
                 inverter_data(
                     component_id=INVERTER_ID,
-                    component_state=InverterState.COMPONENT_STATE_SWITCHING_OFF,
+                    component_state=inverter_pb.ComponentState.COMPONENT_STATE_SWITCHING_OFF,
                 )
             )
             assert (
                 tracker._get_new_status_if_changed() is ComponentStatusEnum.NOT_WORKING
             )
 
-            inverter_critical_error = InverterError(
-                code=InverterErrorCode.ERROR_CODE_UNSPECIFIED,
-                level=ErrorLevel.ERROR_LEVEL_CRITICAL,
+            inverter_critical_error = inverter_pb.Error(
+                code=inverter_pb.ErrorCode.ERROR_CODE_UNSPECIFIED,
+                level=common_pb.ErrorLevel.ERROR_LEVEL_CRITICAL,
                 msg="",
             )
 
-            inverter_warning_error = InverterError(
-                code=InverterErrorCode.ERROR_CODE_UNSPECIFIED,
-                level=ErrorLevel.ERROR_LEVEL_WARN,
+            inverter_warning_error = inverter_pb.Error(
+                code=inverter_pb.ErrorCode.ERROR_CODE_UNSPECIFIED,
+                level=common_pb.ErrorLevel.ERROR_LEVEL_WARN,
                 msg="",
             )
 
             tracker._handle_status_inverter(
                 inverter_data(
                     component_id=INVERTER_ID,
-                    component_state=InverterState.COMPONENT_STATE_SWITCHING_OFF,
+                    component_state=inverter_pb.ComponentState.COMPONENT_STATE_SWITCHING_OFF,
                     errors=[inverter_critical_error, inverter_warning_error],
                 )
             )
@@ -249,15 +242,15 @@ class TestBatteryStatus:
 
             assert tracker._get_new_status_if_changed() is ComponentStatusEnum.WORKING
 
-            battery_critical_error = BatteryError(
-                code=BatteryErrorCode.ERROR_CODE_UNSPECIFIED,
-                level=ErrorLevel.ERROR_LEVEL_CRITICAL,
+            battery_critical_error = battery_pb.Error(
+                code=battery_pb.ErrorCode.ERROR_CODE_UNSPECIFIED,
+                level=common_pb.ErrorLevel.ERROR_LEVEL_CRITICAL,
                 msg="",
             )
 
-            battery_warning_error = BatteryError(
-                code=BatteryErrorCode.ERROR_CODE_UNSPECIFIED,
-                level=ErrorLevel.ERROR_LEVEL_WARN,
+            battery_warning_error = battery_pb.Error(
+                code=battery_pb.ErrorCode.ERROR_CODE_UNSPECIFIED,
+                level=common_pb.ErrorLevel.ERROR_LEVEL_WARN,
                 msg="",
             )
 
@@ -281,7 +274,7 @@ class TestBatteryStatus:
             tracker._handle_status_battery(
                 battery_data(
                     component_id=BATTERY_ID,
-                    component_state=BatteryState.COMPONENT_STATE_ERROR,
+                    component_state=battery_pb.ComponentState.COMPONENT_STATE_ERROR,
                     errors=[battery_warning_error, battery_critical_error],
                 )
             )
@@ -338,7 +331,7 @@ class TestBatteryStatus:
                 tracker._handle_status_battery(
                     battery_data(
                         component_id=BATTERY_ID,
-                        component_state=BatteryState.COMPONENT_STATE_ERROR,
+                        component_state=battery_pb.ComponentState.COMPONENT_STATE_ERROR,
                     )
                 )
 
@@ -408,7 +401,7 @@ class TestBatteryStatus:
                 tracker._handle_status_battery(
                     battery_data(
                         component_id=BATTERY_ID,
-                        component_state=BatteryState.COMPONENT_STATE_ERROR,
+                        component_state=battery_pb.ComponentState.COMPONENT_STATE_ERROR,
                     )
                 )
 
@@ -536,7 +529,7 @@ class TestBatteryStatus:
             tracker._handle_status_inverter(
                 inverter_data(
                     component_id=INVERTER_ID,
-                    component_state=InverterState.COMPONENT_STATE_ERROR,
+                    component_state=inverter_pb.ComponentState.COMPONENT_STATE_ERROR,
                 )
             )
             assert (
@@ -751,8 +744,8 @@ class TestBatteryStatusRecovery:
             battery_data(
                 timestamp=timestamp,
                 component_id=BATTERY_ID,
-                component_state=BatteryState.COMPONENT_STATE_IDLE,
-                relay_state=BatteryRelayState.RELAY_STATE_CLOSED,
+                component_state=battery_pb.ComponentState.COMPONENT_STATE_IDLE,
+                relay_state=battery_pb.RelayState.RELAY_STATE_CLOSED,
             )
         )
 
@@ -762,8 +755,8 @@ class TestBatteryStatusRecovery:
         await mock_microgrid.mock_client.send(
             battery_data(
                 component_id=BATTERY_ID,
-                component_state=BatteryState.COMPONENT_STATE_IDLE,
-                relay_state=BatteryRelayState.RELAY_STATE_CLOSED,
+                component_state=battery_pb.ComponentState.COMPONENT_STATE_IDLE,
+                relay_state=battery_pb.RelayState.RELAY_STATE_CLOSED,
                 capacity=math.nan,
             )
         )
@@ -775,7 +768,7 @@ class TestBatteryStatusRecovery:
             inverter_data(
                 timestamp=timestamp,
                 component_id=INVERTER_ID,
-                component_state=InverterState.COMPONENT_STATE_IDLE,
+                component_state=inverter_pb.ComponentState.COMPONENT_STATE_IDLE,
             )
         )
 
@@ -783,8 +776,8 @@ class TestBatteryStatusRecovery:
         await mock_microgrid.mock_client.send(
             battery_data(
                 component_id=BATTERY_ID,
-                component_state=BatteryState.COMPONENT_STATE_ERROR,
-                relay_state=BatteryRelayState.RELAY_STATE_CLOSED,
+                component_state=battery_pb.ComponentState.COMPONENT_STATE_ERROR,
+                relay_state=battery_pb.RelayState.RELAY_STATE_CLOSED,
             )
         )
 
@@ -792,36 +785,36 @@ class TestBatteryStatusRecovery:
         await mock_microgrid.mock_client.send(
             inverter_data(
                 component_id=INVERTER_ID,
-                component_state=InverterState.COMPONENT_STATE_ERROR,
+                component_state=inverter_pb.ComponentState.COMPONENT_STATE_ERROR,
             )
         )
 
     async def _send_critical_error_battery(self, mock_microgrid: MockMicrogrid) -> None:
-        battery_critical_error = BatteryError(
-            code=BatteryErrorCode.ERROR_CODE_BLOCK_ERROR,
-            level=ErrorLevel.ERROR_LEVEL_CRITICAL,
+        battery_critical_error = battery_pb.Error(
+            code=battery_pb.ErrorCode.ERROR_CODE_BLOCK_ERROR,
+            level=common_pb.ErrorLevel.ERROR_LEVEL_CRITICAL,
             msg="",
         )
         await mock_microgrid.mock_client.send(
             battery_data(
                 component_id=BATTERY_ID,
-                component_state=BatteryState.COMPONENT_STATE_IDLE,
-                relay_state=BatteryRelayState.RELAY_STATE_CLOSED,
+                component_state=battery_pb.ComponentState.COMPONENT_STATE_IDLE,
+                relay_state=battery_pb.RelayState.RELAY_STATE_CLOSED,
                 errors=[battery_critical_error],
             )
         )
 
     async def _send_warning_error_battery(self, mock_microgrid: MockMicrogrid) -> None:
-        battery_warning_error = BatteryError(
-            code=BatteryErrorCode.ERROR_CODE_HIGH_HUMIDITY,
-            level=ErrorLevel.ERROR_LEVEL_WARN,
+        battery_warning_error = battery_pb.Error(
+            code=battery_pb.ErrorCode.ERROR_CODE_HIGH_HUMIDITY,
+            level=common_pb.ErrorLevel.ERROR_LEVEL_WARN,
             msg="",
         )
         await mock_microgrid.mock_client.send(
             battery_data(
                 component_id=BATTERY_ID,
-                component_state=BatteryState.COMPONENT_STATE_IDLE,
-                relay_state=BatteryRelayState.RELAY_STATE_CLOSED,
+                component_state=battery_pb.ComponentState.COMPONENT_STATE_IDLE,
+                relay_state=battery_pb.RelayState.RELAY_STATE_CLOSED,
                 errors=[battery_warning_error],
             )
         )
@@ -829,29 +822,29 @@ class TestBatteryStatusRecovery:
     async def _send_critical_error_inverter(
         self, mock_microgrid: MockMicrogrid
     ) -> None:
-        inverter_critical_error = InverterError(
-            code=InverterErrorCode.ERROR_CODE_UNSPECIFIED,
-            level=ErrorLevel.ERROR_LEVEL_CRITICAL,
+        inverter_critical_error = inverter_pb.Error(
+            code=inverter_pb.ErrorCode.ERROR_CODE_UNSPECIFIED,
+            level=common_pb.ErrorLevel.ERROR_LEVEL_CRITICAL,
             msg="",
         )
         await mock_microgrid.mock_client.send(
             inverter_data(
                 component_id=INVERTER_ID,
-                component_state=InverterState.COMPONENT_STATE_IDLE,
+                component_state=inverter_pb.ComponentState.COMPONENT_STATE_IDLE,
                 errors=[inverter_critical_error],
             )
         )
 
     async def _send_warning_error_inverter(self, mock_microgrid: MockMicrogrid) -> None:
-        inverter_warning_error = InverterError(
-            code=InverterErrorCode.ERROR_CODE_UNSPECIFIED,
-            level=ErrorLevel.ERROR_LEVEL_WARN,
+        inverter_warning_error = inverter_pb.Error(
+            code=inverter_pb.ErrorCode.ERROR_CODE_UNSPECIFIED,
+            level=common_pb.ErrorLevel.ERROR_LEVEL_WARN,
             msg="",
         )
         await mock_microgrid.mock_client.send(
             inverter_data(
                 component_id=INVERTER_ID,
-                component_state=InverterState.COMPONENT_STATE_IDLE,
+                component_state=inverter_pb.ComponentState.COMPONENT_STATE_IDLE,
                 errors=[inverter_warning_error],
             )
         )
