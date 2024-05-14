@@ -11,7 +11,7 @@ component graph.
 import logging
 from abc import ABC, abstractmethod
 
-import grpc.aio as grpcaio
+import grpclib.client
 from frequenz.client.microgrid import ApiClient, Location, Metadata
 
 from .component_graph import ComponentGraph, _MicrogridComponentGraph
@@ -113,9 +113,8 @@ class _InsecureConnectionManager(ConnectionManager):
             port: port. Defaults to _DEFAULT_MICROGRID_PORT.
         """
         super().__init__(host, port)
-        target = f"{host}:{port}"
-        grpc_channel = grpcaio.insecure_channel(target)
-        self._api = ApiClient(grpc_channel, target)
+        grpc_channel = grpclib.client.Channel(host, port)
+        self._api = ApiClient(grpc_channel, f"{host}:{port}")
         # To create graph from the api we need await.
         # So create empty graph here, and update it in `run` method.
         self._graph = _MicrogridComponentGraph()
@@ -169,7 +168,7 @@ class _InsecureConnectionManager(ConnectionManager):
         await super()._update_api(host, port)  # pylint: disable=protected-access
 
         target = f"{host}:{port}"
-        grpc_channel = grpcaio.insecure_channel(target)
+        grpc_channel = grpclib.client.Channel(host, port)
         self._api = ApiClient(grpc_channel, target)
         self._metadata = await self._api.metadata()
         await self._graph.refresh_from_api(self._api)
