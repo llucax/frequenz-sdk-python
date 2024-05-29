@@ -21,21 +21,17 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-# pylint: enable=no-name-in-module
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
 from frequenz.client.microgrid import (
+    BatteryComponentState,
     BatteryData,
+    BatteryRelayState,
     ComponentCategory,
     ComponentData,
+    ErrorLevel,
+    InverterComponentState,
     InverterData,
-)
-
-# pylint: disable=no-name-in-module
-from frequenz.microgrid.betterproto.frequenz.api.microgrid import battery as pb_battery
-from frequenz.microgrid.betterproto.frequenz.api.microgrid import common as pb_common
-from frequenz.microgrid.betterproto.frequenz.api.microgrid import (
-    inverter as pb_inverter,
 )
 from typing_extensions import override
 
@@ -73,29 +69,27 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
     Status updates are sent out only when there is a status change.
     """
 
-    _battery_valid_relay: set[pb_battery.RelayState] = {
-        pb_battery.RelayState.RELAY_STATE_CLOSED
-    }
+    _battery_valid_relay: set[BatteryRelayState] = {BatteryRelayState.CLOSED}
     """The list of valid relay states of a battery.
 
     A working battery in any other battery relay state will be reported as failing.
     """
 
-    _battery_valid_state: set[pb_battery.ComponentState] = {
-        pb_battery.ComponentState.COMPONENT_STATE_IDLE,
-        pb_battery.ComponentState.COMPONENT_STATE_CHARGING,
-        pb_battery.ComponentState.COMPONENT_STATE_DISCHARGING,
+    _battery_valid_state: set[BatteryComponentState] = {
+        BatteryComponentState.IDLE,
+        BatteryComponentState.CHARGING,
+        BatteryComponentState.DISCHARGING,
     }
     """The list of valid states of a battery.
 
     A working battery in any other battery state will be reported as failing.
     """
 
-    _inverter_valid_state: set[pb_inverter.ComponentState] = {
-        pb_inverter.ComponentState.COMPONENT_STATE_STANDBY,
-        pb_inverter.ComponentState.COMPONENT_STATE_IDLE,
-        pb_inverter.ComponentState.COMPONENT_STATE_CHARGING,
-        pb_inverter.ComponentState.COMPONENT_STATE_DISCHARGING,
+    _inverter_valid_state: set[InverterComponentState] = {
+        InverterComponentState.STANDBY,
+        InverterComponentState.IDLE,
+        InverterComponentState.CHARGING,
+        InverterComponentState.DISCHARGING,
     }
     """The list of valid states of an inverter.
 
@@ -371,11 +365,11 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         Returns:
             True if message has no critical error, False otherwise.
         """
-        critical = pb_common.ErrorLevel.ERROR_LEVEL_CRITICAL
-        # pylint: disable=protected-access
-        critical_err = next((err for err in msg._errors if err.level == critical), None)
+        critical = ErrorLevel.CRITICAL
+        critical_err = next((err for err in msg.errors if err.level == critical), None)
         if critical_err is not None:
-            if self._last_status == ComponentStatusEnum.WORKING:
+            last_status = self._last_status  # pylint: disable=protected-access
+            if last_status == ComponentStatusEnum.WORKING:
                 _logger.warning(
                     "Component %d has critical error: %s",
                     msg.component_id,
@@ -395,7 +389,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         """
         # Component state is not exposed to the user.
         # pylint: disable=protected-access
-        state = msg._component_state
+        state = msg.component_state
         if state not in BatteryStatusTracker._inverter_valid_state:
             if self._last_status == ComponentStatusEnum.WORKING:
                 _logger.warning(
@@ -417,7 +411,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         """
         # Component state is not exposed to the user.
         # pylint: disable=protected-access
-        state = msg._component_state
+        state = msg.component_state
         if state not in BatteryStatusTracker._battery_valid_state:
             if self._last_status == ComponentStatusEnum.WORKING:
                 _logger.warning(
@@ -429,7 +423,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
 
         # Component state is not exposed to the user.
         # pylint: disable=protected-access
-        relay_state = msg._relay_state
+        relay_state = msg.relay_state
         if relay_state not in BatteryStatusTracker._battery_valid_relay:
             if self._last_status == ComponentStatusEnum.WORKING:
                 _logger.warning(

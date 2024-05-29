@@ -13,7 +13,9 @@ import pytest
 import pytest_mock
 from frequenz.channels import Broadcast
 from frequenz.client.microgrid import (
+    BatteryComponentState,
     BatteryData,
+    BatteryRelayState,
     Component,
     ComponentCategory,
     ComponentData,
@@ -21,12 +23,9 @@ from frequenz.client.microgrid import (
     EVChargerCableState,
     EVChargerComponentState,
     EVChargerData,
+    InverterComponentState,
     InverterData,
     MeterData,
-)
-from frequenz.microgrid.betterproto.frequenz.api.microgrid import battery as battery_pb
-from frequenz.microgrid.betterproto.frequenz.api.microgrid import (
-    inverter as inverter_pb,
 )
 
 from frequenz.sdk.actor import (
@@ -180,8 +179,8 @@ def _new_inverter_data(
         active_power_exclusion_upper_bound=value,
         active_power_inclusion_lower_bound=value,
         active_power_inclusion_upper_bound=value,
-        _component_state=inverter_pb.ComponentState.COMPONENT_STATE_UNSPECIFIED,
-        _errors=[],
+        component_state=InverterComponentState.UNSPECIFIED,
+        errors=[],
     )
 
 
@@ -193,8 +192,8 @@ def _new_battery_data(
         timestamp=timestamp,
         soc=value,
         temperature=value,
-        _component_state=battery_pb.ComponentState.COMPONENT_STATE_UNSPECIFIED,
-        _errors=[],
+        component_state=BatteryComponentState.UNSPECIFIED,
+        errors=[],
         soc_lower_bound=value,
         soc_upper_bound=value,
         capacity=value,
@@ -202,7 +201,7 @@ def _new_battery_data(
         power_exclusion_upper_bound=value,
         power_inclusion_lower_bound=value,
         power_inclusion_upper_bound=value,
-        _relay_state=battery_pb.RelayState.RELAY_STATE_UNSPECIFIED,
+        relay_state=BatteryRelayState.UNSPECIFIED,
     )
 
 
