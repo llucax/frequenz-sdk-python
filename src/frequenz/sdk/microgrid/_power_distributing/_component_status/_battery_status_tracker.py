@@ -482,7 +482,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         return next(
             (
                 comp.component_id
-                for comp in graph.predecessors(battery_id)
+                for comp in graph.predecessors(battery_id).values()
                 if comp.category == ComponentCategory.INVERTER
             ),
             None,

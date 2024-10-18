@@ -163,7 +163,7 @@ class TestMicrogridApi:
             assert api.api_client is microgrid_client
 
             graph = api.component_graph
-            assert set(graph.components()) == set(components[0])
+            assert set(graph.components().values()) == set(components[0])
             assert set(graph.connections()) == set(connections[0])
 
             assert api.microgrid_id == metadata.microgrid_id
@@ -179,7 +179,7 @@ class TestMicrogridApi:
 
             assert api is api2
             graph = api2.component_graph
-            assert set(graph.components()) == set(components[0])
+            assert set(graph.components().values()) == set(components[0])
             assert set(graph.connections()) == set(connections[0])
 
             assert api.microgrid_id == metadata.microgrid_id
@@ -208,7 +208,7 @@ class TestMicrogridApi:
 
         api = connection_manager.get()
         graph = api.component_graph
-        assert set(graph.components()) == set(components[0])
+        assert set(graph.components().values()) == set(components[0])
         assert set(graph.connections()) == set(connections[0])
 
         assert api.microgrid_id == metadata.microgrid_id

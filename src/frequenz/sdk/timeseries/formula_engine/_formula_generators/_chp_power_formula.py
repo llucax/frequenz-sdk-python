@@ -71,13 +71,13 @@ class CHPPowerFormula(FormulaGenerator[Power]):
         component_graph = connection_manager.get().component_graph
         chps = list(
             comp
-            for comp in component_graph.components()
+            for comp in component_graph.components().values()
             if comp.category == ComponentCategory.CHP
         )
 
         chp_meters: set[int] = set()
         for chp in chps:
-            predecessors = component_graph.predecessors(chp.component_id)
+            predecessors = component_graph.predecessors(chp.component_id).values()
             if len(predecessors) != 1:
                 raise FormulaGenerationError(
                     f"CHP {chp.component_id} has {len(predecessors)} predecessors. "
@@ -90,7 +90,7 @@ class CHPPowerFormula(FormulaGenerator[Power]):
                     f"{meter.category}. Expected ComponentCategory.METER."
                 )
             meter_successors = component_graph.successors(meter.component_id)
-            if not all(successor in chps for successor in meter_successors):
+            if not all(successor in chps for successor in meter_successors.values()):
                 raise FormulaGenerationError(
                     f"Meter {meter.component_id} connected to CHP {chp.component_id}"
                     "has non-chp successors."

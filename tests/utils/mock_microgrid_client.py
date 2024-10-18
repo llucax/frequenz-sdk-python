@@ -170,12 +170,11 @@ class MockMicrogridClient:
             Dictionary where the key is battery id and the value is channel for this
                 battery.
         """
-        batteries = [
-            c.component_id
-            for c in self.component_graph.components(
+        batteries = list(
+            self.component_graph.components(
                 component_categories={ComponentCategory.BATTERY}
             )
-        ]
+        )
 
         return {
             bid: Broadcast[BatteryData](name="battery_data_" + str(bid))
@@ -189,12 +188,11 @@ class MockMicrogridClient:
             Dictionary where the key is meter id and the value is channel for this
                 meter.
         """
-        meters = [
-            c.component_id
-            for c in self.component_graph.components(
+        meters = list(
+            self.component_graph.components(
                 component_categories={ComponentCategory.METER}
             )
-        ]
+        )
 
         return {
             cid: Broadcast[MeterData](name="meter_data_" + str(cid)) for cid in meters
@@ -207,12 +205,11 @@ class MockMicrogridClient:
             Dictionary where the key is inverter id and the value is channel for
                 this inverter.
         """
-        inverters = [
-            c.component_id
-            for c in self.component_graph.components(
+        inverters = list(
+            self.component_graph.components(
                 component_categories={ComponentCategory.INVERTER}
             )
-        ]
+        )
 
         return {
             cid: Broadcast[InverterData](name="inverter_data_" + str(cid))
@@ -226,12 +223,11 @@ class MockMicrogridClient:
             Dictionary where the key is the id of the ev_charger and the value is
                 channel for this ev_charger.
         """
-        meters = [
-            c.component_id
-            for c in self.component_graph.components(
+        meters = list(
+            self.component_graph.components(
                 component_categories={ComponentCategory.EV_CHARGER}
             )
-        ]
+        )
 
         return {
             cid: Broadcast[EVChargerData](name="meter_data_" + str(cid))

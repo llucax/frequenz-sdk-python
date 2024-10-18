@@ -4,6 +4,7 @@
 """Formula generator from component graph for Consumer Power."""
 
 import logging
+from collections.abc import Iterable
 
 from frequenz.client.microgrid import Component, ComponentCategory, ComponentMetricId
 from frequenz.quantities import Power
@@ -116,7 +117,7 @@ class ConsumerPowerFormula(FormulaGenerator[Power]):
         non_consumer_components: set[Component] = set()
         for grid_meter in grid_meters:
             non_consumer_components = non_consumer_components.union(
-                component_graph.dfs(grid_meter, set(), non_consumer_component)
+                component_graph.dfs(grid_meter, set(), non_consumer_component).values()
             )
 
         # push all grid meters
@@ -191,7 +192,9 @@ class ConsumerPowerFormula(FormulaGenerator[Power]):
             )
 
         component_graph = connection_manager.get().component_graph
-        consumer_components = component_graph.dfs(grid, set(), consumer_component)
+        consumer_components = component_graph.dfs(
+            grid, set(), consumer_component
+        ).values()
 
         if not consumer_components:
             _logger.warning(
@@ -237,7 +240,7 @@ class ConsumerPowerFormula(FormulaGenerator[Power]):
         return builder.build()
 
     def _get_fallback_formulas(
-        self, components: set[Component]
+        self, components: Iterable[Component]
     ) -> dict[Component, FallbackFormulaMetricFetcher[Power] | None]:
         """Find primary and fallback components and create fallback formulas.
 

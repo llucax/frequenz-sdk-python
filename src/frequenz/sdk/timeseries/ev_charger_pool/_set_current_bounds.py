@@ -98,7 +98,7 @@ class BoundsSetter:
             _logger.error(err)
             raise RuntimeError(err)
 
-        meter_id = next(iter(meters)).component_id
+        meter_id = next(iter(meters))
         self._meter_data_cache = LatestValueCache(
             await api_client.meter_data(meter_id),
             unique_id=f"{type(self).__name__}«{hex(id(self))}»:meter«{meter_id}»",

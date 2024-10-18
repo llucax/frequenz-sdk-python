@@ -70,12 +70,11 @@ class BatteryPowerFormula(FormulaGenerator[Power]):
         inv_bat_mapping: dict[Component, set[Component]] = {}
 
         for bat_id in component_ids:
-            inverters = set(
-                filter(
-                    component_graph.is_battery_inverter,
-                    component_graph.predecessors(bat_id),
-                )
-            )
+            inverters = {
+                inv
+                for inv in component_graph.predecessors(bat_id).values()
+                if component_graph.is_battery_inverter(inv)
+            }
             if len(inverters) == 0:
                 raise ComponentNotFound(
                     "All batteries must have at least one inverter as a predecessor."
@@ -85,7 +84,7 @@ class BatteryPowerFormula(FormulaGenerator[Power]):
             for inverter in inverters:
                 all_connected_batteries = component_graph.successors(
                     inverter.component_id
-                )
+                ).values()
                 battery_ids = set(
                     map(lambda battery: battery.component_id, all_connected_batteries)
                 )
@@ -95,7 +94,7 @@ class BatteryPowerFormula(FormulaGenerator[Power]):
                         f"are requested. Missing: {battery_ids - component_ids}"
                     )
 
-                inv_bat_mapping[inverter] = all_connected_batteries
+                inv_bat_mapping[inverter] = set(all_connected_batteries)
 
         if self._config.allow_fallback:
             fallbacks = self._get_fallback_formulas(inv_bat_mapping)

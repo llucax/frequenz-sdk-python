@@ -185,9 +185,9 @@ def initialize(
     global _GRID  # pylint: disable=global-statement
 
     grid_connections = list(
-        connection_manager.get().component_graph.components(
-            component_categories={ComponentCategory.GRID},
-        )
+        connection_manager.get()
+        .component_graph.components(component_categories={ComponentCategory.GRID})
+        .values()
     )
 
     grid_connections_count = len(grid_connections)

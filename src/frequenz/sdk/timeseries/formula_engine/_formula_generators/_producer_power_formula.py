@@ -4,6 +4,7 @@
 """Formula generator from component graph for Producer Power."""
 
 import logging
+from collections.abc import Iterable
 from typing import Callable
 
 from frequenz.client.microgrid import Component, ComponentCategory, ComponentMetricId
@@ -56,7 +57,7 @@ class ProducerPowerFormula(FormulaGenerator[Power]):
             set(),
             lambda component: component_graph.is_pv_chain(component)
             or component_graph.is_chp_chain(component),
-        )
+        ).values()
 
         if not producer_components:
             _logger.warning(
@@ -104,7 +105,7 @@ class ProducerPowerFormula(FormulaGenerator[Power]):
         return builder.build()
 
     def _get_fallback_formulas(
-        self, components: set[Component]
+        self, components: Iterable[Component]
     ) -> dict[Component, FallbackFormulaMetricFetcher[Power] | None]:
         """Find primary and fallback components and create fallback formulas.
 

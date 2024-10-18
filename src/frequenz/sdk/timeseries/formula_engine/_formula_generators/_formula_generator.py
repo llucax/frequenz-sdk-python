@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from abc import ABC, abstractmethod
 from collections import abc
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Generic
 
@@ -115,7 +115,7 @@ class FormulaGenerator(ABC, Generic[QuantityT]):
             iter(
                 component_graph.components(
                     component_categories={ComponentCategory.GRID}
-                )
+                ).values()
             ),
             None,
         )
@@ -135,12 +135,14 @@ class FormulaGenerator(ABC, Generic[QuantityT]):
         """
         grid_component = self._get_grid_component()
         component_graph = connection_manager.get().component_graph
-        grid_successors = component_graph.successors(grid_component.component_id)
+        grid_successors = component_graph.successors(
+            grid_component.component_id
+        ).values()
 
         if not grid_successors:
             raise ComponentNotFound("No components found in the component graph.")
 
-        return grid_successors
+        return set(grid_successors)
 
     @abstractmethod
     def generate(
@@ -149,7 +151,7 @@ class FormulaGenerator(ABC, Generic[QuantityT]):
         """Generate a formula engine, based on the component graph."""
 
     def _get_metric_fallback_components(
-        self, components: set[Component]
+        self, components: Iterable[Component]
     ) -> dict[Component, set[Component]]:
         """Get primary and fallback components within a given set of components.
 
@@ -187,7 +189,7 @@ class FormulaGenerator(ABC, Generic[QuantityT]):
             else:
                 predecessors = graph.predecessors(component.component_id)
                 if len(predecessors) == 1:
-                    predecessor = predecessors.pop()
+                    _, predecessor = predecessors.popitem()
                     if self._is_primary_fallback_pair(predecessor, component):
                         # predecessor is primary component and the component is one of the
                         # fallbacks components.
@@ -211,7 +213,7 @@ class FormulaGenerator(ABC, Generic[QuantityT]):
         assert meter.category == ComponentCategory.METER
 
         graph = connection_manager.get().component_graph
-        successors = graph.successors(meter.component_id)
+        successors = set(graph.successors(meter.component_id).values())
 
         # All fallbacks has to be of the same type and category.
         if (

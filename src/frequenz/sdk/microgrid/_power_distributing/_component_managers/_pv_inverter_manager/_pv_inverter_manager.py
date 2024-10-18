@@ -254,8 +254,10 @@ class PVManager(ComponentManager):
         """Return the IDs of all PV inverters present in the component graph."""
         return {
             inv.component_id
-            for inv in connection_manager.get().component_graph.components(
+            for inv in connection_manager.get()
+            .component_graph.components(
                 component_categories={ComponentCategory.INVERTER}
             )
+            .values()
             if inv.type == InverterType.SOLAR
         }

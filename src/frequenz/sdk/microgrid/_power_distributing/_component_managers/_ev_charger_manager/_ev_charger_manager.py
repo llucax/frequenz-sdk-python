@@ -111,12 +111,11 @@ class EVChargerManager(ComponentManager):
 
     def _get_ev_charger_ids(self) -> collections.abc.Set[int]:
         """Return the IDs of all EV chargers present in the component graph."""
-        return {
-            evc.component_id
-            for evc in connection_manager.get().component_graph.components(
+        return set(
+            connection_manager.get().component_graph.components(
                 component_categories={ComponentCategory.EV_CHARGER}
             )
-        }
+        )
 
     def _allocate_new_ev(self, component_id: int) -> dict[int, Power]:
         """Allocate power to a newly connected EV charger.

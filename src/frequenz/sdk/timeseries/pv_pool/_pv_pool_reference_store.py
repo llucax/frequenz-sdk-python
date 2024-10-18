@@ -80,7 +80,7 @@ class PVPoolReferenceStore:
                     inv.component_id
                     for inv in graph.components(
                         component_categories={ComponentCategory.INVERTER}
-                    )
+                    ).values()
                     if inv.type == InverterType.SOLAR
                 }
             )
