@@ -6,6 +6,7 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 
+from frequenz.client.microgrid import ComponentId
 from frequenz.quantities import Power
 
 from frequenz.sdk import timeseries
@@ -19,7 +20,7 @@ class StatefulTester:
 
     def __init__(
         self,
-        batteries: frozenset[int],
+        batteries: frozenset[ComponentId],
         system_bounds: _base_types.SystemBounds,
     ) -> None:
         """Create a new instance of the stateful tester."""
@@ -91,7 +92,7 @@ async def test_matryoshka_no_excl() -> None:  # pylint: disable=too-many-stateme
 
     With just inclusion bounds, and no exclusion bounds.
     """
-    batteries = frozenset({2, 5})
+    batteries = frozenset({ComponentId(2), ComponentId(5)})
 
     system_bounds = _base_types.SystemBounds(
         timestamp=datetime.now(tz=timezone.utc),
@@ -201,7 +202,7 @@ async def test_matryoshka_with_excl_1() -> None:
 
     With inclusion bounds, and exclusion bounds -30.0 to 0.0.
     """
-    batteries = frozenset({2, 5})
+    batteries = frozenset({ComponentId(2), ComponentId(5)})
 
     system_bounds = _base_types.SystemBounds(
         timestamp=datetime.now(tz=timezone.utc),
@@ -251,7 +252,7 @@ async def test_matryoshka_with_excl_2() -> None:
 
     With inclusion bounds, and exclusion bounds 0.0 to 30.0.
     """
-    batteries = frozenset({2, 5})
+    batteries = frozenset({ComponentId(2), ComponentId(5)})
 
     system_bounds = _base_types.SystemBounds(
         timestamp=datetime.now(tz=timezone.utc),
@@ -310,7 +311,7 @@ async def test_matryoshka_with_excl_3() -> None:
 
     With inclusion bounds, and exclusion bounds -30.0 to 30.0.
     """
-    batteries = frozenset({2, 5})
+    batteries = frozenset({ComponentId(2), ComponentId(5)})
 
     system_bounds = _base_types.SystemBounds(
         timestamp=datetime.now(tz=timezone.utc),
@@ -367,7 +368,7 @@ async def test_matryoshka_drop_old_proposals() -> None:
 
     With inclusion bounds, and exclusion bounds -30.0 to 30.0.
     """
-    batteries = frozenset({2, 5})
+    batteries = frozenset({ComponentId(2), ComponentId(5)})
 
     system_bounds = _base_types.SystemBounds(
         timestamp=datetime.now(tz=timezone.utc),

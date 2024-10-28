@@ -9,12 +9,14 @@ from datetime import datetime, timedelta, timezone
 
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
-from frequenz.client.microgrid import InverterComponentState, InverterData
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import ComponentStateCode
 from typing_extensions import override
 
 from ...._internal._asyncio import run_forever
 from ....actor._background_service import BackgroundService
 from ... import connection_manager
+from ..._old_component_data import InverterData
 from ._blocking_status import BlockingStatus
 from ._component_status import (
     ComponentStatus,
@@ -44,7 +46,7 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
     def __init__(  # pylint: disable=too-many-arguments
         self,
         *,
-        component_id: int,
+        component_id: ComponentId,
         max_data_age: timedelta,
         max_blocking_duration: timedelta,
         status_sender: Sender[ComponentStatus],
@@ -82,11 +84,14 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
 
     def _is_working(self, pv_data: InverterData) -> bool:
         """Return whether the given data indicates that the PV inverter is working."""
-        return pv_data.component_state in (
-            InverterComponentState.DISCHARGING,
-            InverterComponentState.CHARGING,
-            InverterComponentState.IDLE,
-            InverterComponentState.STANDBY,
+        return bool(
+            {
+                ComponentStateCode.DISCHARGING,
+                ComponentStateCode.CHARGING,
+                ComponentStateCode.READY,
+                ComponentStateCode.STANDBY,
+            }
+            & pv_data.states
         )
 
     def _is_stale(self, pv_data: InverterData) -> bool:
@@ -132,9 +137,9 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
 
         if self._last_status == ComponentStatusEnum.WORKING:
             _logger.warning(
-                "PV inverter %s is in NOT_WORKING state.  Component state: %s",
+                "PV inverter %s is in NOT_WORKING state.  Component states: %s",
                 self._component_id,
-                pv_data.component_state,
+                pv_data.states,
             )
         return ComponentStatusEnum.NOT_WORKING
 

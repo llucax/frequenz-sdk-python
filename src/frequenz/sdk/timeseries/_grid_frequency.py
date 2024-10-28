@@ -9,7 +9,15 @@ import asyncio
 import logging
 
 from frequenz.channels import Receiver, Sender
-from frequenz.client.microgrid import Component, ComponentCategory, ComponentMetricId
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import (
+    Component,
+    EvCharger,
+    GridConnectionPoint,
+    Inverter,
+    Meter,
+)
+from frequenz.client.microgrid.metrics import Metric
 from frequenz.quantities import Frequency, Quantity
 
 from .._internal._channels import ChannelRegistry
@@ -20,7 +28,7 @@ from ..timeseries._base_types import Sample
 _logger = logging.getLogger(__name__)
 
 
-def create_request(component_id: int) -> ComponentMetricRequest:
+def create_request(component_id: ComponentId) -> ComponentMetricRequest:
     """Create a request for grid frequency.
 
     Args:
@@ -30,7 +38,7 @@ def create_request(component_id: int) -> ComponentMetricRequest:
         A component metric request for grid frequency.
     """
     return ComponentMetricRequest(
-        "grid-frequency", component_id, ComponentMetricId.FREQUENCY, None
+        "grid-frequency", component_id, Metric.AC_FREQUENCY, None
     )
 
 
@@ -53,12 +61,8 @@ class GridFrequency:
         if not source:
             component_graph = connection_manager.get().component_graph
             source = component_graph.find_first_descendant_component(
-                root_category=ComponentCategory.GRID,
-                descendant_categories=(
-                    ComponentCategory.METER,
-                    ComponentCategory.INVERTER,
-                    ComponentCategory.EV_CHARGER,
-                ),
+                root=GridConnectionPoint,
+                descendants=[Meter, Inverter, EvCharger],
             )
 
         self._request_sender: Sender[ComponentMetricRequest] = (
@@ -67,7 +71,7 @@ class GridFrequency:
         self._channel_registry: ChannelRegistry = channel_registry
         self._source_component: Component = source
         self._component_metric_request: ComponentMetricRequest = create_request(
-            self._source_component.component_id
+            self._source_component.id
         )
 
         self._task: None | asyncio.Task[None] = None

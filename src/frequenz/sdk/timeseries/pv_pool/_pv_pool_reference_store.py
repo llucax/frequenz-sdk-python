@@ -9,7 +9,8 @@ import uuid
 from collections import abc
 
 from frequenz.channels import Broadcast, Receiver, Sender
-from frequenz.client.microgrid import ComponentCategory, InverterType
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import SolarInverter
 
 from ..._internal._channels import ChannelRegistry, ReceiverFetcher
 from ...microgrid import connection_manager
@@ -43,7 +44,7 @@ class PVPoolReferenceStore:
         power_manager_requests_sender: Sender[Proposal],
         power_manager_bounds_subs_sender: Sender[ReportRequest],
         power_distribution_results_fetcher: ReceiverFetcher[Result],
-        component_ids: abc.Set[int] | None = None,
+        component_ids: abc.Set[ComponentId] | None = None,
     ):
         """Initialize this instance.
 
@@ -72,17 +73,11 @@ class PVPoolReferenceStore:
         self.power_distribution_results_fetcher = power_distribution_results_fetcher
 
         if component_ids is not None:
-            self.component_ids: frozenset[int] = frozenset(component_ids)
+            self.component_ids: frozenset[ComponentId] = frozenset(component_ids)
         else:
             graph = connection_manager.get().component_graph
             self.component_ids = frozenset(
-                {
-                    inv.component_id
-                    for inv in graph.components(
-                        component_categories={ComponentCategory.INVERTER}
-                    )
-                    if inv.type == InverterType.SOLAR
-                }
+                {inv.id for inv in graph.components(filter_by_types={SolarInverter})}
             )
 
         self.power_bounds_subs: dict[str, asyncio.Task[None]] = {}

@@ -12,7 +12,8 @@ from datetime import timedelta
 from typing import Any
 
 from frequenz.channels import Broadcast
-from frequenz.client.microgrid import Component, ComponentCategory
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import Battery
 from frequenz.quantities import Power
 
 from frequenz.sdk import microgrid
@@ -37,7 +38,7 @@ PORT = 62060
 # send requests, and those no longer go directly to the power distributing actor, but
 # instead through the power managing actor.  So the below function needs to be updated
 # to use the PowerDistributingActor directly.
-async def send_requests(batteries: set[int], request_num: int) -> list[Result]:
+async def send_requests(batteries: set[ComponentId], request_num: int) -> list[Result]:
     """Send requests to the PowerDistributingActor and wait for the response.
 
     Args:
@@ -98,7 +99,7 @@ def parse_result(result: list[list[Result]]) -> dict[str, float]:
 
 async def run_test(  # pylint: disable=too-many-locals
     num_requests: int,
-    batteries: set[int],
+    batteries: set[ComponentId],
 ) -> dict[str, Any]:
     """Run test.
 
@@ -115,8 +116,7 @@ async def run_test(  # pylint: disable=too-many-locals
     battery_status_channel = Broadcast[ComponentPoolStatus](name="battery-status")
     power_result_channel = Broadcast[Result](name="power-result")
     async with PowerDistributingActor(
-        component_category=ComponentCategory.BATTERY,
-        component_type=None,
+        component_type=Battery,
         requests_receiver=power_request_channel.new_receiver(),
         results_sender=power_result_channel.new_sender(),
         component_pool_status_sender=battery_status_channel.new_sender(),
@@ -142,10 +142,10 @@ async def run() -> None:
         ResamplerConfig(resampling_period=timedelta(seconds=1.0)),
     )
 
-    all_batteries: set[Component] = connection_manager.get().component_graph.components(
-        component_categories={ComponentCategory.BATTERY}
+    all_batteries = connection_manager.get().component_graph.components(
+        filter_by_types={Battery},
     )
-    batteries_ids = {c.component_id for c in all_batteries}
+    batteries_ids = {c.id for c in all_batteries}
     # Take some time to get data from components
     await asyncio.sleep(4)
     with open("/dev/stdout", "w", encoding="utf-8") as csvfile:

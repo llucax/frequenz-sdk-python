@@ -12,7 +12,7 @@ import async_solipsism
 import pytest
 import time_machine
 from frequenz.channels import Receiver
-from frequenz.client.microgrid import EVChargerCableState, EVChargerComponentState
+from frequenz.client.microgrid.component import ComponentStateCode
 from frequenz.quantities import Power, Voltage
 from pytest_mock import MockerFixture
 
@@ -120,8 +120,11 @@ class TestEVChargerPoolControl:
                 EvChargerDataWrapper(
                     evc_id,
                     now,
-                    cable_state=EVChargerCableState.EV_PLUGGED,
-                    component_state=EVChargerComponentState.READY,
+                    states={
+                        ComponentStateCode.READY,
+                        ComponentStateCode.EV_CHARGING_CABLE_PLUGGED_AT_EV,
+                        ComponentStateCode.EV_CHARGING_CABLE_PLUGGED_AT_STATION,
+                    },
                     active_power=0.0,
                     active_power_inclusion_lower_bound=0.0,
                     active_power_inclusion_upper_bound=16.0 * 230.0 * 3,
@@ -190,7 +193,8 @@ class TestEVChargerPoolControl:
         mock_time = traveller.start()
 
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
         await self._init_ev_chargers(mocks)
         ev_charger_pool = microgrid.new_ev_charger_pool(priority=5)

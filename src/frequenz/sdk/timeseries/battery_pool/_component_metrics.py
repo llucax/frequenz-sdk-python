@@ -7,7 +7,8 @@
 from collections.abc import Mapping
 from datetime import datetime
 
-from frequenz.client.microgrid import ComponentMetricId
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.metrics import Metric
 
 
 class ComponentMetricsData:
@@ -15,9 +16,9 @@ class ComponentMetricsData:
 
     def __init__(
         self,
-        component_id: int,
+        component_id: ComponentId,
         timestamp: datetime,
-        metrics: Mapping[ComponentMetricId, float],
+        metrics: Mapping[Metric, float],
     ) -> None:
         """Create class instance.
 
@@ -28,10 +29,10 @@ class ComponentMetricsData:
         """
         self._component_id = component_id
         self._timestamp = timestamp
-        self._metrics: Mapping[ComponentMetricId, float] = metrics
+        self._metrics: Mapping[Metric, float] = metrics
 
     @property
-    def component_id(self) -> int:
+    def component_id(self) -> ComponentId:
         """Get component id of the given metrics.
 
         Returns:
@@ -48,7 +49,7 @@ class ComponentMetricsData:
         """
         return self._timestamp
 
-    def get(self, metric: ComponentMetricId) -> float | None:
+    def get(self, metric: Metric) -> float | None:
         """Get metric value.
 
         Args:

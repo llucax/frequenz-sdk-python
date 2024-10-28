@@ -9,10 +9,12 @@ import asyncio
 import logging
 import sys
 from datetime import datetime, timedelta, timezone
+from typing import assert_never
 
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
-from frequenz.client.microgrid import ComponentCategory, ComponentType, InverterType
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import Battery, EvCharger, SolarInverter
 from frequenz.quantities import Power
 from typing_extensions import override
 
@@ -38,8 +40,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
         power_distributing_requests_sender: Sender[_power_distributing.Request],
         power_distributing_results_receiver: Receiver[_power_distributing.Result],
         channel_registry: ChannelRegistry,
-        component_category: ComponentCategory,
-        component_type: ComponentType | None = None,
+        component_class: type[Battery | EvCharger | SolarInverter],
         # arguments to actors need to serializable, so we pass an enum for the algorithm
         # instead of an instance of the algorithm.
         algorithm: Algorithm = Algorithm.MATRYOSHKA,
@@ -54,15 +55,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
             power_distributing_results_receiver: The receiver for power distribution
                 results.
             channel_registry: The channel registry.
-            component_category: The category of the component this power manager
-                instance is going to support.
-            component_type: The type of the component of the given category that this
-                actor is responsible for.  This is used only when the component category
-                is not enough to uniquely identify the component.  For example, when the
-                category is `ComponentCategory.INVERTER`, the type is needed to identify
-                the inverter as a solar inverter or a battery inverter.  This can be
-                `None` when the component category is enough to uniquely identify the
-                component.
+            component_class: The class of component this instance is going to support.
             algorithm: The power management algorithm to use.
 
         Raises:
@@ -73,21 +66,22 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
                 f"PowerManagingActor: Unknown algorithm: {algorithm}"
             )
 
-        self._component_category = component_category
-        self._component_type = component_type
+        self._component_class = component_class
         self._bounds_subscription_receiver = bounds_subscription_receiver
         self._power_distributing_requests_sender = power_distributing_requests_sender
         self._power_distributing_results_receiver = power_distributing_results_receiver
         self._channel_registry = channel_registry
         self._proposals_receiver = proposals_receiver
 
-        self._system_bounds: dict[frozenset[int], SystemBounds] = {}
-        self._bound_tracker_tasks: dict[frozenset[int], asyncio.Task[None]] = {}
+        self._system_bounds: dict[frozenset[ComponentId], SystemBounds] = {}
+        self._bound_tracker_tasks: dict[frozenset[ComponentId], asyncio.Task[None]] = {}
+        # The int key of the sub-dict is the priority of the actor.
         self._set_power_subscriptions: dict[
-            frozenset[int], dict[int, Sender[_Report]]
+            frozenset[ComponentId], dict[int, Sender[_Report]]
         ] = {}
+        # The int key of the sub-dict is the priority of the actor.
         self._set_op_power_subscriptions: dict[
-            frozenset[int], dict[int, Sender[_Report]]
+            frozenset[ComponentId], dict[int, Sender[_Report]]
         ] = {}
 
         self._set_power_group: BaseAlgorithm = Matryoshka(
@@ -99,7 +93,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
         super().__init__()
 
-    async def _send_reports(self, component_ids: frozenset[int]) -> None:
+    async def _send_reports(self, component_ids: frozenset[ComponentId]) -> None:
         """Send reports for a set of components, to all subscribers.
 
         Args:
@@ -134,7 +128,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
     async def _bounds_tracker(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         bounds_receiver: Receiver[SystemBounds],
     ) -> None:
         """Track the power bounds of a set of components and update the cache.
@@ -149,43 +143,36 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
             await self._send_updated_target_power(component_ids, None)
             await self._send_reports(component_ids)
 
-    def _add_system_bounds_tracker(self, component_ids: frozenset[int]) -> None:
+    def _add_system_bounds_tracker(self, component_ids: frozenset[ComponentId]) -> None:
         """Add a bounds tracker.
 
         Args:
             component_ids: The component IDs for which to add a bounds tracker.
-
-        Raises:
-            NotImplementedError: When the pool type is not supported.
         """
         bounds_receiver: Receiver[SystemBounds]
         # pylint: disable=protected-access
-        if self._component_category is ComponentCategory.BATTERY:
+        if issubclass(self._component_class, Battery):
             battery_pool = _data_pipeline.new_battery_pool(
                 priority=-sys.maxsize - 1, component_ids=component_ids
             )
             bounds_receiver = battery_pool._system_power_bounds.new_receiver()
-        elif self._component_category is ComponentCategory.EV_CHARGER:
+        elif issubclass(self._component_class, EvCharger):
             ev_charger_pool = _data_pipeline.new_ev_charger_pool(
                 priority=-sys.maxsize - 1, component_ids=component_ids
             )
             bounds_receiver = ev_charger_pool._system_power_bounds.new_receiver()
-        elif (
-            self._component_category is ComponentCategory.INVERTER
-            and self._component_type is InverterType.SOLAR
-        ):
+        elif issubclass(self._component_class, SolarInverter):
             pv_pool = _data_pipeline.new_pv_pool(
                 priority=-sys.maxsize - 1, component_ids=component_ids
             )
             bounds_receiver = pv_pool._system_power_bounds.new_receiver()
         # pylint: enable=protected-access
         else:
-            err = (
-                "PowerManagingActor: Unsupported component category: "
-                f"{self._component_category}"
+            _logger.error(
+                "PowerManagingActor: Unsupported component class: %s",
+                self._component_class.__name__,
             )
-            _logger.error(err)
-            raise NotImplementedError(err)
+            assert_never(self._component_class)
 
         self._system_bounds[component_ids] = SystemBounds(
             timestamp=datetime.now(tz=timezone.utc),
@@ -236,7 +223,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
     def _calculate_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
         must_send: bool = False,
     ) -> Power | None:
@@ -309,7 +296,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
     async def _send_updated_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
         must_send: bool = False,
     ) -> None:

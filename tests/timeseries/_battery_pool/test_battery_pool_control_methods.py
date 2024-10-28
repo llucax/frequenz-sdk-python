@@ -190,7 +190,8 @@ class TestBatteryPoolControl:
         - all batteries are working, then one battery stops working.
         """
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
 
         await self._patch_battery_pool_status(mocks, mocker)
@@ -293,7 +294,8 @@ class TestBatteryPoolControl:
         - all batteries are working.
         """
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
 
         await self._patch_battery_pool_status(mocks, mocker)
@@ -350,7 +352,8 @@ class TestBatteryPoolControl:
         - all batteries are working.
         """
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
 
         await self._patch_battery_pool_status(mocks, mocker)
@@ -413,7 +416,8 @@ class TestBatteryPoolControl:
         - all batteries are working, but have exclusion bounds.
         """
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
         await self._patch_battery_pool_status(mocks, mocker)
         await self._init_data_for_batteries(mocks, exclusion_bounds=(-100.0, 100.0))
@@ -539,7 +543,8 @@ class TestBatteryPoolControl:
         - all batteries are working.
         """
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
 
         await self._patch_battery_pool_status(mocks, mocker)

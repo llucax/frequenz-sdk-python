@@ -11,7 +11,8 @@ from unittest.mock import AsyncMock
 import async_solipsism
 import pytest
 from frequenz.channels import Receiver
-from frequenz.client.microgrid import InverterComponentState
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import ComponentStateCode
 from frequenz.quantities import Power
 from pytest_mock import MockerFixture
 
@@ -67,7 +68,7 @@ class TestPVPoolControl:
                 InverterDataWrapper(
                     comp_id,
                     now,
-                    component_state=InverterComponentState.IDLE,
+                    states={ComponentStateCode.READY},
                     active_power=0.0,
                     active_power_inclusion_lower_bound=-10000.0 * (idx + 1),
                     active_power_inclusion_upper_bound=0.0,
@@ -75,17 +76,19 @@ class TestPVPoolControl:
                 0.05,
             )
 
-    async def _fail_pv_inverters(self, fail_ids: list[int], mocks: _Mocks) -> None:
+    async def _fail_pv_inverters(
+        self, fail_ids: list[ComponentId], mocks: _Mocks
+    ) -> None:
         now = datetime.now(tz=timezone.utc)
         for idx, comp_id in enumerate(mocks.microgrid.pv_inverter_ids):
             mocks.streamer.update_stream(
                 InverterDataWrapper(
                     comp_id,
                     now,
-                    component_state=(
-                        InverterComponentState.ERROR
+                    states=(
+                        {ComponentStateCode.ERROR}
                         if comp_id in fail_ids
-                        else InverterComponentState.IDLE
+                        else {ComponentStateCode.READY}
                     ),
                     active_power=0.0,
                     active_power_inclusion_lower_bound=-10000.0 * (idx + 1),
@@ -136,7 +139,8 @@ class TestPVPoolControl:
     ) -> None:
         """Test setting power."""
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
 
         await self._init_pv_inverters(mocks)
