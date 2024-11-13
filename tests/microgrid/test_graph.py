@@ -230,40 +230,43 @@ class TestComponentGraph:
     @pytest.mark.parametrize(
         "int_ids, expected",
         [
-            ({1}, set()),
-            ({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, set()),
+            ({1}, []),
+            ({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, []),
             (
                 {11},
-                {
+                [
                     GridConnectionPoint(
                         id=ComponentId(11),
                         microgrid_id=_MICROGRID_ID,
                         rated_fuse_current=10_000,
                     )
-                },
+                ],
             ),
-            ({21}, {Meter(id=ComponentId(21), microgrid_id=_MICROGRID_ID)}),
-            ({41}, {Meter(id=ComponentId(41), microgrid_id=_MICROGRID_ID)}),
-            ({51}, {BatteryInverter(id=ComponentId(51), microgrid_id=_MICROGRID_ID)}),
-            ({61}, {Battery(id=ComponentId(61), microgrid_id=_MICROGRID_ID)}),
+            ({21}, [Meter(id=ComponentId(21), microgrid_id=_MICROGRID_ID)]),
+            ({41}, [Meter(id=ComponentId(41), microgrid_id=_MICROGRID_ID)]),
+            ({51}, [BatteryInverter(id=ComponentId(51), microgrid_id=_MICROGRID_ID)]),
+            (
+                {61},
+                [UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID)],
+            ),
             (
                 {11, 61},
-                {
+                [
                     GridConnectionPoint(
                         id=ComponentId(11),
                         microgrid_id=_MICROGRID_ID,
                         rated_fuse_current=10_000,
                     ),
-                    Battery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
-                },
+                    UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
+                ],
             ),
             (
                 {9, 51, 41, 21, 101},
-                {
+                [
                     Meter(id=ComponentId(41), microgrid_id=_MICROGRID_ID),
                     BatteryInverter(id=ComponentId(51), microgrid_id=_MICROGRID_ID),
                     Meter(id=ComponentId(21), microgrid_id=_MICROGRID_ID),
-                },
+                ],
             ),
         ],
     )
@@ -271,7 +274,7 @@ class TestComponentGraph:
         self,
         sample_graph: gr.ComponentGraph,
         int_ids: set[int],
-        expected: set[Component],
+        expected: list[Component],
     ) -> None:
         """Test the graph component query with component ID filter."""
         # with component_id filter specified, we get back only components whose ID
@@ -283,51 +286,54 @@ class TestComponentGraph:
     @pytest.mark.parametrize(
         "types, expected",
         [
-            ({EvCharger}, set()),
+            ({EvCharger}, []),
             (
                 {Battery, EvCharger},
                 [UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID)],
             ),
             (
                 {GridConnectionPoint},
-                {
+                [
                     GridConnectionPoint(
                         id=ComponentId(11),
                         microgrid_id=_MICROGRID_ID,
                         rated_fuse_current=10_000,
                     )
-                },
+                ],
             ),
             (
                 {Meter},
-                {
+                [
                     Meter(id=ComponentId(21), microgrid_id=_MICROGRID_ID),
                     Meter(id=ComponentId(41), microgrid_id=_MICROGRID_ID),
-                },
+                ],
             ),
             (
                 {BatteryInverter},
-                {BatteryInverter(id=ComponentId(51), microgrid_id=_MICROGRID_ID)},
+                [BatteryInverter(id=ComponentId(51), microgrid_id=_MICROGRID_ID)],
             ),
-            ({Battery}, {Battery(id=ComponentId(61), microgrid_id=_MICROGRID_ID)}),
+            (
+                {Battery},
+                [UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID)],
+            ),
             (
                 {GridConnectionPoint, Battery},
-                {
+                [
                     GridConnectionPoint(
                         id=ComponentId(11),
                         microgrid_id=_MICROGRID_ID,
                         rated_fuse_current=10_000,
                     ),
-                    Battery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
-                },
+                    UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
+                ],
             ),
             (
                 {Meter, Battery, EvCharger},
-                {
+                [
                     Meter(id=ComponentId(21), microgrid_id=_MICROGRID_ID),
-                    Battery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
+                    UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
                     Meter(id=ComponentId(41), microgrid_id=_MICROGRID_ID),
-                },
+                ],
             ),
         ],
     )
@@ -335,13 +341,13 @@ class TestComponentGraph:
         self,
         sample_graph: gr.ComponentGraph,
         types: set[type[Component]],
-        expected: set[Component],
+        expected: list[Component],
     ) -> None:
         """Test the graph component query with component category filter."""
         # with component_id filter specified, we get back only components whose ID
         # matches one of the specified values
         assert len(sample_graph.components(filter_by_types=types)) == len(expected)
-        assert sample_graph.components(filter_by_types=types) == expected
+        assert sample_graph.components(filter_by_types=types) == expected)
 
     @pytest.mark.parametrize(
         "int_ids, types, expected",
@@ -349,27 +355,27 @@ class TestComponentGraph:
             (
                 {11},
                 {GridConnectionPoint},
-                {
+                [
                     GridConnectionPoint(
                         id=ComponentId(11),
                         microgrid_id=_MICROGRID_ID,
                         rated_fuse_current=10_000,
                     )
-                },
+                ],
             ),
-            ({31}, {GridConnectionPoint}, set()),
+            ({31}, {GridConnectionPoint}, []),
             (
                 {61},
                 {Battery},
-                {Battery(id=ComponentId(61), microgrid_id=_MICROGRID_ID)},
+                [UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID)],
             ),
             (
                 {11, 21, 31, 61},
                 {Meter, Battery},
-                {
-                    Battery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
+                [
+                    UnspecifiedBattery(id=ComponentId(61), microgrid_id=_MICROGRID_ID),
                     Meter(id=ComponentId(21), microgrid_id=_MICROGRID_ID),
-                },
+                ],
             ),
         ],
     )
@@ -378,7 +384,7 @@ class TestComponentGraph:
         sample_graph: gr.ComponentGraph,
         int_ids: set[int],
         types: set[type[Component]],
-        expected: set[Component],
+        expected: list[Component],
     ) -> None:
         """Test the graph component query with composite filter."""
         # when both filters are applied, they are combined via AND logic, i.e.
@@ -389,19 +395,17 @@ class TestComponentGraph:
             sample_graph.components(filter_by_ids=ids, filter_by_types=types)
         ) == len(expected)
         assert (
-            set(sample_graph.components(filter_by_ids=ids, filter_by_types=types))
-            == expected
-        )
+            sample_graph.components(filter_by_ids=ids, filter_by_types=types)
+        ) == expected
 
     def test_components_without_filters(
-        self, sample_input_components: set[Component], sample_graph: gr.ComponentGraph
+        self, sample_input_components: list[Component], sample_graph: gr.ComponentGraph
     ) -> None:
         """Test the graph component query without filters."""
         # without any filter applied, we get back all the components in the graph
-        assert len(sample_graph.components()) == len(sample_input_components)
         assert sample_graph.components() == sample_input_components
 
-    def test_connection_filters(self) -> None:
+    def test_connection_filters(self) -> None:  # pylint: disable=too-many-locals
         """Test the graph connection query with filters."""
         # Components
         grid_1 = GridConnectionPoint(
@@ -434,71 +438,73 @@ class TestComponentGraph:
 
         # with start filter applied, we get back only connections whose `start`
         # component matches one of the provided IDs
-        assert graph.connections(filter_by_start={ComponentId(8)}) == set()
-        assert graph.connections(filter_by_start={ComponentId(7)}) == set()
-        assert graph.connections(filter_by_start={charger_6.id}) == set()
-        assert graph.connections(filter_by_start={charger_5.id}) == set()
-        assert graph.connections(filter_by_start={charger_4.id}) == set()
-        assert graph.connections(filter_by_start={meter_3.id}) == set()
-        assert graph.connections(filter_by_start={meter_2.id}) == {
+        assert graph.connections(filter_by_start={ComponentId(8)}) == []
+        assert graph.connections(filter_by_start={ComponentId(7)}) == []
+        assert graph.connections(filter_by_start={charger_6.id}) == []
+        assert graph.connections(filter_by_start={charger_5.id}) == []
+        assert graph.connections(filter_by_start={charger_4.id}) == []
+        assert graph.connections(filter_by_start={meter_3.id}) == []
+        assert graph.connections(filter_by_start={meter_2.id}) == [
             conn_2_4,
             conn_2_5,
             conn_2_6,
-        }
-        assert graph.connections(filter_by_start={grid_1.id}) == {conn_1_2, conn_1_3}
+        ]
+        assert graph.connections(filter_by_start={grid_1.id}) == [conn_1_2, conn_1_3]
         assert graph.connections(
             filter_by_start={grid_1.id, meter_3.id, charger_5.id}
-        ) == {conn_1_2, conn_1_3}
+        ) == [conn_1_2, conn_1_3]
         assert graph.connections(
             filter_by_start={grid_1.id, meter_2.id, charger_5.id, charger_6.id}
-        ) == {conn_1_2, conn_1_3, conn_2_4, conn_2_5, conn_2_6}
+        ) == [conn_1_2, conn_1_3, conn_2_4, conn_2_5, conn_2_6]
 
         # with end filter applied, we get back only connections whose `end`
         # component matches one of the provided IDs
-        assert graph.connections(filter_by_end={ComponentId(8)}) == set()
-        assert graph.connections(filter_by_end={charger_6.id}) == {conn_2_6}
-        assert graph.connections(filter_by_end={charger_5.id}) == {conn_2_5}
-        assert graph.connections(filter_by_end={charger_4.id}) == {conn_2_4}
-        assert graph.connections(filter_by_end={meter_3.id}) == {conn_1_3}
-        assert graph.connections(filter_by_end={meter_2.id}) == {conn_1_2}
-        assert graph.connections(filter_by_end={grid_1.id}) == set()
-        assert graph.connections(filter_by_end={grid_1.id, meter_2.id, meter_3.id}) == {
+        assert graph.connections(filter_by_end={ComponentId(8)}) == []
+        assert graph.connections(filter_by_end={charger_6.id}) == [conn_2_6]
+        assert graph.connections(filter_by_end={charger_5.id}) == [conn_2_5]
+        assert graph.connections(filter_by_end={charger_4.id}) == [conn_2_4]
+        assert graph.connections(filter_by_end={meter_3.id}) == [conn_1_3]
+        assert graph.connections(filter_by_end={meter_2.id}) == [conn_1_2]
+        assert graph.connections(filter_by_end={grid_1.id}) == []
+        assert graph.connections(
+            filter_by_end={grid_1.id, meter_2.id, meter_3.id}
+        ) == [
             conn_1_2,
             conn_1_3,
-        }
+        ]
         assert graph.connections(
             filter_by_end={charger_4.id, charger_5.id, charger_6.id}
-        ) == {conn_2_4, conn_2_5, conn_2_6}
+        ) == [conn_2_4, conn_2_5, conn_2_6]
 
         assert graph.connections(
             filter_by_end={meter_2.id, charger_4.id, charger_6.id, ComponentId(8)}
-        ) == {conn_1_2, conn_2_4, conn_2_6}
-        assert graph.connections(filter_by_end={grid_1.id}) == set()
+        ) == [conn_1_2, conn_2_4, conn_2_6]
+        assert graph.connections(filter_by_end={grid_1.id}) == []
 
         # when both filters are applied, they are combined via AND logic, i.e.
         # a connection must have its `start` matching one of the provided start
         # values, and its `end` matching one of the provided end values
         assert graph.connections(
             filter_by_start={grid_1.id}, filter_by_end={meter_2.id}
-        ) == {conn_1_2}
+        ) == [conn_1_2]
         assert (
             graph.connections(filter_by_start={meter_2.id}, filter_by_end={meter_3.id})
-            == set()
+            == []
         )
         assert graph.connections(
             filter_by_start={grid_1.id, meter_2.id},
             filter_by_end={meter_3.id, charger_4.id},
-        ) == {
+        ) == [
             conn_1_3,
             conn_2_4,
-        }
+        ]
         assert graph.connections(
             filter_by_start={meter_2.id, meter_3.id},
             filter_by_end={charger_5.id, charger_6.id, ComponentId(7)},
-        ) == {
+        ) == [
             conn_2_5,
             conn_2_6,
-        }
+        ]
 
     def test_dfs_search_two_grid_meters(self) -> None:
         """Test DFS searching PV components in a graph with two grid meters."""
@@ -520,7 +526,7 @@ class TestComponentGraph:
             },
         )
 
-        result = graph.dfs(grid_1, set(), graph.is_pv_inverter)
+        result = graph.dfs(grid_1, [], graph.is_pv_inverter)
         assert result == {solar_inverter_4, solar_inverter_5}
 
     def test_dfs_search_grid_meter(self) -> None:
@@ -823,7 +829,7 @@ class Test_MicrogridComponentGraph:
                 },
             )
 
-    def test_refresh_from(self) -> None:
+    def test_refresh_from(self) -> None:  # pylint: disable=too-many-locals
         """Test the refresh_from method."""
         graph = gr._MicrogridComponentGraph()
         assert set(graph.components()) == set()
@@ -846,7 +852,7 @@ class Test_MicrogridComponentGraph:
         meter_3 = Meter(id=ComponentId(3), microgrid_id=_MICROGRID_ID)
         meter_4 = Meter(id=ComponentId(4), microgrid_id=_MICROGRID_ID)
         inverter_5 = UnspecifiedInverter(id=ComponentId(5), microgrid_id=_MICROGRID_ID)
-        battery_6 = Battery(id=ComponentId(6), microgrid_id=_MICROGRID_ID)
+        battery_6 = UnspecifiedBattery(id=ComponentId(6), microgrid_id=_MICROGRID_ID)
         grid_7 = GridConnectionPoint(
             id=ComponentId(7), microgrid_id=_MICROGRID_ID, rated_fuse_current=10_000
         )
@@ -1062,7 +1068,9 @@ class Test_MicrogridComponentGraph:
         inverter_727 = UnspecifiedInverter(
             id=ComponentId(727), microgrid_id=_MICROGRID_ID
         )
-        battery_737 = Battery(id=ComponentId(737), microgrid_id=_MICROGRID_ID)
+        battery_737 = UnspecifiedBattery(
+            id=ComponentId(737), microgrid_id=_MICROGRID_ID
+        )
         meter_747 = Meter(id=ComponentId(747), microgrid_id=_MICROGRID_ID)
         expected_components = [
             grid_707,
@@ -1575,7 +1583,7 @@ class TestComponentTypeIdentification:
         grid_meter_2 = Meter(id=ComponentId(2), microgrid_id=_MICROGRID_ID)
         solar_inv_3 = SolarInverter(id=ComponentId(3), microgrid_id=_MICROGRID_ID)
         battery_inv_4 = BatteryInverter(id=ComponentId(4), microgrid_id=_MICROGRID_ID)
-        battery_5 = Battery(id=ComponentId(5), microgrid_id=_MICROGRID_ID)
+        battery_5 = UnspecifiedBattery(id=ComponentId(5), microgrid_id=_MICROGRID_ID)
 
         graph = gr._MicrogridComponentGraph(
             components={
@@ -1621,7 +1629,7 @@ class TestComponentTypeIdentification:
         pv_inv_4 = SolarInverter(id=ComponentId(4), microgrid_id=_MICROGRID_ID)
         battery_meter_5 = Meter(id=ComponentId(5), microgrid_id=_MICROGRID_ID)
         battery_inv_6 = BatteryInverter(id=ComponentId(6), microgrid_id=_MICROGRID_ID)
-        battery_7 = Battery(id=ComponentId(7), microgrid_id=_MICROGRID_ID)
+        battery_7 = UnspecifiedBattery(id=ComponentId(7), microgrid_id=_MICROGRID_ID)
 
         graph = gr._MicrogridComponentGraph(
             components={

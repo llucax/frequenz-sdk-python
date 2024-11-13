@@ -849,9 +849,9 @@ class _MicrogridComponentGraph(
     def dfs(
         self,
         current_node: Component,
-        visited: set[Component],
+        visited: set[ComponentId],
         condition: Callable[[Component], bool],
-    ) -> set[Component]:
+    ) -> list[Component]:
         """
         Search for components that fulfill the condition in the Graph.
 
@@ -867,18 +867,18 @@ class _MicrogridComponentGraph(
             A set of component ids where the corresponding components fulfill
             the condition function.
         """
-        if current_node in visited:
-            return set()
+        if current_node.id in visited:
+            return []
 
-        visited.add(current_node)
+        visited.add(current_node.id)
 
         if condition(current_node):
-            return {current_node}
+            return [current_node]
 
-        component: set[Component] = set()
+        component: list[Component] = []
 
         for successor in self.successors(current_node.id):
-            component.update(self.dfs(successor, visited, condition))
+            component.extend(self.dfs(successor, visited, condition))
 
         return component
 
