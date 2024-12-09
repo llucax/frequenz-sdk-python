@@ -6,7 +6,7 @@
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Annotated, Any
+from typing import Annotated, Any, Final
 
 import marshmallow
 import marshmallow.validate
@@ -116,6 +116,7 @@ class LoggingConfigUpdatingActor(Actor):
         self,
         *,
         config_recv: Receiver[Mapping[str, Any]],
+        default_config: LoggingConfig = LoggingConfig(),
         log_datefmt: str = "%Y-%m-%dT%H:%M:%S%z",
         log_format: str = "%(asctime)s %(levelname)-8s %(name)s:%(lineno)s: %(message)s",
         name: str | None = None,
@@ -124,6 +125,8 @@ class LoggingConfigUpdatingActor(Actor):
 
         Args:
             config_recv: The receiver to listen for configuration changes.
+            default_config: The default configuration for the logging system when the
+                configuration is not yet available.
             log_datefmt: Use the specified date/time format in logs.
             log_format: Use the specified format string in logs.
             name: The name of this actor. If `None`, `str(id(self))` will be used. This
@@ -137,10 +140,16 @@ class LoggingConfigUpdatingActor(Actor):
         """
         self._config_recv = config_recv
 
+        self.default_config: Final[LoggingConfig] = default_config
+        """The default configuration for the logging system.
+
+        This configuration is used when the configuration is not yet available.
+        """
+
         # Setup default configuration.
         # This ensures logging is configured even if actor fails to start or
         # if the configuration cannot be loaded.
-        self._current_config: LoggingConfig = LoggingConfig()
+        self._current_config: LoggingConfig = default_config
 
         super().__init__(name=name)
 
@@ -166,6 +175,8 @@ class LoggingConfigUpdatingActor(Actor):
 
     def _update_logging(self, config: LoggingConfig) -> None:
         """Configure the logging level."""
+        # TODO: do _recursive_update(config, self.default_config) here
+
         # If the logger is not in the new config, set it to NOTSET
         loggers_to_unset = self._current_config.loggers.keys() - config.loggers.keys()
         for logger_id in loggers_to_unset:
@@ -188,3 +199,27 @@ class LoggingConfigUpdatingActor(Actor):
             logging.getLogger(logger_id).setLevel(logger_config.level)
 
         _logger.info("Logging config changed to: %s", self._current_config)
+
+
+def _recursive_update(
+    target: dict[str, Any], overrides: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Recursively updates dictionary d1 with values from dictionary d2.
+
+    Args:
+        target: The original dictionary to be updated.
+        overrides: The dictionary with updates.
+
+    Returns:
+        The updated dictionary.
+    """
+    for key, value in overrides.items():
+        if (
+            key in target
+            and isinstance(target[key], MutableMapping)
+            and isinstance(value, MutableMapping)
+        ):
+            _recursive_update(target[key], value)
+        else:
+            target[key] = value
+    return target
