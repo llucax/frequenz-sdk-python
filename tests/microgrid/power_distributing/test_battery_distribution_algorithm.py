@@ -8,9 +8,10 @@ from collections.abc import Sequence, Set
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from frequenz.client.microgrid import BatteryData, InverterData
+from frequenz.client.microgrid import ComponentId
 from pytest import approx, raises
 
+from frequenz.sdk.microgrid._old_component_data import BatteryData, InverterData
 from frequenz.sdk.microgrid._power_distributing._distribution_algorithm import (
     AggregatedBatteryData,
     BatteryDistributionAlgorithm,
@@ -39,7 +40,7 @@ class Metric:
 
 
 def battery_msg(  # pylint: disable=too-many-arguments
-    component_id: int,
+    component_id: ComponentId,
     capacity: Metric,
     soc: Metric,
     power: PowerBounds,
@@ -72,7 +73,7 @@ def battery_msg(  # pylint: disable=too-many-arguments
 
 
 def inverter_msg(
-    component_id: int,
+    component_id: ComponentId,
     power: PowerBounds,
     timestamp: datetime = datetime.now(timezone.utc),
 ) -> InverterData:
@@ -115,8 +116,10 @@ def create_components(
     """
     components: list[InvBatPair] = []
     for i in range(0, num):
-        battery = battery_msg(2 * i, capacity[i], soc[i], power_bounds[2 * i])
-        inverter = inverter_msg(2 * i + 1, power_bounds[2 * i + 1])
+        battery = battery_msg(
+            ComponentId(2 * i), capacity[i], soc[i], power_bounds[2 * i]
+        )
+        inverter = inverter_msg(ComponentId(2 * i + 1), power_bounds[2 * i + 1])
         components.append(InvBatPair(AggregatedBatteryData([battery]), [inverter]))
     return components
 
@@ -140,12 +143,13 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
 
         if share_inverter:
             shared_inverter = InverterDataWrapper(
-                component_id=start_id + 1, timestamp=datetime.now(tz=timezone.utc)
+                component_id=ComponentId(start_id + 1),
+                timestamp=datetime.now(tz=timezone.utc),
             )
 
         for i in range(start_id, num):
             battery_data = BatteryDataWrapper(
-                component_id=2 * i,
+                component_id=ComponentId(2 * i),
                 timestamp=datetime.now(tz=timezone.utc),
                 capacity=capacity[i],
             )
@@ -154,7 +158,8 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
                 inverter_data = shared_inverter
             else:
                 inverter_data = InverterDataWrapper(
-                    component_id=2 * i + 1, timestamp=datetime.now(tz=timezone.utc)
+                    component_id=ComponentId(2 * i + 1),
+                    timestamp=datetime.now(tz=timezone.utc),
                 )
 
             components.append(
@@ -184,9 +189,12 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         capacity: list[float] = [98000]
         components = self.create_components_with_capacity(1, capacity)
 
-        available_soc: dict[int, float] = {0: 40}
-        incl_bounds: dict[int, float] = {0: 500, 1: 500}
-        excl_bounds: dict[int, float] = {0: 0, 1: 0}
+        available_soc: dict[ComponentId, float] = {ComponentId(0): 40}
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 500,
+            ComponentId(1): 500,
+        }
+        excl_bounds: dict[ComponentId, float] = {ComponentId(0): 0, ComponentId(1): 0}
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -197,7 +205,7 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 500})
+        assert result.distribution == approx({ComponentId(1): 500})
         assert result.remaining_power == approx(150.0)
 
     def test_distribute_power_two_batteries_1(self) -> None:
@@ -209,9 +217,22 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         capacity: list[float] = [98000, 98000]
         components = self.create_components_with_capacity(2, capacity)
 
-        available_soc: dict[int, float] = {0: 40, 2: 20}
-        incl_bounds: dict[int, float] = {0: 500, 2: 500, 1: 500, 3: 500}
-        excl_bounds: dict[int, float] = {0: 0, 2: 0, 1: 0, 3: 0}
+        available_soc: dict[ComponentId, float] = {
+            ComponentId(0): 40,
+            ComponentId(2): 20,
+        }
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 500,
+            ComponentId(2): 500,
+            ComponentId(1): 500,
+            ComponentId(3): 500,
+        }
+        excl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 0,
+            ComponentId(2): 0,
+            ComponentId(1): 0,
+            ComponentId(3): 0,
+        }
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -222,7 +243,7 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 400, 3: 200})
+        assert result.distribution == approx({ComponentId(1): 400, ComponentId(3): 200})
         assert result.remaining_power == approx(0.0)
 
     def test_distribute_power_two_batteries_2(self) -> None:
@@ -234,9 +255,22 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         capacity: list[float] = [49000, 98000]
         components = self.create_components_with_capacity(2, capacity)
 
-        available_soc: dict[int, float] = {0: 20, 2: 20}
-        incl_bounds: dict[int, float] = {0: 500, 2: 500, 1: 500, 3: 500}
-        excl_bounds: dict[int, float] = {0: 0, 2: 0, 1: 0, 3: 0}
+        available_soc: dict[ComponentId, float] = {
+            ComponentId(0): 20,
+            ComponentId(2): 20,
+        }
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 500,
+            ComponentId(2): 500,
+            ComponentId(1): 500,
+            ComponentId(3): 500,
+        }
+        excl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 0,
+            ComponentId(2): 0,
+            ComponentId(1): 0,
+            ComponentId(3): 0,
+        }
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -247,7 +281,7 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 200, 3: 400})
+        assert result.distribution == approx({ComponentId(1): 200, ComponentId(3): 400})
         assert result.remaining_power == approx(0.0)
 
     def test_distribute_power_two_batteries_one_inverter(self) -> None:
@@ -261,9 +295,20 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             2, capacity, share_inverter=True
         )
 
-        available_soc: dict[int, float] = {0: 20, 2: 30}
-        incl_bounds: dict[int, float] = {0: 500, 2: 500, 1: 500}
-        excl_bounds: dict[int, float] = {0: 0, 2: 0, 1: 0}
+        available_soc: dict[ComponentId, float] = {
+            ComponentId(0): 20,
+            ComponentId(2): 30,
+        }
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 500,
+            ComponentId(2): 500,
+            ComponentId(1): 500,
+        }
+        excl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 0,
+            ComponentId(2): 0,
+            ComponentId(1): 0,
+        }
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -274,7 +319,7 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 500})
+        assert result.distribution == approx({ComponentId(1): 500})
         assert result.remaining_power == approx(100.0)
 
     def test_distribute_power_two_batteries_bounds(self) -> None:
@@ -287,9 +332,22 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         capacity: list[float] = [49000, 98000]
         components = self.create_components_with_capacity(2, capacity)
 
-        available_soc: dict[int, float] = {0: 40, 2: 20}
-        incl_bounds: dict[int, float] = {0: 250, 2: 330, 1: 250, 3: 330}
-        excl_bounds: dict[int, float] = {0: 0, 2: 0, 1: 0, 3: 0}
+        available_soc: dict[ComponentId, float] = {
+            ComponentId(0): 40,
+            ComponentId(2): 20,
+        }
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 250,
+            ComponentId(2): 330,
+            ComponentId(1): 250,
+            ComponentId(3): 330,
+        }
+        excl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 0,
+            ComponentId(2): 0,
+            ComponentId(1): 0,
+            ComponentId(3): 0,
+        }
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -300,7 +358,7 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 250, 3: 330})
+        assert result.distribution == approx({ComponentId(1): 250, ComponentId(3): 330})
         assert result.remaining_power == approx(20.0)
 
     def test_distribute_power_three_batteries(self) -> None:
@@ -308,16 +366,27 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         capacity: list[float] = [49000, 98000, 49000]
         components = self.create_components_with_capacity(3, capacity)
 
-        available_soc: dict[int, float] = {0: 40, 2: 20, 4: 20}
-        incl_bounds: dict[int, float] = {
-            0: 1000,
-            2: 1000,
-            4: 1000,
-            1: 1000,
-            3: 3400,
-            5: 3550,
+        available_soc: dict[ComponentId, float] = {
+            ComponentId(0): 40,
+            ComponentId(2): 20,
+            ComponentId(4): 20,
         }
-        excl_bounds: dict[int, float] = {0: 0, 2: 0, 4: 0, 1: 0, 3: 0, 5: 0}
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 1000,
+            ComponentId(2): 1000,
+            ComponentId(4): 1000,
+            ComponentId(1): 1000,
+            ComponentId(3): 3400,
+            ComponentId(5): 3550,
+        }
+        excl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 0,
+            ComponentId(2): 0,
+            ComponentId(4): 0,
+            ComponentId(1): 0,
+            ComponentId(3): 0,
+            ComponentId(5): 0,
+        }
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -328,7 +397,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 400, 3: 400, 5: 200})
+        assert result.distribution == approx(
+            {ComponentId(1): 400, ComponentId(3): 400, ComponentId(5): 200}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_distribute_power_three_batteries_2(self) -> None:
@@ -336,16 +407,27 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         capacity: list[float] = [98000, 49000, 49000]
         components = self.create_components_with_capacity(3, capacity)
 
-        available_soc: dict[int, float] = {0: 80, 2: 10, 4: 20}
-        incl_bounds: dict[int, float] = {
-            0: 1000,
-            2: 1000,
-            4: 1000,
-            1: 400,
-            3: 3400,
-            5: 300,
+        available_soc: dict[ComponentId, float] = {
+            ComponentId(0): 80,
+            ComponentId(2): 10,
+            ComponentId(4): 20,
         }
-        excl_bounds: dict[int, float] = {0: 0, 2: 0, 4: 0, 1: 0, 3: 0, 5: 0}
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 1000,
+            ComponentId(2): 1000,
+            ComponentId(4): 1000,
+            ComponentId(1): 400,
+            ComponentId(3): 3400,
+            ComponentId(5): 300,
+        }
+        excl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 0,
+            ComponentId(2): 0,
+            ComponentId(4): 0,
+            ComponentId(1): 0,
+            ComponentId(3): 0,
+            ComponentId(5): 0,
+        }
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -356,7 +438,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 400, 3: 300, 5: 300})
+        assert result.distribution == approx(
+            {ComponentId(1): 400, ComponentId(3): 300, ComponentId(5): 300}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_distribute_power_three_batteries_3(self) -> None:
@@ -364,16 +448,27 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         capacity: list[float] = [0, 49000, 0]
         components = self.create_components_with_capacity(3, capacity)
 
-        available_soc: dict[int, float] = {0: 80, 2: 10, 4: 20}
-        incl_bounds: dict[int, float] = {
-            0: 1000,
-            2: 1000,
-            4: 1000,
-            1: 500,
-            3: 300,
-            5: 300,
+        available_soc: dict[ComponentId, float] = {
+            ComponentId(0): 80,
+            ComponentId(2): 10,
+            ComponentId(4): 20,
         }
-        excl_bounds: dict[int, float] = {0: 0, 2: 0, 4: 0, 1: 0, 3: 0, 5: 0}
+        incl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 1000,
+            ComponentId(2): 1000,
+            ComponentId(4): 1000,
+            ComponentId(1): 500,
+            ComponentId(3): 300,
+            ComponentId(5): 300,
+        }
+        excl_bounds: dict[ComponentId, float] = {
+            ComponentId(0): 0,
+            ComponentId(2): 0,
+            ComponentId(4): 0,
+            ComponentId(1): 0,
+            ComponentId(3): 0,
+            ComponentId(5): 0,
+        }
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm._distribute_power(  # pylint: disable=protected-access
@@ -384,7 +479,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
             excl_bounds=excl_bounds,
         )
 
-        assert result.distribution == approx({1: 0, 3: 300, 5: 0})
+        assert result.distribution == approx(
+            {ComponentId(1): 0, ComponentId(3): 300, ComponentId(5): 0}
+        )
         assert result.remaining_power == approx(700.0)
 
     # Test distribute supply power
@@ -412,7 +509,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-1200, components)
 
-        assert result.distribution == approx({1: -200, 3: -400, 5: -600})
+        assert result.distribution == approx(
+            {ComponentId(1): -200, ComponentId(3): -400, ComponentId(5): -600}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_supply_three_batteries_2(self) -> None:
@@ -437,7 +536,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-1400, components)
 
-        assert result.distribution == approx({1: -400, 3: -400, 5: -600})
+        assert result.distribution == approx(
+            {ComponentId(1): -400, ComponentId(3): -400, ComponentId(5): -600}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_supply_three_batteries_3(self) -> None:
@@ -462,7 +563,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-1400, components)
 
-        assert result.distribution == approx({1: -500, 3: -100, 5: -800})
+        assert result.distribution == approx(
+            {ComponentId(1): -500, ComponentId(3): -100, ComponentId(5): -800}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_supply_three_batteries_4(self) -> None:
@@ -487,7 +590,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-1700, components)
 
-        assert result.distribution == approx({1: -600, 3: -100, 5: -800})
+        assert result.distribution == approx(
+            {ComponentId(1): -600, ComponentId(3): -100, ComponentId(5): -800}
+        )
         assert result.remaining_power == approx(-200.0)
 
     def test_supply_three_batteries_5(self) -> None:
@@ -512,7 +617,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-1700, components)
 
-        assert result.distribution == approx({1: 0, 3: -100, 5: 0})
+        assert result.distribution == approx(
+            {ComponentId(1): 0, ComponentId(3): -100, ComponentId(5): 0}
+        )
         assert result.remaining_power == approx(-1600.0)
 
     def test_supply_two_batteries_1(self) -> None:
@@ -535,7 +642,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-600, components)
 
-        assert result.distribution == approx({1: -500, 3: -100})
+        assert result.distribution == approx(
+            {ComponentId(1): -500, ComponentId(3): -100}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_supply_two_batteries_2(self) -> None:
@@ -557,7 +666,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-600, components)
 
-        assert result.distribution == approx({1: -346.1538, 3: -253.8461})
+        assert result.distribution == approx(
+            {ComponentId(1): -346.1538, ComponentId(3): -253.8461}
+        )
         assert result.remaining_power == approx(0.0)
 
     # Test consumption power distribution
@@ -583,7 +694,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(1200, components)
 
-        assert result.distribution == approx({1: 200, 3: 400, 5: 600})
+        assert result.distribution == approx(
+            {ComponentId(1): 200, ComponentId(3): 400, ComponentId(5): 600}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_consumption_three_batteries_2(self) -> None:
@@ -608,7 +721,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(1400, components)
 
-        assert result.distribution == approx({1: 400, 3: 400, 5: 600})
+        assert result.distribution == approx(
+            {ComponentId(1): 400, ComponentId(3): 400, ComponentId(5): 600}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_consumption_three_batteries_3(self) -> None:
@@ -633,7 +748,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(1400, components)
 
-        assert result.distribution == approx({1: 500, 3: 100, 5: 800})
+        assert result.distribution == approx(
+            {ComponentId(1): 500, ComponentId(3): 100, ComponentId(5): 800}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_consumption_three_batteries_4(self) -> None:
@@ -658,7 +775,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(1700, components)
 
-        assert result.distribution == approx({1: 600, 3: 100, 5: 800})
+        assert result.distribution == approx(
+            {ComponentId(1): 600, ComponentId(3): 100, ComponentId(5): 800}
+        )
         assert result.remaining_power == approx(200.0)
 
     def test_consumption_three_batteries_5(self) -> None:
@@ -683,7 +802,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(1700, components)
 
-        assert result.distribution == approx({1: 0, 3: 100, 5: 0})
+        assert result.distribution == approx(
+            {ComponentId(1): 0, ComponentId(3): 100, ComponentId(5): 0}
+        )
         assert result.remaining_power == approx(1600.0)
 
     def test_consumption_three_batteries_6(self) -> None:
@@ -708,7 +829,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(1700, components)
 
-        assert result.distribution == approx({1: 0, 3: 100, 5: 800})
+        assert result.distribution == approx(
+            {ComponentId(1): 0, ComponentId(3): 100, ComponentId(5): 800}
+        )
         assert result.remaining_power == approx(800.0)
 
     def test_consumption_three_batteries_7(self) -> None:
@@ -733,7 +856,9 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(500, components)
 
-        assert result.distribution == approx({1: 498.3388, 3: 1.661129, 5: 0})
+        assert result.distribution == approx(
+            {ComponentId(1): 498.3388, ComponentId(3): 1.661129, ComponentId(5): 0}
+        )
         assert result.remaining_power == approx(0.0)
 
     def test_consumption_two_batteries_1(self) -> None:
@@ -755,7 +880,7 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(600, components)
 
-        assert result.distribution == approx({1: 100, 3: 500})
+        assert result.distribution == approx({ComponentId(1): 100, ComponentId(3): 500})
         assert result.remaining_power == approx(0.0)
 
     def test_consumption_two_batteries_distribution_exponent(self) -> None:
@@ -777,19 +902,25 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(8000, components)
 
-        assert result.distribution == approx({1: 2000, 3: 6000})
+        assert result.distribution == approx(
+            {ComponentId(1): 2000, ComponentId(3): 6000}
+        )
         assert result.remaining_power == approx(0.0)
 
         algorithm2 = BatteryDistributionAlgorithm(distributor_exponent=2)
         result2 = algorithm2.distribute_power(8000, components)
 
-        assert result2.distribution == approx({1: 800, 3: 7200})
+        assert result2.distribution == approx(
+            {ComponentId(1): 800, ComponentId(3): 7200}
+        )
         assert result2.remaining_power == approx(0.0)
 
         algorithm3 = BatteryDistributionAlgorithm(distributor_exponent=3)
         result3 = algorithm3.distribute_power(8000, components)
 
-        assert result3.distribution == approx({1: 285.7142, 3: 7714.2857})
+        assert result3.distribution == approx(
+            {ComponentId(1): 285.7142, ComponentId(3): 7714.2857}
+        )
         assert result3.remaining_power == approx(0.0)
 
     def test_consumption_two_batteries_distribution_exponent_1(self) -> None:
@@ -811,37 +942,47 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(900, components)
 
-        assert result.distribution == approx({1: 300, 3: 600})
+        assert result.distribution == approx({ComponentId(1): 300, ComponentId(3): 600})
         assert result.remaining_power == approx(0.0)
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(8000, components)
 
-        assert result.distribution == approx({1: 2666.6666, 3: 5333.3333})
+        assert result.distribution == approx(
+            {ComponentId(1): 2666.6666, ComponentId(3): 5333.3333}
+        )
         assert result.remaining_power == approx(0.0)
 
         algorithm2 = BatteryDistributionAlgorithm(distributor_exponent=2)
         result2 = algorithm2.distribute_power(900, components)
 
-        assert result2.distribution == approx({1: 180, 3: 720})
+        assert result2.distribution == approx(
+            {ComponentId(1): 180, ComponentId(3): 720}
+        )
         assert result2.remaining_power == approx(0.0)
 
         algorithm2 = BatteryDistributionAlgorithm(distributor_exponent=2)
         result2 = algorithm2.distribute_power(8000, components)
 
-        assert result2.distribution == approx({1: 1600, 3: 6400})
+        assert result2.distribution == approx(
+            {ComponentId(1): 1600, ComponentId(3): 6400}
+        )
         assert result2.remaining_power == approx(0.0)
 
         algorithm2 = BatteryDistributionAlgorithm(distributor_exponent=3)
         result2 = algorithm2.distribute_power(900, components)
 
-        assert result2.distribution == approx({1: 100, 3: 800})
+        assert result2.distribution == approx(
+            {ComponentId(1): 100, ComponentId(3): 800}
+        )
         assert result2.remaining_power == approx(0.0)
 
         algorithm3 = BatteryDistributionAlgorithm(distributor_exponent=3)
         result3 = algorithm3.distribute_power(8000, components)
 
-        assert result3.distribution == approx({1: 888.8888, 3: 7111.1111})
+        assert result3.distribution == approx(
+            {ComponentId(1): 888.8888, ComponentId(3): 7111.1111}
+        )
         assert result3.remaining_power == approx(0.0)
 
     def test_supply_two_batteries_distribution_exponent(self) -> None:
@@ -863,19 +1004,25 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-8000, components)
 
-        assert result.distribution == approx({1: -2000, 3: -6000})
+        assert result.distribution == approx(
+            {ComponentId(1): -2000, ComponentId(3): -6000}
+        )
         assert result.remaining_power == approx(0.0)
 
         algorithm2 = BatteryDistributionAlgorithm(distributor_exponent=2)
         result2 = algorithm2.distribute_power(-8000, components)
 
-        assert result2.distribution == approx({1: -800, 3: -7200})
+        assert result2.distribution == approx(
+            {ComponentId(1): -800, ComponentId(3): -7200}
+        )
         assert result2.remaining_power == approx(0.0)
 
         algorithm3 = BatteryDistributionAlgorithm(distributor_exponent=3)
         result3 = algorithm3.distribute_power(-8000, components)
 
-        assert result3.distribution == approx({1: -285.7142, 3: -7714.2857})
+        assert result3.distribution == approx(
+            {ComponentId(1): -285.7142, ComponentId(3): -7714.2857}
+        )
         assert result3.remaining_power == approx(0.0)
 
     def test_supply_two_batteries_distribution_exponent_1(self) -> None:
@@ -897,19 +1044,25 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=1)
         result = algorithm.distribute_power(-8000, components)
 
-        assert result.distribution == approx({1: -2666.6666, 3: -5333.3333})
+        assert result.distribution == approx(
+            {ComponentId(1): -2666.6666, ComponentId(3): -5333.3333}
+        )
         assert result.remaining_power == approx(0.0)
 
         algorithm2 = BatteryDistributionAlgorithm(distributor_exponent=2)
         result2 = algorithm2.distribute_power(-8000, components)
 
-        assert result2.distribution == approx({1: -1600, 3: -6400})
+        assert result2.distribution == approx(
+            {ComponentId(1): -1600, ComponentId(3): -6400}
+        )
         assert result2.remaining_power == approx(0.0)
 
         algorithm3 = BatteryDistributionAlgorithm(distributor_exponent=3)
         result3 = algorithm3.distribute_power(-8000, components)
 
-        assert result3.distribution == approx({1: -888.8888, 3: -7111.1111})
+        assert result3.distribution == approx(
+            {ComponentId(1): -888.8888, ComponentId(3): -7111.1111}
+        )
         assert result3.remaining_power == approx(0.0)
 
     def test_supply_three_batteries_distribution_exponent_2(self) -> None:
@@ -935,7 +1088,11 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         result = algorithm.distribute_power(-8000, components)
 
         assert result.distribution == approx(
-            {1: -1777.7777, 3: -2666.6666, 5: -3555.5555}
+            {
+                ComponentId(1): -1777.7777,
+                ComponentId(3): -2666.6666,
+                ComponentId(5): -3555.5555,
+            }
         )
         assert result.remaining_power == approx(0.0)
 
@@ -943,7 +1100,11 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         result2 = algorithm2.distribute_power(-8000, components)
 
         assert result2.distribution == approx(
-            {1: -1103.4482, 3: -2482.7586, 5: -4413.7931}
+            {
+                ComponentId(1): -1103.4482,
+                ComponentId(3): -2482.7586,
+                ComponentId(5): -4413.7931,
+            }
         )
         assert result2.remaining_power == approx(0.0)
 
@@ -951,7 +1112,11 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         result3 = algorithm3.distribute_power(-8000, components)
 
         assert result3.distribution == approx(
-            {1: -646.4646, 3: -2181.8181, 5: -5171.7171}
+            {
+                ComponentId(1): -646.4646,
+                ComponentId(3): -2181.8181,
+                ComponentId(5): -5171.7171,
+            }
         )
         assert result3.remaining_power == approx(0.0)
 
@@ -977,16 +1142,20 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=0.5)
         result = algorithm.distribute_power(-1300, components)
 
-        assert result.distribution == approx({1: -600, 3: -400, 5: -300})
+        assert result.distribution == approx(
+            {ComponentId(1): -600, ComponentId(3): -400, ComponentId(5): -300}
+        )
         assert result.remaining_power == approx(0.0)
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=0)
         result = algorithm.distribute_power(-1200, components)
 
-        assert result.distribution == approx({1: -400, 3: -400, 5: -400})
+        assert result.distribution == approx(
+            {ComponentId(1): -400, ComponentId(3): -400, ComponentId(5): -400}
+        )
         assert result.remaining_power == approx(0.0)
 
-    def test_supply_two_batteries_distribution_exponent_less_then_1(self) -> None:
+    def test_supply_two_batteries_distribution_exponent_less_than_1(self) -> None:
         """Distribute power."""
         capacity: list[Metric] = [Metric(98000), Metric(98000)]
         soc: list[Metric] = [
@@ -1005,13 +1174,13 @@ class TestDistributionAlgorithm:  # pylint: disable=too-many-public-methods
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=0.5)
         result = algorithm.distribute_power(1000, components)
 
-        assert result.distribution == approx({1: 600, 3: 400})
+        assert result.distribution == approx({ComponentId(1): 600, ComponentId(3): 400})
         assert result.remaining_power == approx(0.0)
 
         algorithm = BatteryDistributionAlgorithm(distributor_exponent=0)
         result = algorithm.distribute_power(1000, components)
 
-        assert result.distribution == approx({1: 500, 3: 500})
+        assert result.distribution == approx({ComponentId(1): 500, ComponentId(3): 500})
         assert result.remaining_power == approx(0.0)
 
 
@@ -1033,7 +1202,9 @@ class TestDistWithExclBounds:
     ) -> None:
         """Assert the result is as expected, disregarding which power goes to which component."""
         assert result.remaining_power == expected_remaining_power
-        assert {*result.distribution.keys()} == expected_distribution_ids
+        assert {*result.distribution.keys()} == {
+            *map(ComponentId, expected_distribution_ids)
+        }
         assert list(sorted(result.distribution.values())) == list(
             sorted(expected_distribution_powers)
         )
@@ -1088,52 +1259,124 @@ class TestDistWithExclBounds:
 
         self.assert_result(
             algorithm.distribute_power(0, components),
-            DistributionResult({1: 0, 3: 0, 5: 0}, remaining_power=0.0),
+            DistributionResult(
+                {ComponentId(1): 0, ComponentId(3): 0, ComponentId(5): 0},
+                remaining_power=0.0,
+            ),
         )
 
         self.assert_result(
             algorithm.distribute_power(-300, components),
-            DistributionResult({1: -100, 3: -100, 5: -100}, remaining_power=0.0),
+            DistributionResult(
+                {ComponentId(1): -100, ComponentId(3): -100, ComponentId(5): -100},
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(300, components),
-            DistributionResult({1: 100, 3: 100, 5: 100}, remaining_power=0.0),
+            DistributionResult(
+                {ComponentId(1): 100, ComponentId(3): 100, ComponentId(5): 100},
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-600, components),
-            DistributionResult({1: -100, 3: -200, 5: -300}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -100,
+                    ComponentId(3): -200,
+                    ComponentId(5): -300,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(900, components),
-            DistributionResult({1: 450, 3: 300, 5: 150}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 450,
+                    ComponentId(3): 300,
+                    ComponentId(5): 150,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-900, components),
-            DistributionResult({1: -150, 3: -300, 5: -450}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -150,
+                    ComponentId(3): -300,
+                    ComponentId(5): -450,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(2200, components),
-            DistributionResult({1: 1000, 3: 833.33, 5: 366.66}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 833.33,
+                    ComponentId(5): 366.66,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-2200, components),
-            DistributionResult({1: -366.66, 3: -833.33, 5: -1000}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -366.66,
+                    ComponentId(3): -833.33,
+                    ComponentId(5): -1000,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(2800, components),
-            DistributionResult({1: 1000, 3: 1000, 5: 800}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 1000,
+                    ComponentId(5): 800,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-2800, components),
-            DistributionResult({1: -800, 3: -1000, 5: -1000}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -800,
+                    ComponentId(3): -1000,
+                    ComponentId(5): -1000,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(3800, components),
-            DistributionResult({1: 1000, 3: 1000, 5: 1000}, remaining_power=800.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 1000,
+                    ComponentId(5): 1000,
+                },
+                remaining_power=800.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-3200, components),
-            DistributionResult({1: -1000, 3: -1000, 5: -1000}, remaining_power=-200.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -1000,
+                    ComponentId(3): -1000,
+                    ComponentId(5): -1000,
+                },
+                remaining_power=-200.0,
+            ),
         )
 
     def test_scenario_2(self) -> None:
@@ -1186,57 +1429,135 @@ class TestDistWithExclBounds:
 
         self.assert_result(
             algorithm.distribute_power(-300, components),
-            DistributionResult({1: -100, 3: -100, 5: -100}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -100,
+                    ComponentId(3): -100,
+                    ComponentId(5): -100,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(300, components),
-            DistributionResult({1: 100, 3: 100, 5: 100}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 100,
+                    ComponentId(3): 100,
+                    ComponentId(5): 100,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-530, components),
             DistributionResult(
-                {1: -151.42, 3: -151.42, 5: -227.14}, remaining_power=0.0
+                {
+                    ComponentId(1): -151.42,
+                    ComponentId(3): -151.42,
+                    ComponentId(5): -227.14,
+                },
+                remaining_power=0.0,
             ),
         )
         self.assert_result(
             algorithm.distribute_power(530, components),
-            DistributionResult({1: 212, 3: 212, 5: 106}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 212,
+                    ComponentId(3): 212,
+                    ComponentId(5): 106,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(2000, components),
-            DistributionResult({1: 800, 3: 800, 5: 400}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 800,
+                    ComponentId(3): 800,
+                    ComponentId(5): 400,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-2000, components),
             DistributionResult(
-                {1: -571.42, 3: -571.42, 5: -857.14}, remaining_power=0.0
+                {
+                    ComponentId(1): -571.42,
+                    ComponentId(3): -571.42,
+                    ComponentId(5): -857.14,
+                },
+                remaining_power=0.0,
             ),
         )
         self.assert_result(
             algorithm.distribute_power(2500, components),
-            DistributionResult({1: 1000, 3: 1000, 5: 500}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 1000,
+                    ComponentId(5): 500,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-2500, components),
             DistributionResult(
-                {1: -785.71, 3: -714.28, 5: -1000.0}, remaining_power=0.0
+                {
+                    ComponentId(1): -785.71,
+                    ComponentId(3): -714.28,
+                    ComponentId(5): -1000.0,
+                },
+                remaining_power=0.0,
             ),
         )
         self.assert_result(
             algorithm.distribute_power(3000, components),
-            DistributionResult({1: 1000, 3: 1000, 5: 1000}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 1000,
+                    ComponentId(5): 1000,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-3000, components),
-            DistributionResult({1: -1000, 3: -1000, 5: -1000}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -1000,
+                    ComponentId(3): -1000,
+                    ComponentId(5): -1000,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(3500, components),
-            DistributionResult({1: 1000, 3: 1000, 5: 1000}, remaining_power=500.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 1000,
+                    ComponentId(5): 1000,
+                },
+                remaining_power=500.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-3500, components),
-            DistributionResult({1: -1000, 3: -1000, 5: -1000}, remaining_power=-500.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -1000,
+                    ComponentId(3): -1000,
+                    ComponentId(5): -1000,
+                },
+                remaining_power=-500.0,
+            ),
         )
 
     def test_scenario_3(self) -> None:
@@ -1287,37 +1608,91 @@ class TestDistWithExclBounds:
 
         self.assert_result(
             algorithm.distribute_power(-320, components),
-            DistributionResult({1: -88, 3: -108.57, 5: -123.43}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -88,
+                    ComponentId(3): -108.57,
+                    ComponentId(5): -123.43,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(320, components),
-            DistributionResult({1: 128, 3: 128, 5: 64}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 128,
+                    ComponentId(3): 128,
+                    ComponentId(5): 64,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-1800, components),
             DistributionResult(
-                {1: -514.28, 3: -514.28, 5: -771.42}, remaining_power=0.0
+                {
+                    ComponentId(1): -514.28,
+                    ComponentId(3): -514.28,
+                    ComponentId(5): -771.42,
+                },
+                remaining_power=0.0,
             ),
         )
         self.assert_result(
             algorithm.distribute_power(1800, components),
-            DistributionResult({1: 720, 3: 720, 5: 360}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 720,
+                    ComponentId(3): 720,
+                    ComponentId(5): 360,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-2800, components),
-            DistributionResult({1: -800, 3: -1000, 5: -1000}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -800,
+                    ComponentId(3): -1000,
+                    ComponentId(5): -1000,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(2800, components),
-            DistributionResult({1: 1000, 3: 1000, 5: 800}, remaining_power=0.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 1000,
+                    ComponentId(5): 800,
+                },
+                remaining_power=0.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(-3500, components),
-            DistributionResult({1: -1000, 3: -1000, 5: -1000}, remaining_power=-500.0),
+            DistributionResult(
+                {
+                    ComponentId(1): -1000,
+                    ComponentId(3): -1000,
+                    ComponentId(5): -1000,
+                },
+                remaining_power=-500.0,
+            ),
         )
         self.assert_result(
             algorithm.distribute_power(3500, components),
-            DistributionResult({1: 1000, 3: 1000, 5: 1000}, remaining_power=500.0),
+            DistributionResult(
+                {
+                    ComponentId(1): 1000,
+                    ComponentId(3): 1000,
+                    ComponentId(5): 1000,
+                },
+                remaining_power=500.0,
+            ),
         )
 
     def test_scenario_4(self) -> None:
@@ -1348,7 +1723,7 @@ class TestDistWithExclBounds:
                 AggregatedBatteryData(
                     [
                         battery_msg(
-                            component_id=1,
+                            component_id=ComponentId(1),
                             capacity=Metric(10000),
                             soc=Metric(50, Bound(10, 90)),
                             power=PowerBounds(-1500, -200, 200, 1500),
@@ -1356,8 +1731,8 @@ class TestDistWithExclBounds:
                     ]
                 ),
                 [
-                    inverter_msg(2, PowerBounds(-1000, -100, 100, 1000)),
-                    inverter_msg(3, PowerBounds(-1000, -100, 100, 1000)),
+                    inverter_msg(ComponentId(2), PowerBounds(-1000, -100, 100, 1000)),
+                    inverter_msg(ComponentId(3), PowerBounds(-1000, -100, 100, 1000)),
                 ],
             )
         ]
@@ -1422,7 +1797,7 @@ class TestDistWithExclBounds:
                 AggregatedBatteryData(
                     [
                         battery_msg(
-                            component_id=1,
+                            component_id=ComponentId(1),
                             capacity=Metric(10000),
                             soc=Metric(20, Bound(10, 90)),
                             power=PowerBounds(-1500, -200, 200, 1500),
@@ -1430,15 +1805,15 @@ class TestDistWithExclBounds:
                     ]
                 ),
                 [
-                    inverter_msg(10, PowerBounds(-1000, -100, 100, 1000)),
-                    inverter_msg(11, PowerBounds(-1000, -100, 100, 1000)),
+                    inverter_msg(ComponentId(10), PowerBounds(-1000, -100, 100, 1000)),
+                    inverter_msg(ComponentId(11), PowerBounds(-1000, -100, 100, 1000)),
                 ],
             ),
             InvBatPair(
                 AggregatedBatteryData(
                     [
                         battery_msg(
-                            component_id=2,
+                            component_id=ComponentId(2),
                             capacity=Metric(10000),
                             soc=Metric(60, Bound(10, 90)),
                             power=PowerBounds(-1500, 0, 0, 1500),
@@ -1446,8 +1821,8 @@ class TestDistWithExclBounds:
                     ]
                 ),
                 [
-                    inverter_msg(20, PowerBounds(-1000, -100, 100, 1000)),
-                    inverter_msg(21, PowerBounds(-1000, -100, 100, 1000)),
+                    inverter_msg(ComponentId(20), PowerBounds(-1000, -100, 100, 1000)),
+                    inverter_msg(ComponentId(21), PowerBounds(-1000, -100, 100, 1000)),
                 ],
             ),
         ]

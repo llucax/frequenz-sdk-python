@@ -8,15 +8,17 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterable
 
-from frequenz.client.microgrid import EVChargerData
+from frequenz.client.microgrid import ComponentId
 from frequenz.quantities import Power
+
+from ...._old_component_data import EVChargerData
 
 
 @dataclass
 class EvcState:
     """A class for tracking state of an ev charger."""
 
-    component_id: int
+    component_id: ComponentId
     """The component id of the ev charger."""
 
     last_data: EVChargerData
@@ -71,7 +73,7 @@ class EvcState:
 class EvcStates:
     """Tracks states of all ev chargers."""
 
-    _states: dict[int, EvcState]
+    _states: dict[ComponentId, EvcState]
 
     def __init__(self) -> None:
         """Initialize this instance."""
@@ -91,7 +93,7 @@ class EvcStates:
             total_allocated += evc.last_allocation
         return total_allocated
 
-    def get(self, component_id: int) -> EvcState:
+    def get(self, component_id: ComponentId) -> EvcState:
         """Return a reference to the EvcState object with the given component_id.
 
         Args:
@@ -118,7 +120,7 @@ class EvcStates:
         """
         return self._states.values()
 
-    def __contains__(self, component_id: int) -> bool:
+    def __contains__(self, component_id: ComponentId) -> bool:
         """Check if the given component_id has an associated EvcState object.
 
         Args:

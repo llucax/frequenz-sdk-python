@@ -8,9 +8,10 @@ import asyncio
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from frequenz.client.microgrid import ComponentData
+from frequenz.client.microgrid import ComponentId
 
 from frequenz.sdk._internal._asyncio import cancel_and_await
+from frequenz.sdk.microgrid._old_component_data import ComponentData
 
 from .mock_microgrid_client import MockMicrogridClient
 
@@ -32,8 +33,8 @@ class MockComponentDataStreamer:
             mock_microgrid: Mock microgrid.
         """
         self._mock_microgrid = mock_microgrid
-        self._component_data: dict[int, ComponentData] = {}
-        self._streaming_tasks: dict[int, asyncio.Task[None]] = {}
+        self._component_data: dict[ComponentId, ComponentData] = {}
+        self._streaming_tasks: dict[ComponentId, asyncio.Task[None]] = {}
 
     def start_streaming(
         self, component_data: ComponentData, sampling_rate: float
@@ -56,7 +57,7 @@ class MockComponentDataStreamer:
             self._stream_data(component_id, sampling_rate)
         )
 
-    def get_current_component_data(self, component_id: int) -> ComponentData:
+    def get_current_component_data(self, component_id: ComponentId) -> ComponentData:
         """Get component data that are currently streamed or was streaming recently.
 
         Args:
@@ -90,7 +91,7 @@ class MockComponentDataStreamer:
 
         self._component_data[cid] = new_component_data
 
-    async def stop_streaming(self, component_id: int) -> None:
+    async def stop_streaming(self, component_id: ComponentId) -> None:
         """Stop sending data from this component."""
         if task := self._streaming_tasks.pop(component_id, None):
             await cancel_and_await(task)
@@ -101,9 +102,11 @@ class MockComponentDataStreamer:
             *[self.stop_streaming(cid) for cid in self._streaming_tasks]
         )
 
-    async def _stream_data(self, component_id: int, sampling_rate: float) -> None:
+    async def _stream_data(
+        self, component_id: ComponentId, sampling_rate: float
+    ) -> None:
         while component_id in self._component_data:
             data = self._component_data[component_id]
             new_data = replace(data, timestamp=datetime.now(tz=timezone.utc))
-            await self._mock_microgrid.send(new_data)
+            await self._mock_microgrid.send(new_data.to_samples())
             await asyncio.sleep(sampling_rate)

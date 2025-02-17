@@ -8,21 +8,17 @@ import collections.abc
 import logging
 import math
 import typing
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from frequenz.channels import LatestValueCache, Receiver, Sender
-from frequenz.client.microgrid import (
-    ApiClientError,
-    BatteryData,
-    ComponentCategory,
-    InverterData,
-    OperationOutOfRange,
-)
+from frequenz.client.microgrid import ApiClientError, ComponentId, OperationOutOfRange
+from frequenz.client.microgrid.component import Battery, Inverter
 from frequenz.quantities import Power
 from typing_extensions import override
 
 from ...._internal._math import is_close_to_zero
 from ... import connection_manager
+from ..._old_component_data import BatteryData, InverterData
 from .._component_pool_status_tracker import ComponentPoolStatusTracker
 from .._component_status import BatteryStatusTracker, ComponentPoolStatus
 from .._distribution_algorithm import (
@@ -39,8 +35,9 @@ _logger = logging.getLogger(__name__)
 
 
 def _get_all_from_map(
-    source: dict[int, frozenset[int]], keys: collections.abc.Set[int]
-) -> set[int]:
+    source: dict[ComponentId, frozenset[ComponentId]],
+    keys: collections.abc.Set[ComponentId],
+) -> set[ComponentId]:
     """Get all values for the given keys from the given map.
 
     Args:
@@ -54,12 +51,12 @@ def _get_all_from_map(
 
 
 def _get_battery_inverter_mappings(
-    battery_ids: collections.abc.Set[int],
+    battery_ids: collections.abc.Set[ComponentId],
     *,  # force keyword arguments
     inv_bats: bool = True,
     bat_bats: bool = True,
     inv_invs: bool = True,
-) -> dict[str, dict[int, frozenset[int]]]:
+) -> dict[str, dict[ComponentId, frozenset[ComponentId]]]:
     """Create maps between battery and adjacent inverters.
 
     Args:
@@ -75,17 +72,18 @@ def _get_battery_inverter_mappings(
             * "bat_bats": battery to batteries map
             * "inv_invs": inverter to inverters map
     """
-    bat_invs_map: dict[int, set[int]] = {}
-    inv_bats_map: dict[int, set[int]] | None = {} if inv_bats else None
-    bat_bats_map: dict[int, set[int]] | None = {} if bat_bats else None
-    inv_invs_map: dict[int, set[int]] | None = {} if inv_invs else None
+    bat_invs_map: dict[ComponentId, set[ComponentId]] = {}
+    inv_bats_map: dict[ComponentId, set[ComponentId]] | None = {} if inv_bats else None
+    bat_bats_map: dict[ComponentId, set[ComponentId]] | None = {} if bat_bats else None
+    inv_invs_map: dict[ComponentId, set[ComponentId]] | None = {} if inv_invs else None
     component_graph = connection_manager.get().component_graph
 
     for battery_id in battery_ids:
-        inverters: set[int] = set(
-            component.component_id
+        inverters: set[ComponentId] = set(
+            component.id
             for component in component_graph.predecessors(battery_id)
-            if component.category == ComponentCategory.INVERTER
+            # TODO: Shouldn't this be (SolarInverter, HybridInverter)?
+            if isinstance(component, Inverter)
         )
 
         if len(inverters) == 0:
@@ -96,7 +94,7 @@ def _get_battery_inverter_mappings(
         if bat_bats_map is not None:
             bat_bats_map.setdefault(battery_id, set()).update(
                 set(
-                    component.component_id
+                    component.id
                     for inverter in inverters
                     for component in component_graph.successors(inverter)
                 )
@@ -108,10 +106,10 @@ def _get_battery_inverter_mappings(
             if inv_invs_map is not None:
                 inv_invs_map.setdefault(inverter, set()).update(bat_invs_map)
 
-    mapping: dict[str, dict[int, frozenset[int]]] = {}
+    mapping: dict[str, dict[ComponentId, frozenset[ComponentId]]] = {}
 
     # Convert sets to frozensets to make them hashable.
-    def _add(key: str, value: dict[int, set[int]] | None) -> None:
+    def _add(key: str, value: dict[ComponentId, set[ComponentId]] | None) -> None:
         if value is not None:
             mapping[key] = {k: frozenset(v) for k, v in value.items()}
 
@@ -147,9 +145,9 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         self._results_sender = results_sender
         self._api_power_request_timeout = api_power_request_timeout
         self._batteries = connection_manager.get().component_graph.components(
-            component_categories={ComponentCategory.BATTERY}
+            filter_by_types={Battery}
         )
-        self._battery_ids = {battery.component_id for battery in self._batteries}
+        self._battery_ids = {battery.id for battery in self._batteries}
 
         maps = _get_battery_inverter_mappings(self._battery_ids)
 
@@ -158,8 +156,8 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         self._bat_bats_map = maps["bat_bats"]
         self._inv_invs_map = maps["inv_invs"]
 
-        self._battery_caches: dict[int, LatestValueCache[BatteryData]] = {}
-        self._inverter_caches: dict[int, LatestValueCache[InverterData]] = {}
+        self._battery_caches: dict[ComponentId, LatestValueCache[BatteryData]] = {}
+        self._inverter_caches: dict[ComponentId, LatestValueCache[InverterData]] = {}
 
         self._component_pool_status_tracker = ComponentPoolStatusTracker(
             component_ids=set(self._battery_ids),
@@ -183,7 +181,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         """The distribution algorithm used to distribute power between batteries."""
 
     @override
-    def component_ids(self) -> collections.abc.Set[int]:
+    def component_ids(self) -> collections.abc.Set[ComponentId]:
         """Return the set of component ids."""
         return self._battery_ids
 
@@ -267,7 +265,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         distributed_power_value = (
             request.power.as_watts() - distribution.remaining_power
         )
-        battery_distribution: dict[int, float] = {}
+        battery_distribution: dict[ComponentId, float] = {}
         for inverter_id, dist in distribution.distribution.items():
             for battery_id in self._inv_bats_map[inverter_id]:
                 battery_distribution[battery_id] = (
@@ -320,14 +318,18 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         api = connection_manager.get().api_client
         manager_id = f"{type(self).__name__}«{hex(id(self))}»"
         for battery_id, inverter_ids in self._bat_invs_map.items():
-            bat_recv: Receiver[BatteryData] = await api.battery_data(battery_id)
+            bat_recv: Receiver[BatteryData] = await BatteryData.subscribe(
+                api, battery_id
+            )
             self._battery_caches[battery_id] = LatestValueCache(
                 bat_recv,
                 unique_id=f"{manager_id}:battery«{battery_id}»",
             )
 
             for inverter_id in inverter_ids:
-                inv_recv: Receiver[InverterData] = await api.inverter_data(inverter_id)
+                inv_recv: Receiver[InverterData] = await InverterData.subscribe(
+                    api, inverter_id
+                )
                 self._inverter_caches[inverter_id] = LatestValueCache(
                     inv_recv, unique_id=f"{manager_id}:inverter«{inverter_id}»"
                 )
@@ -434,7 +436,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         return None
 
     def _get_battery_inverter_data(
-        self, battery_ids: frozenset[int], inverter_ids: frozenset[int]
+        self, battery_ids: frozenset[ComponentId], inverter_ids: frozenset[ComponentId]
     ) -> InvBatPair | None:
         """Get battery and inverter data if they are correct.
 
@@ -510,7 +512,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         return InvBatPair(AggregatedBatteryData(battery_data), inverter_data)
 
     def _get_components_data(
-        self, batteries: collections.abc.Set[int]
+        self, batteries: collections.abc.Set[ComponentId]
     ) -> list[InvBatPair] | str:
         """Get data for the given batteries and adjacent inverters.
 
@@ -521,7 +523,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
             Pairs of battery and adjacent inverter data or an error message if there was
                 an error while getting the data.
         """
-        inverter_ids: collections.abc.Set[int]
+        inverter_ids: collections.abc.Set[ComponentId]
         pairs_data: list[InvBatPair] = []
 
         working_batteries = self._component_pool_status_tracker.get_working_components(
@@ -552,7 +554,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
             )
 
         # set of set of batteries one for each working_battery
-        battery_sets: frozenset[frozenset[int]] = frozenset(
+        battery_sets: frozenset[frozenset[ComponentId]] = frozenset(
             self._bat_bats_map[working_battery] for working_battery in working_batteries
         )
 
@@ -571,7 +573,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
             pairs_data.append(data)
         return pairs_data
 
-    def _str_ids(self, ids: collections.abc.Set[int]) -> str:
+    def _str_ids(self, ids: collections.abc.Set[ComponentId]) -> str:
         return ", ".join(str(cid) for cid in sorted(ids))
 
     def _get_power_distribution(
@@ -591,12 +593,12 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         )
 
         unavailable_bat_ids = request.component_ids - available_bat_ids
-        unavailable_inv_ids: set[int] = set()
+        unavailable_inv_ids: set[ComponentId] = set()
 
         for inverter_ids in [
             self._bat_invs_map[battery_id_set] for battery_id_set in unavailable_bat_ids
         ]:
-            unavailable_inv_ids = unavailable_inv_ids.union(inverter_ids)
+            unavailable_inv_ids = unavailable_inv_ids | inverter_ids
 
         result = self._distribution_algorithm.distribute_power(
             request.power.as_watts(), inv_bat_pairs
@@ -608,7 +610,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         self,
         distribution: DistributionResult,
         timeout: timedelta,
-    ) -> tuple[float, set[int]]:
+    ) -> tuple[float, set[ComponentId]]:
         """Send distributed power to the inverters.
 
         Args:
@@ -622,7 +624,9 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         api = connection_manager.get().api_client
 
         tasks = {
-            inverter_id: asyncio.create_task(api.set_power(inverter_id, power))
+            inverter_id: asyncio.create_task(
+                api.set_component_power_active(inverter_id, power)
+            )
             for inverter_id, power in distribution.distribution.items()
         }
 
@@ -638,10 +642,10 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
 
     def _parse_result(
         self,
-        tasks: dict[int, asyncio.Task[None]],
-        distribution: dict[int, float],
+        tasks: dict[ComponentId, asyncio.Task[datetime | None]],
+        distribution: dict[ComponentId, float],
         request_timeout: timedelta,
-    ) -> tuple[float, set[int]]:
+    ) -> tuple[float, set[ComponentId]]:
         """Parse the results of `set_power` requests.
 
         Check if any task has failed and determine the reason for failure.
@@ -659,7 +663,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
             the set of batteries that failed.
         """
         failed_power: float = 0.0
-        failed_batteries: set[int] = set()
+        failed_batteries: set[ComponentId] = set()
 
         for inverter_id, aws in tasks.items():
             battery_ids = self._inv_bats_map[inverter_id]

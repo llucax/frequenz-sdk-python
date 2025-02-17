@@ -11,7 +11,8 @@ from unittest.mock import AsyncMock
 import async_solipsism
 import pytest
 from frequenz.channels import Receiver
-from frequenz.client.microgrid import InverterComponentState
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import ComponentStateCode
 from frequenz.quantities import Power
 from pytest_mock import MockerFixture
 
@@ -50,11 +51,15 @@ async def mocks(mocker: MockerFixture) -> typing.AsyncIterator[_Mocks]:
 
     dp = typing.cast(_DataPipeline, microgrid._data_pipeline._DATA_PIPELINE)
 
-    yield _Mocks(
+    _mocks = _Mocks(
         mockgrid,
         streamer,
         dp._pv_power_wrapper.status_channel.new_sender(),
     )
+    try:
+        yield _mocks
+    finally:
+        await _mocks.stop()
 
 
 class TestPVPoolControl:
@@ -67,29 +72,35 @@ class TestPVPoolControl:
                 InverterDataWrapper(
                     comp_id,
                     now,
-                    component_state=InverterComponentState.IDLE,
+                    states={ComponentStateCode.READY},
                     active_power=0.0,
                     active_power_inclusion_lower_bound=-10000.0 * (idx + 1),
                     active_power_inclusion_upper_bound=0.0,
+                    active_power_exclusion_lower_bound=0.0,
+                    active_power_exclusion_upper_bound=0.0,
                 ),
                 0.05,
             )
 
-    async def _fail_pv_inverters(self, fail_ids: list[int], mocks: _Mocks) -> None:
+    async def _fail_pv_inverters(
+        self, fail_ids: list[ComponentId], mocks: _Mocks
+    ) -> None:
         now = datetime.now(tz=timezone.utc)
         for idx, comp_id in enumerate(mocks.microgrid.pv_inverter_ids):
             mocks.streamer.update_stream(
                 InverterDataWrapper(
                     comp_id,
                     now,
-                    component_state=(
-                        InverterComponentState.ERROR
+                    states=(
+                        {ComponentStateCode.ERROR}
                         if comp_id in fail_ids
-                        else InverterComponentState.IDLE
+                        else {ComponentStateCode.READY}
                     ),
                     active_power=0.0,
                     active_power_inclusion_lower_bound=-10000.0 * (idx + 1),
                     active_power_inclusion_upper_bound=0.0,
+                    active_power_exclusion_lower_bound=0.0,
+                    active_power_exclusion_upper_bound=0.0,
                 ),
             )
 
@@ -119,15 +130,17 @@ class TestPVPoolControl:
         self,
         bounds_rx: Receiver[PVPoolReport],
         check: typing.Callable[[PVPoolReport], bool],
-    ) -> None:
+    ) -> PVPoolReport | None:
         """Receive reports until the given condition is met."""
         max_reports = 10
         ctr = 0
         while ctr < max_reports:
             ctr += 1
-            report = await bounds_rx.receive()
+            async with asyncio.timeout(10.0):
+                report = await bounds_rx.receive()
             if check(report):
-                break
+                return report
+        return None
 
     async def test_setting_power(  # pylint: disable=too-many-statements
         self,
@@ -136,138 +149,131 @@ class TestPVPoolControl:
     ) -> None:
         """Test setting power."""
         set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
 
         await self._init_pv_inverters(mocks)
         pv_pool = microgrid.new_pv_pool(priority=5)
         bounds_rx = pv_pool.power_status.new_receiver()
-        await self._recv_reports_until(
+        report = await self._recv_reports_until(
             bounds_rx,
-            lambda x: x.bounds is not None and x.bounds.lower.as_watts() == -100000.0,
+            lambda x: x.bounds is not None and x.bounds.lower.as_watts() == -100_000.0,
         )
-        self._assert_report(
-            await bounds_rx.receive(), power=None, lower=-100000.0, upper=0.0
-        )
-        await pv_pool.propose_power(Power.from_watts(-80000.0))
-        await self._recv_reports_until(
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=None, lower=-100_000.0, upper=0.0)
+        await pv_pool.propose_power(Power.from_watts(-80_000.0))
+        report = await self._recv_reports_until(
             bounds_rx,
             lambda x: x.target_power is not None
-            and x.target_power.as_watts() == -80000.0,
+            and x.target_power.as_watts() == -80_000.0,
         )
-        self._assert_report(
-            await bounds_rx.receive(), power=-80000.0, lower=-100000.0, upper=0.0
-        )
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=-80_000.0, lower=-100_000.0, upper=0.0)
         await asyncio.sleep(0.0)
 
         # Components are set initial power
         assert set_power.call_count == 4
         inv_ids = mocks.microgrid.pv_inverter_ids
         assert sorted(set_power.call_args_list, key=lambda x: x.args[0]) == [
-            mocker.call(inv_ids[0], -10000.0),
-            mocker.call(inv_ids[1], -20000.0),
-            mocker.call(inv_ids[2], -25000.0),
-            mocker.call(inv_ids[3], -25000.0),
+            mocker.call(inv_ids[0], -10_000.0),
+            mocker.call(inv_ids[1], -20_000.0),
+            mocker.call(inv_ids[2], -25_000.0),
+            mocker.call(inv_ids[3], -25_000.0),
         ]
 
         set_power.reset_mock()
-        await pv_pool.propose_power(Power.from_watts(-4000.0))
-        await self._recv_reports_until(
+        await pv_pool.propose_power(Power.from_watts(-4_000.0))
+        report = await self._recv_reports_until(
             bounds_rx,
             lambda x: x.target_power is not None
-            and x.target_power.as_watts() == -4000.0,
+            and x.target_power.as_watts() == -4_000.0,
         )
-        self._assert_report(
-            await bounds_rx.receive(), power=-4000.0, lower=-100000.0, upper=0.0
-        )
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=-4_000.0, lower=-100_000.0, upper=0.0)
         await asyncio.sleep(0.0)
 
         # Components are set initial power
         assert set_power.call_count == 4
         inv_ids = mocks.microgrid.pv_inverter_ids
         assert sorted(set_power.call_args_list, key=lambda x: x.args[0]) == [
-            mocker.call(inv_ids[0], -1000.0),
-            mocker.call(inv_ids[1], -1000.0),
-            mocker.call(inv_ids[2], -1000.0),
-            mocker.call(inv_ids[3], -1000.0),
+            mocker.call(inv_ids[0], -1_000.0),
+            mocker.call(inv_ids[1], -1_000.0),
+            mocker.call(inv_ids[2], -1_000.0),
+            mocker.call(inv_ids[3], -1_000.0),
         ]
 
         # After failing 1 inverter, bounds should go down and power shouldn't be
         # distributed to that inverter.
         await self._fail_pv_inverters([inv_ids[1]], mocks)
-        await self._recv_reports_until(
+        report = await self._recv_reports_until(
             bounds_rx,
-            lambda x: x.bounds is not None and x.bounds.lower.as_watts() == -80000.0,
+            lambda x: x.bounds is not None and x.bounds.lower.as_watts() == -80_000.0,
         )
-        self._assert_report(
-            await bounds_rx.receive(), power=-4000.0, lower=-80000.0, upper=0.0
-        )
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=-4_000.0, lower=-80_000.0, upper=0.0)
 
         set_power.reset_mock()
-        await pv_pool.propose_power(Power.from_watts(-70000.0))
-        await self._recv_reports_until(
+        await pv_pool.propose_power(Power.from_watts(-70_000.0))
+        report = await self._recv_reports_until(
             bounds_rx,
             lambda x: x.target_power is not None
-            and x.target_power.as_watts() == -70000.0,
+            and x.target_power.as_watts() == -70_000.0,
         )
 
-        self._assert_report(
-            await bounds_rx.receive(), power=-70000.0, lower=-80000.0, upper=0.0
-        )
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=-70_000.0, lower=-80_000.0, upper=0.0)
         await asyncio.sleep(0.0)
 
         # Components are set initial power
         assert set_power.call_count == 3
         inv_ids = mocks.microgrid.pv_inverter_ids
         assert sorted(set_power.call_args_list, key=lambda x: x.args[0]) == [
-            mocker.call(inv_ids[0], -10000.0),
-            mocker.call(inv_ids[2], -30000.0),
-            mocker.call(inv_ids[3], -30000.0),
+            mocker.call(inv_ids[0], -10_000.0),
+            mocker.call(inv_ids[2], -30_000.0),
+            mocker.call(inv_ids[3], -30_000.0),
         ]
 
         # After the failed inverter recovers, bounds should go back up and power
         # should be distributed to all inverters
         await self._fail_pv_inverters([], mocks)
-        await self._recv_reports_until(
+        report = await self._recv_reports_until(
             bounds_rx,
-            lambda x: x.bounds is not None and x.bounds.lower.as_watts() == -100000.0,
+            lambda x: x.bounds is not None and x.bounds.lower.as_watts() == -100_000.0,
         )
-        self._assert_report(
-            await bounds_rx.receive(), power=-70000.0, lower=-100000.0, upper=0.0
-        )
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=-70_000.0, lower=-100_000.0, upper=0.0)
 
         set_power.reset_mock()
-        await pv_pool.propose_power(Power.from_watts(-90000.0))
-        await self._recv_reports_until(
+        await pv_pool.propose_power(Power.from_watts(-90_000.0))
+        report = await self._recv_reports_until(
             bounds_rx,
             lambda x: x.target_power is not None
-            and x.target_power.as_watts() == -90000.0,
+            and x.target_power.as_watts() == -90_000.0,
         )
 
-        self._assert_report(
-            await bounds_rx.receive(), power=-90000.0, lower=-100000.0, upper=0.0
-        )
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=-90_000.0, lower=-100_000.0, upper=0.0)
         await asyncio.sleep(0.0)
 
         assert set_power.call_count == 4
         inv_ids = mocks.microgrid.pv_inverter_ids
         assert sorted(set_power.call_args_list, key=lambda x: x.args[0]) == [
-            mocker.call(inv_ids[0], -10000.0),
-            mocker.call(inv_ids[1], -20000.0),
-            mocker.call(inv_ids[2], -30000.0),
-            mocker.call(inv_ids[3], -30000.0),
+            mocker.call(inv_ids[0], -10_000.0),
+            mocker.call(inv_ids[1], -20_000.0),
+            mocker.call(inv_ids[2], -30_000.0),
+            mocker.call(inv_ids[3], -30_000.0),
         ]
 
         # Setting 0 power should set all inverters to 0
         set_power.reset_mock()
         await pv_pool.propose_power(Power.zero())
-        await self._recv_reports_until(
+        report = await self._recv_reports_until(
             bounds_rx,
             lambda x: x.target_power is not None and x.target_power.as_watts() == 0.0,
         )
-        self._assert_report(
-            await bounds_rx.receive(), power=0.0, lower=-100000.0, upper=0.0
-        )
+        assert report is not None, "No report meeting the condition was received"
+        self._assert_report(report, power=0.0, lower=-100_000.0, upper=0.0)
         await asyncio.sleep(0.0)
 
         assert set_power.call_count == 4

@@ -5,8 +5,15 @@
 
 from contextlib import AsyncExitStack
 
-import frequenz.client.microgrid as client
-from frequenz.client.microgrid import ComponentCategory
+from frequenz.client.microgrid import ComponentId, MicrogridId
+from frequenz.client.microgrid.component import (
+    ComponentCategory,
+    ComponentConnection,
+    GridConnectionPoint,
+    Meter,
+    UnspecifiedComponent,
+)
+from frequenz.client.microgrid.metrics import Metric
 from frequenz.quantities import Current, Power, Quantity, ReactivePower
 from pytest_mock import MockerFixture
 
@@ -18,6 +25,8 @@ from tests.utils.graph_generator import GraphGenerator
 from ..timeseries._formula_engine.utils import equal_float_lists, get_resampled_stream
 from ..timeseries.mock_microgrid import MockMicrogrid
 
+_MICROGRID_ID = MicrogridId(1)
+
 
 async def test_grid_1(mocker: MockerFixture) -> None:
     """Test the grid connection module."""
@@ -26,13 +35,10 @@ async def test_grid_1(mocker: MockerFixture) -> None:
     # the tests, unless we explicitly delete it.
 
     # validate that islands with no grid connection are accepted.
-    components = {
-        client.Component(1, client.ComponentCategory.NONE),
-        client.Component(2, client.ComponentCategory.METER),
-    }
-    connections = {
-        client.Connection(1, 2),
-    }
+    unspec_1 = UnspecifiedComponent(id=ComponentId(1), microgrid_id=_MICROGRID_ID)
+    meter_2 = Meter(id=ComponentId(2), microgrid_id=_MICROGRID_ID)
+    components = {unspec_1, meter_2}
+    connections = {ComponentConnection(source=unspec_1.id, destination=meter_2.id)}
 
     graph = gr._MicrogridComponentGraph(  # pylint: disable=protected-access
         components=components, connections=connections
@@ -50,18 +56,12 @@ async def test_grid_1(mocker: MockerFixture) -> None:
 
 async def test_grid_2(mocker: MockerFixture) -> None:
     """Validate that microgrids with one grid connection are accepted."""
-    components = {
-        client.Component(
-            1,
-            client.ComponentCategory.GRID,
-            None,
-            client.ComponentMetadata(fuse=client.Fuse(max_current=123.0)),
-        ),
-        client.Component(2, client.ComponentCategory.METER),
-    }
-    connections = {
-        client.Connection(1, 2),
-    }
+    grid_1 = GridConnectionPoint(
+        id=ComponentId(1), microgrid_id=_MICROGRID_ID, rated_fuse_current=123
+    )
+    meter_2 = Meter(id=ComponentId(2), microgrid_id=_MICROGRID_ID)
+    components = {grid_1, meter_2}
+    connections = {ComponentConnection(source=grid_1.id, destination=meter_2.id)}
 
     graph = gr._MicrogridComponentGraph(  # pylint: disable=protected-access
         components=components, connections=connections
@@ -93,7 +93,7 @@ async def test_grid_power_1(mocker: MockerFixture) -> None:
         grid_meter_recv = get_resampled_stream(
             grid._formula_pool._namespace,  # pylint: disable=protected-access
             mockgrid.meter_ids[0],
-            client.ComponentMetricId.ACTIVE_POWER,
+            Metric.AC_ACTIVE_POWER,
             Power.from_watts,
         )
 
@@ -137,7 +137,7 @@ async def test_grid_power_2(mocker: MockerFixture) -> None:
             get_resampled_stream(
                 grid._formula_pool._namespace,  # pylint: disable=protected-access
                 component_id,
-                client.ComponentMetricId.ACTIVE_POWER,
+                Metric.AC_ACTIVE_POWER,
                 Power.from_watts,
             )
             for component_id in [
@@ -187,7 +187,7 @@ async def test_grid_reactive_power_1(mocker: MockerFixture) -> None:
         grid_meter_recv = get_resampled_stream(
             grid._formula_pool._namespace,  # pylint: disable=protected-access
             mockgrid.meter_ids[0],
-            client.ComponentMetricId.REACTIVE_POWER,
+            Metric.AC_REACTIVE_POWER,
             ReactivePower.from_volt_amperes_reactive,
         )
 
@@ -231,7 +231,7 @@ async def test_grid_reactive_power_2(mocker: MockerFixture) -> None:
             get_resampled_stream(
                 grid._formula_pool._namespace,  # pylint: disable=protected-access
                 component_id,
-                client.ComponentMetricId.REACTIVE_POWER,
+                Metric.AC_REACTIVE_POWER,
                 ReactivePower.from_volt_amperes_reactive,
             )
             for component_id in [

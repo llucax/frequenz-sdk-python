@@ -6,20 +6,17 @@
 import asyncio
 import collections.abc
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from frequenz.channels import Broadcast, LatestValueCache, Sender
-from frequenz.client.microgrid import (
-    ApiClientError,
-    ComponentCategory,
-    InverterData,
-    InverterType,
-)
+from frequenz.client.microgrid import ApiClientError, ComponentId
+from frequenz.client.microgrid.component import SolarInverter
 from frequenz.quantities import Power
 from typing_extensions import override
 
 from ....._internal._math import is_close_to_zero
 from .... import connection_manager
+from ...._old_component_data import InverterData
 from ..._component_pool_status_tracker import ComponentPoolStatusTracker
 from ..._component_status import ComponentPoolStatus, PVInverterStatusTracker
 from ...request import Request
@@ -63,14 +60,16 @@ class PVManager(ComponentManager):
             if self._pv_inverter_ids
             else None
         )
-        self._component_data_caches: dict[int, LatestValueCache[InverterData]] = {}
+        self._component_data_caches: dict[
+            ComponentId, LatestValueCache[InverterData]
+        ] = {}
         self._target_power = Power.zero()
         self._target_power_channel = Broadcast[Request](name="target_power")
         self._target_power_tx = self._target_power_channel.new_sender()
         self._task: asyncio.Task[None] | None = None
 
     @override
-    def component_ids(self) -> collections.abc.Set[int]:
+    def component_ids(self) -> collections.abc.Set[ComponentId]:
         """Return the set of PV inverter ids."""
         return self._pv_inverter_ids
 
@@ -79,7 +78,9 @@ class PVManager(ComponentManager):
         """Start the PV inverter manager."""
         self._component_data_caches = {
             inv_id: LatestValueCache(
-                await connection_manager.get().api_client.inverter_data(inv_id),
+                await InverterData.subscribe(
+                    connection_manager.get().api_client, inv_id
+                ),
                 unique_id=f"{type(self).__name__}«{hex(id(self))}»:inverter«{inv_id}»",
             )
             for inv_id in self._pv_inverter_ids
@@ -106,7 +107,7 @@ class PVManager(ComponentManager):
                 component_ids are provided in the request.
         """
         remaining_power = request.power
-        allocations: dict[int, Power] = {}
+        allocations: dict[ComponentId, Power] = {}
         if not self._component_pool_status_tracker:
             if not request.component_ids:
                 await self._results_sender.send(
@@ -122,7 +123,7 @@ class PVManager(ComponentManager):
                 "Cannot distribute power to PV inverters without any inverters"
             )
 
-        working_components: list[int] = []
+        working_components: list[ComponentId] = []
         for inv_id in self._component_pool_status_tracker.get_working_components(
             request.component_ids
         ):
@@ -182,13 +183,16 @@ class PVManager(ComponentManager):
         await self._set_api_power(request, allocations, remaining_power)
 
     async def _set_api_power(  # pylint: disable=too-many-locals
-        self, request: Request, allocations: dict[int, Power], remaining_power: Power
+        self,
+        request: Request,
+        allocations: dict[ComponentId, Power],
+        remaining_power: Power,
     ) -> None:
         api_client = connection_manager.get().api_client
-        tasks: dict[int, asyncio.Task[None]] = {}
+        tasks: dict[ComponentId, asyncio.Task[datetime | None]] = {}
         for component_id, power in allocations.items():
             tasks[component_id] = asyncio.create_task(
-                api_client.set_power(component_id, power.as_watts())
+                api_client.set_component_power_active(component_id, power.as_watts())
             )
         _, pending = await asyncio.wait(
             tasks.values(),
@@ -201,8 +205,8 @@ class PVManager(ComponentManager):
             task.cancel()
         await asyncio.gather(*pending, return_exceptions=True)
 
-        failed_components: set[int] = set()
-        succeeded_components: set[int] = set()
+        failed_components: set[ComponentId] = set()
+        succeeded_components: set[ComponentId] = set()
         failed_power = Power.zero()
         for component_id, task in tasks.items():
             try:
@@ -250,12 +254,11 @@ class PVManager(ComponentManager):
             )
         )
 
-    def _get_pv_inverter_ids(self) -> collections.abc.Set[int]:
+    def _get_pv_inverter_ids(self) -> collections.abc.Set[ComponentId]:
         """Return the IDs of all PV inverters present in the component graph."""
         return {
-            inv.component_id
+            inv.id
             for inv in connection_manager.get().component_graph.components(
-                component_categories={ComponentCategory.INVERTER}
+                filter_by_types={SolarInverter}
             )
-            if inv.type == InverterType.SOLAR
         }

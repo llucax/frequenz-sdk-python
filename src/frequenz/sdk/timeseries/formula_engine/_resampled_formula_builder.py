@@ -8,8 +8,11 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from frequenz.channels import Receiver, Sender
-from frequenz.client.microgrid import ComponentMetricId
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.metrics import Metric
 from frequenz.quantities import Quantity
+
+from frequenz.sdk.microgrid._old_component_data import TransitionalMetric
 
 from ..._internal._channels import ChannelRegistry
 from ...microgrid._data_sourcing import ComponentMetricRequest
@@ -29,7 +32,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
         formula_name: str,
         channel_registry: ChannelRegistry,
         resampler_subscription_sender: Sender[ComponentMetricRequest],
-        metric_id: ComponentMetricId,
+        metric: Metric | TransitionalMetric,
         create_method: Callable[[float], QuantityT],
     ) -> None:
         """Create a `ResampledFormulaBuilder` instance.
@@ -42,7 +45,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
                 and the data sourcing actors.
             resampler_subscription_sender: A sender to send metric requests to the
                 resampling actor.
-            metric_id: A metric ID to fetch for all components in this formula.
+            metric: The metric to fetch for all components in this formula.
             create_method: A method to generate the output `Sample` value with.  If the
                 formula is for generating power values, this would be
                 `Power.from_watts`, for example.
@@ -52,23 +55,25 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
             resampler_subscription_sender
         )
         self._namespace: str = namespace
-        self._metric_id: ComponentMetricId = metric_id
+        self._metric: Metric | TransitionalMetric = metric
         self._resampler_requests: list[ComponentMetricRequest] = []
         super().__init__(formula_name, create_method)
 
     def _get_resampled_receiver(
-        self, component_id: int, metric_id: ComponentMetricId
+        self,
+        component_id: ComponentId,
+        metric: Metric | TransitionalMetric,
     ) -> Receiver[Sample[QuantityT]]:
         """Get a receiver with the resampled data for the given component id.
 
         Args:
             component_id: The component id for which to get a resampled data receiver.
-            metric_id: A metric ID to fetch for all components in this formula.
+            metric: The metric to fetch for all components in this formula.
 
         Returns:
             A receiver to stream resampled data for the given component id.
         """
-        request = ComponentMetricRequest(self._namespace, component_id, metric_id, None)
+        request = ComponentMetricRequest(self._namespace, component_id, metric, None)
         self._resampler_requests.append(request)
         resampled_channel = self._channel_registry.get_or_create(
             Sample[Quantity], request.get_channel_name()
@@ -92,7 +97,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
 
     def push_component_metric(
         self,
-        component_id: int,
+        component_id: ComponentId,
         *,
         nones_are_zeros: bool,
         fallback: FallbackMetricFetcher[QuantityT] | None = None,
@@ -107,9 +112,9 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
                 invalid data (e.g. due to a component stop). If None the data from
                 primary metric fetcher will be returned.
         """
-        receiver = self._get_resampled_receiver(component_id, self._metric_id)
+        receiver = self._get_resampled_receiver(component_id, self._metric)
         self.push_metric(
-            f"#{component_id}",
+            f"#{int(component_id)}",
             receiver,
             nones_are_zeros=nones_are_zeros,
             fallback=fallback,
@@ -145,7 +150,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
         for token in tokenizer:
             if token.type == TokenType.COMPONENT_METRIC:
                 self.push_component_metric(
-                    int(token.value), nones_are_zeros=nones_are_zeros
+                    ComponentId(int(token.value)), nones_are_zeros=nones_are_zeros
                 )
             elif token.type == TokenType.OPER:
                 self.push_oper(token.value)

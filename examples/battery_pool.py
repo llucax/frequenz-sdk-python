@@ -13,7 +13,7 @@ from frequenz.channels import merge
 from frequenz.sdk import microgrid
 from frequenz.sdk.actor import ResamplerConfig
 
-MICROGRID_API_URL = "grpc://microgrid.sandbox.api.frequenz.io:62060"
+MICROGRID_API_URL = "grpc://microgrid.sandbox.api.frequenz.io:61060"
 
 
 async def main() -> None:

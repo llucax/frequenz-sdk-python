@@ -8,23 +8,26 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
-from frequenz.client.microgrid import ComponentMetricId
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.metrics import Metric
+
+from frequenz.sdk.microgrid._old_component_data import TransitionalMetric
 
 
 @dataclass(frozen=True, eq=False)
 class ComponentMetricsData:
     """Store values of the component metrics."""
 
-    component_id: int
+    component_id: ComponentId
     """The component ID the data is for."""
 
     timestamp: datetime
     """The timestamp for all the metrics."""
 
-    metrics: Mapping[ComponentMetricId, float]
+    metrics: Mapping[Metric | TransitionalMetric, float]
     """The values for each metric."""
 
-    def get(self, metric: ComponentMetricId) -> float | None:
+    def get(self, metric: Metric | TransitionalMetric) -> float | None:
         """Get metric value.
 
         Args:

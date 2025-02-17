@@ -8,12 +8,13 @@ import asyncio
 from collections import abc
 
 from frequenz.channels import Receiver, Sender, merge, select, selected_from
-from frequenz.client.microgrid import EVChargerData
+from frequenz.client.microgrid import ComponentId
 from frequenz.quantities import Power
 
 from ..._internal._asyncio import run_forever
 from ...actor import BackgroundService
 from ...microgrid import connection_manager
+from ...microgrid._old_component_data import EVChargerData
 from ...microgrid._power_distributing._component_status import ComponentPoolStatus
 from .._base_types import Bounds, SystemBounds
 
@@ -30,7 +31,7 @@ class EVCSystemBoundsTracker(BackgroundService):
 
     def __init__(
         self,
-        component_ids: abc.Set[int],
+        component_ids: abc.Set[ComponentId],
         status_receiver: Receiver[ComponentPoolStatus],
         bounds_sender: Sender[SystemBounds],
     ):
@@ -47,7 +48,7 @@ class EVCSystemBoundsTracker(BackgroundService):
         self._component_ids = component_ids
         self._status_receiver = status_receiver
         self._bounds_sender = bounds_sender
-        self._latest_component_data: dict[int, EVChargerData] = {}
+        self._latest_component_data: dict[ComponentId, EVChargerData] = {}
         self._last_sent_bounds: SystemBounds | None = None
         self._component_pool_status = ComponentPoolStatus(set(), set())
 
@@ -109,7 +110,10 @@ class EVCSystemBoundsTracker(BackgroundService):
         ev_data_rx = merge(
             *(
                 await asyncio.gather(
-                    *[api_client.ev_charger_data(cid) for cid in self._component_ids]
+                    *[
+                        EVChargerData.subscribe(api_client, cid)
+                        for cid in self._component_ids
+                    ]
                 )
             )
         )
@@ -117,7 +121,7 @@ class EVCSystemBoundsTracker(BackgroundService):
         async for selected in select(status_rx, ev_data_rx):
             if selected_from(selected, status_rx):
                 self._component_pool_status = selected.message
-                to_remove = []
+                to_remove: list[ComponentId] = []
                 for comp_id in self._latest_component_data:
                     if (
                         comp_id not in self._component_pool_status.working

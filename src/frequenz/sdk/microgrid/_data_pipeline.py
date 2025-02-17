@@ -17,7 +17,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from frequenz.channels import Broadcast, Sender
-from frequenz.client.microgrid import ComponentCategory, InverterType
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import Battery, EvCharger, SolarInverter
 
 from .._internal._channels import ChannelRegistry
 from ..actor._actor import Actor
@@ -103,18 +104,17 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         self._battery_power_wrapper = PowerWrapper(
             self._channel_registry,
             api_power_request_timeout=api_power_request_timeout,
-            component_category=ComponentCategory.BATTERY,
+            component_class=Battery,
         )
         self._ev_power_wrapper = PowerWrapper(
             self._channel_registry,
             api_power_request_timeout=api_power_request_timeout,
-            component_category=ComponentCategory.EV_CHARGER,
+            component_class=EvCharger,
         )
         self._pv_power_wrapper = PowerWrapper(
             self._channel_registry,
             api_power_request_timeout=api_power_request_timeout,
-            component_category=ComponentCategory.INVERTER,
-            component_type=InverterType.SOLAR,
+            component_class=SolarInverter,
         )
 
         self._logical_meter: LogicalMeter | None = None
@@ -122,12 +122,14 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         self._producer: Producer | None = None
         self._grid: Grid | None = None
         self._ev_charger_pool_reference_stores: dict[
-            frozenset[int], EVChargerPoolReferenceStore
+            frozenset[ComponentId], EVChargerPoolReferenceStore
         ] = {}
         self._battery_pool_reference_stores: dict[
-            frozenset[int], BatteryPoolReferenceStore
+            frozenset[ComponentId], BatteryPoolReferenceStore
         ] = {}
-        self._pv_pool_reference_stores: dict[frozenset[int], PVPoolReferenceStore] = {}
+        self._pv_pool_reference_stores: dict[
+            frozenset[ComponentId], PVPoolReferenceStore
+        ] = {}
         self._frequency_instance: GridFrequency | None = None
         self._voltage_instance: VoltageStreamer | None = None
 
@@ -208,7 +210,7 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         priority: int,
-        component_ids: abc.Set[int] | None = None,
+        component_ids: abc.Set[ComponentId] | None = None,
         name: str | None = None,
         set_operating_point: bool = False,
     ) -> EVChargerPool:
@@ -238,7 +240,7 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
             self._ev_power_wrapper.start()
 
         # We use frozenset to make a hashable key from the input set.
-        ref_store_key: frozenset[int] = frozenset()
+        ref_store_key: frozenset[ComponentId] = frozenset()
         if component_ids is not None:
             ref_store_key = frozenset(component_ids)
 
@@ -288,7 +290,7 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         priority: int,
-        component_ids: abc.Set[int] | None = None,
+        component_ids: abc.Set[ComponentId] | None = None,
         name: str | None = None,
         set_operating_point: bool = False,
     ) -> PVPool:
@@ -316,7 +318,7 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
             self._pv_power_wrapper.start()
 
         # We use frozenset to make a hashable key from the input set.
-        ref_store_key: frozenset[int] = frozenset()
+        ref_store_key: frozenset[ComponentId] = frozenset()
         if component_ids is not None:
             ref_store_key = frozenset(component_ids)
 
@@ -365,7 +367,7 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         self,
         *,
         priority: int,
-        component_ids: abc.Set[int] | None = None,
+        component_ids: abc.Set[ComponentId] | None = None,
         name: str | None = None,
         set_operating_point: bool = False,
     ) -> BatteryPool:
@@ -395,7 +397,7 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
             self._battery_power_wrapper.start()
 
         # We use frozenset to make a hashable key from the input set.
-        ref_store_key: frozenset[int] = frozenset()
+        ref_store_key: frozenset[ComponentId] = frozenset()
         if component_ids is not None:
             ref_store_key = frozenset(component_ids)
 
@@ -555,7 +557,7 @@ def producer() -> Producer:
 def new_ev_charger_pool(
     *,
     priority: int,
-    component_ids: abc.Set[int] | None = None,
+    component_ids: abc.Set[ComponentId] | None = None,
     name: str | None = None,
     set_operating_point: bool = False,
 ) -> EVChargerPool:
@@ -600,7 +602,7 @@ def new_ev_charger_pool(
 def new_battery_pool(
     *,
     priority: int,
-    component_ids: abc.Set[int] | None = None,
+    component_ids: abc.Set[ComponentId] | None = None,
     name: str | None = None,
     set_operating_point: bool = False,
 ) -> BatteryPool:
@@ -645,7 +647,7 @@ def new_battery_pool(
 def new_pv_pool(
     *,
     priority: int,
-    component_ids: abc.Set[int] | None = None,
+    component_ids: abc.Set[ComponentId] | None = None,
     name: str | None = None,
     set_operating_point: bool = False,
 ) -> PVPool:

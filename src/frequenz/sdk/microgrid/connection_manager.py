@@ -11,7 +11,12 @@ component graph.
 import logging
 from abc import ABC, abstractmethod
 
-from frequenz.client.microgrid import Location, Metadata, MicrogridApiClient
+from frequenz.client.microgrid import (
+    Location,
+    MicrogridApiClient,
+    MicrogridId,
+    MicrogridInfo,
+)
 
 from .component_graph import ComponentGraph, _MicrogridComponentGraph
 
@@ -45,7 +50,7 @@ class ConnectionManager(ABC):
         """Get the MicrogridApiClient.
 
         Returns:
-            api client
+            The microgrid API client used by this connection manager.
         """
 
     @property
@@ -59,7 +64,7 @@ class ConnectionManager(ABC):
 
     @property
     @abstractmethod
-    def microgrid_id(self) -> int | None:
+    def microgrid_id(self) -> MicrogridId | None:
         """Get the ID of the microgrid if available.
 
         Returns:
@@ -75,7 +80,7 @@ class ConnectionManager(ABC):
             the location of the microgrid if available, None otherwise.
         """
 
-    async def _update_api(self, server_url: str) -> None:
+    async def _update_client(self, server_url: str) -> None:
         self._server_url = server_url
 
     @abstractmethod
@@ -97,31 +102,27 @@ class _InsecureConnectionManager(ConnectionManager):
                 `grpc://localhost:1090?ssl=true`.
         """
         super().__init__(server_url)
-        self._api = MicrogridApiClient(server_url)
-        # To create graph from the api we need await.
+        self._client = MicrogridApiClient(server_url)
+        # To create graph from the API client we need await.
         # So create empty graph here, and update it in `run` method.
         self._graph = _MicrogridComponentGraph()
 
-        self._metadata: Metadata
+        self._microgrid_info: MicrogridInfo
         """The metadata of the microgrid."""
 
     @property
     def api_client(self) -> MicrogridApiClient:
-        """Get the MicrogridApiClient.
-
-        Returns:
-            api client
-        """
-        return self._api
+        """The microgrid API client used by this connection manager."""
+        return self._client
 
     @property
-    def microgrid_id(self) -> int | None:
+    def microgrid_id(self) -> MicrogridId | None:
         """Get the ID of the microgrid if available.
 
         Returns:
             the ID of the microgrid if available, None otherwise.
         """
-        return self._metadata.microgrid_id
+        return self._microgrid_info.id
 
     @property
     def location(self) -> Location | None:
@@ -130,7 +131,7 @@ class _InsecureConnectionManager(ConnectionManager):
         Returns:
             the location of the microgrid if available, None otherwise.
         """
-        return self._metadata.location
+        return self._microgrid_info.location
 
     @property
     def component_graph(self) -> ComponentGraph:
@@ -141,8 +142,8 @@ class _InsecureConnectionManager(ConnectionManager):
         """
         return self._graph
 
-    async def _update_api(self, server_url: str) -> None:
-        """Update api with new host and port.
+    async def _update_client(self, server_url: str) -> None:
+        """Update the API client with a new server URL.
 
         Args:
             server_url: The new location of the microgrid API server in the form of a
@@ -152,14 +153,14 @@ class _InsecureConnectionManager(ConnectionManager):
                 a boolean (defaulting to false). For example:
                 `grpc://localhost:1090?ssl=true`.
         """
-        await super()._update_api(server_url)  # pylint: disable=protected-access
+        await super()._update_client(server_url)  # pylint: disable=protected-access
 
-        self._api = MicrogridApiClient(server_url)
+        self._client = MicrogridApiClient(server_url)
         await self._initialize()
 
     async def _initialize(self) -> None:
-        self._metadata = await self._api.metadata()
-        await self._graph.refresh_from_api(self._api)
+        self._microgrid_info = await self._client.get_microgrid_info()
+        await self._graph.refresh_from_client(self._client)
 
 
 _CONNECTION_MANAGER: ConnectionManager | None = None
@@ -175,28 +176,23 @@ async def initialize(server_url: str) -> None:
             where the port should be an int between `0` and `65535` (defaulting to
             `9090`) and ssl should be a boolean (defaulting to false). For example:
             `grpc://localhost:1090?ssl=true`.
-
-    Raises:
-        AssertionError: If method was called more then once.
     """
     # From Doc: pylint just try to discourage this usage.
     # That doesn't mean you cannot use it.
     global _CONNECTION_MANAGER  # pylint: disable=global-statement
 
-    if _CONNECTION_MANAGER is not None:
-        raise AssertionError("MicrogridApi was already initialized.")
+    assert _CONNECTION_MANAGER is None, "MicrogridApi was already initialized."
 
     _logger.info("Connecting to microgrid at %s", server_url)
 
-    microgrid_api = _InsecureConnectionManager(server_url)
-    await microgrid_api._initialize()  # pylint: disable=protected-access
+    connection_manager = _InsecureConnectionManager(server_url)
+    await connection_manager._initialize()  # pylint: disable=protected-access
 
     # Check again that _MICROGRID_API is None in case somebody had the great idea of
     # calling initialize() twice and in parallel.
-    if _CONNECTION_MANAGER is not None:
-        raise AssertionError("MicrogridApi was already initialized.")
+    assert _CONNECTION_MANAGER is None, "MicrogridApi was already initialized."
 
-    _CONNECTION_MANAGER = microgrid_api
+    _CONNECTION_MANAGER = connection_manager
 
 
 def get() -> ConnectionManager:
