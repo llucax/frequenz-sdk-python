@@ -15,6 +15,7 @@ This module should be removed once the migration is complete.
 from __future__ import annotations
 
 import logging
+import math
 from abc import ABC, abstractmethod
 from collections.abc import Set
 from dataclasses import dataclass
@@ -493,7 +494,10 @@ class BatteryData(ComponentData):  # pylint: disable=too-many-instance-attribute
                         # FIXME: We assume only one range is present
                         # If one bound is None, we assume 0 to match the previous
                         # behavior of v0.15, but this should eventually be fixed
-                        if len(sample.bounds) > 1:
+                        if len(sample.bounds) > 1 and (
+                            sample.bounds[1].lower != 0.0
+                            or sample.bounds[1].upper != 0.0
+                        ):
                             _logger.warning(
                                 "Too many bounds found in sample, a maximum of 1 is "
                                 "supported for SOC, using only the first: %r",
@@ -1169,6 +1173,31 @@ def _bound_ranges_to_inclusion_exclusion(
             assert_never(unexpected)
 
 
+def _try_create_bounds(lower: float, upper: float, description: str) -> list[Bounds]:
+    """Safely create a bounds object, handling any exceptions gracefully.
+
+    Args:
+        lower: Lower bound value
+        upper: Upper bound value
+        description: Description for logging
+
+    Returns:
+        List containing the created Bounds object or an empty list if creation failed.
+    """
+    try:
+        return [Bounds(lower=lower, upper=upper)]
+    except ValueError as exc:
+        _logger.warning(
+            "Ignoring invalid %s bounds [%s, %s]: %s",
+            description,
+            lower,
+            upper,
+            exc,
+            stack_info=True,
+        )
+        return []
+
+
 def _inclusion_exclusion_bounds_to_ranges(
     inclusion_lower_bound: float,
     inclusion_upper_bound: float,
@@ -1190,17 +1219,68 @@ def _inclusion_exclusion_bounds_to_ranges(
     Returns:
         A list of bounds.
     """
+    ranges: list[Bounds] = []
     if exclusion_lower_bound == 0.0 and exclusion_upper_bound == 0.0:
         if inclusion_lower_bound == 0.0 and inclusion_upper_bound == 0.0:
+            # No bounds are present at all
             return []
+        # Only inclusion bounds are present
+        return _try_create_bounds(
+            inclusion_lower_bound, inclusion_upper_bound, "inclusion"
+        )
 
-        ranges = [Bounds(lower=inclusion_lower_bound, upper=inclusion_upper_bound)]
+    if inclusion_lower_bound == 0.0 and inclusion_upper_bound == 0.0:
+        # There are exclusion bounds, but no inclusion bounds, we create 2 ranges, one
+        # from -inf to exclusion_lower_bound and one from exclusion_upper_bound to +inf
+        ranges.extend(
+            _try_create_bounds(
+                float("-inf"), exclusion_lower_bound, "exclusion lower bound"
+            )
+        )
+        ranges.extend(
+            _try_create_bounds(
+                exclusion_upper_bound, float("+inf"), "exclusion upper bound"
+            )
+        )
         return ranges
 
-    assert inclusion_lower_bound != 0.0 or inclusion_upper_bound != 0.0
+    # First range: from inclusion_lower_bound to exclusion_lower_bound.
+    # If either value is NaN, skip the ordering check. Is not entirely clear what to do
+    # with NaN, but this is the old behavior so we are keeping it for now.
+    if (
+        math.isnan(inclusion_lower_bound)
+        or math.isnan(exclusion_lower_bound)
+        or inclusion_lower_bound <= exclusion_lower_bound
+    ):
+        ranges.extend(
+            _try_create_bounds(
+                inclusion_lower_bound, exclusion_lower_bound, "first range"
+            )
+        )
+    else:
+        _logger.warning(
+            "Inclusion lower bound (%s) is greater than exclusion lower bound (%s), "
+            "skipping this bound in the ranges",
+            inclusion_lower_bound,
+            exclusion_lower_bound,
+        )
+    # Second range: from exclusion_upper_bound to inclusion_upper_bound.
+    if (
+        math.isnan(exclusion_upper_bound)
+        or math.isnan(inclusion_upper_bound)
+        or exclusion_upper_bound <= inclusion_upper_bound
+    ):
+        ranges.extend(
+            _try_create_bounds(
+                exclusion_upper_bound, inclusion_upper_bound, "second range"
+            )
+        )
+    else:
+        _logger.warning(
+            "Inclusion upper bound (%s) is less than exclusion upper bound (%s), "
+            "no second range to add",
+            inclusion_upper_bound,
+            exclusion_upper_bound,
+        )
 
-    ranges = [
-        Bounds(lower=inclusion_lower_bound, upper=exclusion_lower_bound),
-        Bounds(lower=exclusion_upper_bound, upper=inclusion_upper_bound),
-    ]
     return ranges

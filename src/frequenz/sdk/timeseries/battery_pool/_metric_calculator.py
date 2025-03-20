@@ -572,7 +572,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
 
         Returns:
             High level metric calculated from the given metrics.
-            Return None if there are no component metrics.
+                Return None if there are no component metrics.
         """
         timestamp = _MIN_TIMESTAMP
         loop_timestamp = _MIN_TIMESTAMP
