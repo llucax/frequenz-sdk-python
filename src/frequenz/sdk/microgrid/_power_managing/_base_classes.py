@@ -10,6 +10,7 @@ import dataclasses
 import enum
 import typing
 
+from frequenz.client.microgrid import ComponentId
 from frequenz.quantities import Power
 
 from ... import timeseries
@@ -26,7 +27,7 @@ class ReportRequest:
     source_id: str
     """The source ID of the actor sending the request."""
 
-    component_ids: frozenset[int]
+    component_ids: frozenset[ComponentId]
     """The component IDs to report on."""
 
     priority: int
@@ -145,7 +146,7 @@ class Proposal:
     feature.
     """
 
-    component_ids: frozenset[int]
+    component_ids: frozenset[ComponentId]
     """The component IDs to distribute the power to."""
 
     priority: int
@@ -217,7 +218,7 @@ class BaseAlgorithm(abc.ABC):
     @abc.abstractmethod
     def calculate_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
         system_bounds: SystemBounds,
         must_return_power: bool = False,
@@ -240,7 +241,7 @@ class BaseAlgorithm(abc.ABC):
     @abc.abstractmethod
     def get_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
     ) -> Power | None:
         """Get the target power for the given components.
 
@@ -257,7 +258,7 @@ class BaseAlgorithm(abc.ABC):
     @abc.abstractmethod
     def get_status(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         priority: int,
         system_bounds: SystemBounds,
     ) -> _Report:

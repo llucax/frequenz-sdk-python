@@ -12,7 +12,12 @@ from datetime import datetime, timedelta, timezone
 
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
-from frequenz.client.microgrid import ComponentCategory, ComponentType, InverterType
+from frequenz.client.microgrid import (
+    ComponentCategory,
+    ComponentId,
+    ComponentType,
+    InverterType,
+)
 from frequenz.quantities import Power
 from typing_extensions import override
 
@@ -81,13 +86,15 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
         self._channel_registry = channel_registry
         self._proposals_receiver = proposals_receiver
 
-        self._system_bounds: dict[frozenset[int], SystemBounds] = {}
-        self._bound_tracker_tasks: dict[frozenset[int], asyncio.Task[None]] = {}
+        self._system_bounds: dict[frozenset[ComponentId], SystemBounds] = {}
+        self._bound_tracker_tasks: dict[frozenset[ComponentId], asyncio.Task[None]] = {}
+        # The int key of the sub-dict is the priority of the actor.
         self._set_power_subscriptions: dict[
-            frozenset[int], dict[int, Sender[_Report]]
+            frozenset[ComponentId], dict[int, Sender[_Report]]
         ] = {}
+        # The int key of the sub-dict is the priority of the actor.
         self._set_op_power_subscriptions: dict[
-            frozenset[int], dict[int, Sender[_Report]]
+            frozenset[ComponentId], dict[int, Sender[_Report]]
         ] = {}
 
         self._set_power_group: BaseAlgorithm = Matryoshka(
@@ -99,7 +106,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
         super().__init__()
 
-    async def _send_reports(self, component_ids: frozenset[int]) -> None:
+    async def _send_reports(self, component_ids: frozenset[ComponentId]) -> None:
         """Send reports for a set of components, to all subscribers.
 
         Args:
@@ -134,7 +141,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
     async def _bounds_tracker(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         bounds_receiver: Receiver[SystemBounds],
     ) -> None:
         """Track the power bounds of a set of components and update the cache.
@@ -149,7 +156,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
             await self._send_updated_target_power(component_ids, None)
             await self._send_reports(component_ids)
 
-    def _add_system_bounds_tracker(self, component_ids: frozenset[int]) -> None:
+    def _add_system_bounds_tracker(self, component_ids: frozenset[ComponentId]) -> None:
         """Add a bounds tracker.
 
         Args:
@@ -236,7 +243,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
     def _calculate_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
         must_send: bool = False,
     ) -> Power | None:
@@ -309,7 +316,7 @@ class PowerManagingActor(Actor):  # pylint: disable=too-many-instance-attributes
 
     async def _send_updated_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
         must_send: bool = False,
     ) -> None:
