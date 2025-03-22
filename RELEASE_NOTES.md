@@ -6,7 +6,7 @@
 
 ## Upgrading
 
-<!-- Here goes notes on how to upgrade from previous versions, including deprecations and what they should be replaced with -->
+- The SDK now depends on the `frequenz-client-microgrid` v0.7.x series. The main change is now all component and microgrid IDs need to be passed using the wrapper classes `ComponentId`/`MicrogridId` instead of `int`.
 
 ## New Features
 
