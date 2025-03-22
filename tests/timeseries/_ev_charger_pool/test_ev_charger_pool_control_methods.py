@@ -4,15 +4,16 @@
 """Test the EV charger pool control methods."""
 
 import asyncio
-import typing
+from collections.abc import AsyncIterator, Callable
 from datetime import datetime, timedelta, timezone
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 
 import async_solipsism
 import pytest
 import time_machine
 from frequenz.channels import Receiver
-from frequenz.client.microgrid import EVChargerCableState, EVChargerComponentState
+from frequenz.client.microgrid.component import ComponentStateCode
 from frequenz.quantities import Power, Voltage
 from pytest_mock import MockerFixture
 
@@ -24,7 +25,7 @@ from frequenz.sdk.microgrid._power_distributing._component_pool_status_tracker i
     ComponentPoolStatusTracker,
 )
 from frequenz.sdk.timeseries import ResamplerConfig, Sample3Phase
-from frequenz.sdk.timeseries.ev_charger_pool import EVChargerPool, EVChargerPoolReport
+from frequenz.sdk.timeseries.ev_charger_pool import EVChargerPoolReport
 
 from ...microgrid.fixtures import _Mocks
 from ...utils.component_data_streamer import MockComponentDataStreamer
@@ -41,7 +42,7 @@ def event_loop_policy() -> async_solipsism.EventLoopPolicy:
 
 
 @pytest.fixture
-async def mocks(mocker: MockerFixture) -> typing.AsyncIterator[_Mocks]:
+async def mocks(mocker: MockerFixture) -> AsyncIterator[_Mocks]:
     """Create the mocks."""
     mockgrid = MockMicrogrid(grid_meter=True)
     mockgrid.add_ev_chargers(4)
@@ -55,13 +56,17 @@ async def mocks(mocker: MockerFixture) -> typing.AsyncIterator[_Mocks]:
     )
     streamer = MockComponentDataStreamer(mockgrid.mock_client)
 
-    dp = typing.cast(_DataPipeline, microgrid._data_pipeline._DATA_PIPELINE)
+    dp = cast(_DataPipeline, microgrid._data_pipeline._DATA_PIPELINE)
 
-    yield _Mocks(
+    _mocks = _Mocks(
         mockgrid,
         streamer,
         dp._ev_power_wrapper.status_channel.new_sender(),
     )
+    try:
+        yield _mocks
+    finally:
+        await _mocks.stop()
 
 
 class TestEVChargerPoolControl:
@@ -120,8 +125,11 @@ class TestEVChargerPoolControl:
                 EvChargerDataWrapper(
                     evc_id,
                     now,
-                    cable_state=EVChargerCableState.EV_PLUGGED,
-                    component_state=EVChargerComponentState.READY,
+                    states={
+                        ComponentStateCode.READY,
+                        ComponentStateCode.EV_CHARGING_CABLE_PLUGGED_AT_EV,
+                        ComponentStateCode.EV_CHARGING_CABLE_PLUGGED_AT_STATION,
+                    },
                     active_power=0.0,
                     active_power_inclusion_lower_bound=0.0,
                     active_power_inclusion_upper_bound=16.0 * 230.0 * 3,
@@ -142,16 +150,17 @@ class TestEVChargerPoolControl:
 
     def _assert_report(  # pylint: disable=too-many-arguments
         self,
-        report: EVChargerPoolReport,
+        report: EVChargerPoolReport | None,
         *,
         power: float | None,
         lower: float,
         upper: float,
         dist_result: _power_distributing.Result | None = None,
         expected_result_pred: (
-            typing.Callable[[_power_distributing.Result], bool] | None
+            Callable[[_power_distributing.Result], bool] | None
         ) = None,
     ) -> None:
+        assert report is not None
         assert report.target_power == (
             Power.from_watts(power) if power is not None else None
         )
@@ -162,23 +171,21 @@ class TestEVChargerPoolControl:
             assert dist_result is not None
             assert expected_result_pred(dist_result)
 
-    async def _get_bounds_receiver(
-        self, ev_charger_pool: EVChargerPool
-    ) -> Receiver[EVChargerPoolReport]:
-        bounds_rx = ev_charger_pool.power_status.new_receiver()
-
-        # Consume initial reports as chargers are initialized
-        expected_upper_bounds = 44160.0
+    async def _recv_reports_until(
+        self,
+        bounds_rx: Receiver[EVChargerPoolReport],
+        check: Callable[[EVChargerPoolReport], bool],
+    ) -> EVChargerPoolReport | None:
+        """Receive reports until the given condition is met."""
         max_reports = 10
         ctr = 0
         while ctr < max_reports:
             ctr += 1
-            report = await bounds_rx.receive()
-            assert report.bounds is not None
-            if report.bounds.upper == Power.from_watts(expected_upper_bounds):
-                break
-
-        return bounds_rx
+            async with asyncio.timeout(10.0):
+                report = await bounds_rx.receive()
+            if check(report):
+                return report
+        return None
 
     async def test_setting_power(
         self,
@@ -189,31 +196,36 @@ class TestEVChargerPoolControl:
         traveller = time_machine.travel(datetime(2012, 12, 12))
         mock_time = traveller.start()
 
-        set_power = typing.cast(
-            AsyncMock, microgrid.connection_manager.get().api_client.set_power
+        set_power = cast(
+            AsyncMock,
+            microgrid.connection_manager.get().api_client.set_component_power_active,
         )
         await self._init_ev_chargers(mocks)
         ev_charger_pool = microgrid.new_ev_charger_pool(priority=5)
         await self._patch_ev_pool_status(mocks, mocker)
         await self._patch_power_distributing_actor(mocker)
 
-        bounds_rx = await self._get_bounds_receiver(ev_charger_pool)
+        bounds_rx = ev_charger_pool.power_status.new_receiver()
+        # Receive reports until all chargers are initialized
+        report = await self._recv_reports_until(
+            bounds_rx,
+            lambda r: r.bounds is not None
+            and r.bounds.upper == Power.from_watts(44160.0),
+        )
 
         # Check that chargers are initialized to Power.zero()
         assert set_power.call_count == 4
         assert all(x.args[1] == 0.0 for x in set_power.call_args_list)
-
-        self._assert_report(
-            await bounds_rx.receive(), power=None, lower=0.0, upper=44160.0
-        )
+        self._assert_report(report, power=None, lower=0.0, upper=44160.0)
 
         set_power.reset_mock()
         await ev_charger_pool.propose_power(Power.from_watts(40000.0))
         # ignore one report because it is not always immediately updated.
-        await bounds_rx.receive()
-        self._assert_report(
-            await bounds_rx.receive(), power=40000.0, lower=0.0, upper=44160.0
+        report = await self._recv_reports_until(
+            bounds_rx,
+            lambda r: r.target_power == Power.from_watts(40000.0),
         )
+        self._assert_report(report, power=40000.0, lower=0.0, upper=44160.0)
         mock_time.shift(timedelta(seconds=60))
         await asyncio.sleep(0.15)
 
@@ -236,7 +248,7 @@ class TestEVChargerPoolControl:
         # Throttle the power
         set_power.reset_mock()
         await ev_charger_pool.propose_power(Power.from_watts(32000.0))
-        await bounds_rx.receive()
+        report = await bounds_rx.receive()
         await asyncio.sleep(0.02)
         assert set_power.call_count == 1
 

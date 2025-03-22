@@ -37,8 +37,8 @@ async def test_grid_frequency_none(mocker: MockerFixture) -> None:
 
     await mockgrid.mock_client.send(
         component_data_wrapper.MeterDataWrapper(
-            mockgrid.meter_ids[0], datetime.now(tz=timezone.utc)
-        )
+            component_id=mockgrid.meter_ids[0], timestamp=datetime.now(tz=timezone.utc)
+        ).to_samples()
     )
 
     val = await grid_freq_recv.receive()
@@ -69,8 +69,10 @@ async def test_grid_frequency_1(mocker: MockerFixture) -> None:
             freq = float(50.0 + (1 if count % 2 == 0 else -1) * 0.01)
             await mockgrid.mock_client.send(
                 component_data_wrapper.MeterDataWrapper(
-                    mockgrid.meter_ids[0], datetime.now(tz=timezone.utc), frequency=freq
-                )
+                    mockgrid.meter_ids[0],
+                    datetime.now(tz=timezone.utc),
+                    frequency=freq,
+                ).to_samples()
             )
 
             grid_meter_data.append(Frequency.from_hertz(freq))
@@ -108,7 +110,7 @@ async def test_grid_frequency_no_grid_meter_no_consumer_meter(
             await mockgrid.mock_client.send(
                 component_data_wrapper.MeterDataWrapper(
                     mockgrid.meter_ids[0], datetime.now(tz=timezone.utc), frequency=freq
-                )
+                ).to_samples()
             )
             meter_data.append(Frequency.from_hertz(freq))
 
@@ -145,7 +147,7 @@ async def test_grid_frequency_no_grid_meter(
             await mockgrid.mock_client.send(
                 component_data_wrapper.MeterDataWrapper(
                     mockgrid.meter_ids[0], datetime.now(tz=timezone.utc), frequency=freq
-                )
+                ).to_samples()
             )
             meter_data.append(Frequency.from_hertz(freq))
 
@@ -183,7 +185,7 @@ async def test_grid_frequency_only_inverter(
                     mockgrid.battery_inverter_ids[0],
                     datetime.now(tz=timezone.utc),
                     frequency=freq,
-                )
+                ).to_samples()
             )
 
             meter_data.append(Frequency.from_hertz(freq))

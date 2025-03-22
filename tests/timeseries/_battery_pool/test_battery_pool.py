@@ -21,7 +21,7 @@ import pytest
 import time_machine
 from frequenz.channels import Receiver, Sender
 from frequenz.client.microgrid import ComponentId
-from frequenz.client.microgrid import ComponentCategory
+from frequenz.client.microgrid.component import Battery, Component, ComponentCategory
 from frequenz.quantities import Energy, Percentage, Power, Temperature
 from pytest_mock import MockerFixture
 
@@ -62,21 +62,21 @@ def event_loop_policy() -> async_solipsism.EventLoopPolicy:
 
 
 def get_components(
-    mock_microgrid: MockMicrogridClient, component_category: ComponentCategory
-    """Get components of given category from mock microgrid.
+    mock_microgrid: MockMicrogridClient, component_type: type[Component]
 ) -> set[ComponentId]:
+    """Get components of given type from mock microgrid.
 
     Args:
         mock_microgrid: mock microgrid
-        component_category: components category
+        component_type: components type
 
     Returns:
-        Components of this category.
+        Components of this type.
     """
     return {
-        component.component_id
+        component.id
         for component in mock_microgrid.component_graph.components(
-            component_categories={component_category}
+            filter_by_types={component_type}
         )
     }
 
@@ -199,7 +199,7 @@ async def setup_batteries_pool(mocker: MockerFixture) -> AsyncIterator[SetupArgs
     # the scope of this tests. This tests should cover BatteryPool only.
     # We use our own battery status channel, where we easily control set of working
     # batteries.
-    all_batteries = get_components(mock_microgrid, ComponentCategory.BATTERY)
+    all_batteries = get_components(mock_microgrid, Battery)
 
     # This is a hack because these tests used to rely on the order in which components
     # are returned from the component graph using `all_batteries[:2]` to get the first 2
@@ -279,6 +279,7 @@ async def run_scenarios(
         AssertionError: If received metric is not as expected.
     """
     for idx, scenario in enumerate(scenarios):
+        _logger.info("Testing scenario: %d", idx)
         # Update data stream
         old_data = streamer.get_current_component_data(scenario.component_id)
         new_data = replace(old_data, **scenario.new_metrics)
@@ -737,7 +738,7 @@ async def test_battery_pool_power_incomplete_bat_request(mocker: MockerFixture) 
     with pytest.raises(FormulaGenerationError):
         # Request only two of the three batteries behind the inverters
         battery_pool = microgrid.new_battery_pool(
-            priority=5, component_ids=set([bats[1].component_id, bats[0].component_id])
+            priority=5, component_ids=set([bats[1].id, bats[0].id])
         )
         power_receiver = battery_pool.power.new_receiver()
         await mockgrid.mock_resampler.send_bat_inverter_power([2.0])
@@ -760,7 +761,7 @@ async def run_capacity_test(  # pylint: disable=too-many-locals
 
     # All batteries are working and sending data. Not just the ones in the
     # battery pool.
-    all_batteries = get_components(mock_microgrid, ComponentCategory.BATTERY)
+    all_batteries = get_components(mock_microgrid, Battery)
     await battery_status_sender.send(
         ComponentPoolStatus(working=all_batteries, uncertain=set())
     )
@@ -950,7 +951,7 @@ async def run_soc_test(setup_args: SetupArgs) -> None:
 
     # All batteries are working and sending data. Not just the ones in the
     # battery pool.
-    all_batteries = get_components(mock_microgrid, ComponentCategory.BATTERY)
+    all_batteries = get_components(mock_microgrid, Battery)
     await battery_status_sender.send(
         ComponentPoolStatus(working=all_batteries, uncertain=set())
     )
@@ -1085,7 +1086,7 @@ async def run_power_bounds_test(  # pylint: disable=too-many-locals
 
     # All batteries are working and sending data. Not just the ones in the
     # battery pool.
-    all_batteries = get_components(mock_microgrid, ComponentCategory.BATTERY)
+    all_batteries = get_components(mock_microgrid, Battery)
     await battery_status_sender.send(
         ComponentPoolStatus(working=all_batteries, uncertain=set())
     )
@@ -1337,7 +1338,7 @@ async def run_temperature_test(  # pylint: disable=too-many-locals
     streamer = setup_args.streamer
     battery_status_sender = setup_args.battery_status_sender
 
-    all_batteries = get_components(mock_microgrid, ComponentCategory.BATTERY)
+    all_batteries = get_components(mock_microgrid, Battery)
     await battery_status_sender.send(
         ComponentPoolStatus(working=all_batteries, uncertain=set())
     )

@@ -253,6 +253,9 @@ class SendOnUpdate(MetricAggregator[T]):
                 await sender.send(result)
 
                 if result is None:
+                    # TODO: This code is unreacheable, as T can't be None. We need to
+                    # figure out which case this was supposed to handle. Maybe we need
+                    # some sentinel value or to allow None in T.
                     sleep_for = min_update_interval.total_seconds()
                 else:
                     # Sleep for the rest of the time.
