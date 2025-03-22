@@ -9,7 +9,8 @@ import uuid
 from collections import abc
 
 from frequenz.channels import Broadcast, Receiver, Sender
-from frequenz.client.microgrid import ComponentCategory, ComponentId, InverterType
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import SolarInverter
 
 from ..._internal._channels import ChannelRegistry, ReceiverFetcher
 from ...microgrid import connection_manager
@@ -76,13 +77,7 @@ class PVPoolReferenceStore:
         else:
             graph = connection_manager.get().component_graph
             self.component_ids = frozenset(
-                {
-                    inv.component_id
-                    for inv in graph.components(
-                        component_categories={ComponentCategory.INVERTER}
-                    )
-                    if inv.type == InverterType.SOLAR
-                }
+                {inv.id for inv in graph.components(filter_by_types={SolarInverter})}
             )
 
         self.power_bounds_subs: dict[str, asyncio.Task[None]] = {}

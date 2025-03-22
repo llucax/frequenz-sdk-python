@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterable
 
-from frequenz.client.microgrid import ComponentId, EVChargerData
+from frequenz.client.microgrid import ComponentId
 from frequenz.quantities import Power
+
+from ...._old_component_data import EVChargerData
 
 
 @dataclass

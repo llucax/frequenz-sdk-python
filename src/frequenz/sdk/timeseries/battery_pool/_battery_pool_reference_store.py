@@ -11,7 +11,8 @@ from datetime import timedelta
 from typing import Any
 
 from frequenz.channels import Receiver, Sender
-from frequenz.client.microgrid import ComponentCategory, ComponentId
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import Battery
 
 from ..._internal._asyncio import cancel_and_await
 from ..._internal._channels import ChannelRegistry, ReceiverFetcher
@@ -141,12 +142,7 @@ class BatteryPoolReferenceStore:  # pylint: disable=too-many-instance-attributes
         """
         graph = connection_manager.get().component_graph
         return frozenset(
-            {
-                battery.component_id
-                for battery in graph.components(
-                    component_categories={ComponentCategory.BATTERY}
-                )
-            }
+            battery.id for battery in graph.components(filter_by_types={Battery})
         )
 
     async def _update_battery_status(

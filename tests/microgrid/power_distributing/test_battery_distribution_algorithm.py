@@ -8,9 +8,10 @@ from collections.abc import Sequence, Set
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from frequenz.client.microgrid import BatteryData, ComponentId, InverterData
+from frequenz.client.microgrid import ComponentId
 from pytest import approx, raises
 
+from frequenz.sdk.microgrid._old_component_data import BatteryData, InverterData
 from frequenz.sdk.microgrid._power_distributing._distribution_algorithm import (
     AggregatedBatteryData,
     BatteryDistributionAlgorithm,

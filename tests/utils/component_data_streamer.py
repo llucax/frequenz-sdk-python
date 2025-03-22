@@ -8,9 +8,10 @@ import asyncio
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from frequenz.client.microgrid import ComponentData, ComponentId
+from frequenz.client.microgrid import ComponentId
 
 from frequenz.sdk._internal._asyncio import cancel_and_await
+from frequenz.sdk.microgrid._old_component_data import ComponentData
 
 from .mock_microgrid_client import MockMicrogridClient
 
@@ -107,5 +108,5 @@ class MockComponentDataStreamer:
         while component_id in self._component_data:
             data = self._component_data[component_id]
             new_data = replace(data, timestamp=datetime.now(tz=timezone.utc))
-            await self._mock_microgrid.send(new_data)
+            await self._mock_microgrid.send(new_data.to_samples())
             await asyncio.sleep(sampling_rate)

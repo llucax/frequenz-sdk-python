@@ -17,7 +17,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from frequenz.channels import Broadcast, Sender
-from frequenz.client.microgrid import ComponentCategory, ComponentId, InverterType
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import Battery, EvCharger, SolarInverter
 
 from .._internal._channels import ChannelRegistry
 from ..actor._actor import Actor
@@ -103,18 +104,17 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         self._battery_power_wrapper = PowerWrapper(
             self._channel_registry,
             api_power_request_timeout=api_power_request_timeout,
-            component_category=ComponentCategory.BATTERY,
+            component_class=Battery,
         )
         self._ev_power_wrapper = PowerWrapper(
             self._channel_registry,
             api_power_request_timeout=api_power_request_timeout,
-            component_category=ComponentCategory.EV_CHARGER,
+            component_class=EvCharger,
         )
         self._pv_power_wrapper = PowerWrapper(
             self._channel_registry,
             api_power_request_timeout=api_power_request_timeout,
-            component_category=ComponentCategory.INVERTER,
-            component_type=InverterType.SOLAR,
+            component_class=SolarInverter,
         )
 
         self._logical_meter: LogicalMeter | None = None

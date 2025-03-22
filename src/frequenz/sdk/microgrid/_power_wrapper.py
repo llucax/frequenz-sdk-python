@@ -13,7 +13,7 @@ from frequenz.channels import Broadcast
 # pylint seems to think this is a cyclic import, but it is not.
 #
 # pylint: disable=cyclic-import
-from frequenz.client.microgrid import ComponentCategory, ComponentType
+from frequenz.client.microgrid.component import Battery, EvCharger, SolarInverter
 
 from .._internal._channels import ChannelRegistry, ReceiverFetcher
 from . import _power_managing, connection_manager
@@ -35,8 +35,7 @@ class PowerWrapper:
         channel_registry: ChannelRegistry,
         *,
         api_power_request_timeout: timedelta,
-        component_category: ComponentCategory,
-        component_type: ComponentType | None = None,
+        component_class: type[Battery | EvCharger | SolarInverter],
     ):
         """Initialize the power control.
 
@@ -44,18 +43,9 @@ class PowerWrapper:
             channel_registry: A channel registry for use in the actors.
             api_power_request_timeout: Timeout to use when making power requests to
                 the microgrid API.
-            component_category: The category of the components that actors started by
-                this instance of the PowerWrapper will be responsible for.
-            component_type: The type of the component of the given category that this
-                actor is responsible for.  This is used only when the component category
-                is not enough to uniquely identify the component.  For example, when the
-                category is `ComponentCategory.INVERTER`, the type is needed to identify
-                the inverter as a solar inverter or a battery inverter.  This can be
-                `None` when the component category is enough to uniquely identify the
-                component.
+            component_class: The class of the component to manage.
         """
-        self._component_category = component_category
-        self._component_type = component_type
+        self._component_class = component_class
         self._channel_registry = channel_registry
         self._api_power_request_timeout = api_power_request_timeout
 
@@ -88,19 +78,16 @@ class PowerWrapper:
         # Currently the power managing actor only supports batteries.  The below
         # constraint needs to be relaxed if the actor is extended to support other
         # components.
-        if not component_graph.components(
-            component_categories={self._component_category}
-        ):
+        if not component_graph.components(filter_by_types={self._component_class}):
             _logger.warning(
                 "No %s found in the component graph. "
                 "The power managing actor will not be started.",
-                self._component_category,
+                self._component_class.__name__,
             )
             return
 
         self._power_managing_actor = _power_managing.PowerManagingActor(
-            component_category=self._component_category,
-            component_type=self._component_type,
+            component_class=self._component_class,
             proposals_receiver=self.proposal_channel.new_receiver(),
             bounds_subscription_receiver=(
                 self.bounds_subscription_channel.new_receiver()
@@ -121,13 +108,11 @@ class PowerWrapper:
             return
 
         component_graph = connection_manager.get().component_graph
-        if not component_graph.components(
-            component_categories={self._component_category}
-        ):
+        if not component_graph.components(filter_by_types={self._component_class}):
             _logger.warning(
                 "No %s found in the component graph. "
                 "The power distributing actor will not be started.",
-                self._component_category,
+                self._component_class.__name__,
             )
             return
 
@@ -135,8 +120,7 @@ class PowerWrapper:
         # Until the PowerManager is implemented, support for multiple use-case actors
         # will not be available in the high level interface.
         self._power_distributing_actor = PowerDistributingActor(
-            component_category=self._component_category,
-            component_type=self._component_type,
+            component_type=self._component_class,
             api_power_request_timeout=self._api_power_request_timeout,
             requests_receiver=self._power_distribution_requests_channel.new_receiver(),
             results_sender=self._power_distribution_results_channel.new_sender(),

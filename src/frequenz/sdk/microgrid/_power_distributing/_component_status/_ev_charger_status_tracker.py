@@ -10,17 +10,14 @@ from datetime import datetime, timedelta, timezone
 
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
-from frequenz.client.microgrid import (
-    ComponentId,
-    EVChargerCableState,
-    EVChargerComponentState,
-    EVChargerData,
-)
+from frequenz.client.microgrid import ComponentId
+from frequenz.client.microgrid.component import ComponentStateCode
 from typing_extensions import override
 
 from ...._internal._asyncio import run_forever
 from ....actor._background_service import BackgroundService
 from ... import connection_manager
+from ..._old_component_data import EVChargerData
 from ._blocking_status import BlockingStatus
 from ._component_status import (
     ComponentStatus,
@@ -47,25 +44,25 @@ class EVChargerStatusTracker(ComponentStatusTracker, BackgroundService):
     @override
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        *,
         component_id: ComponentId,
-        max_data_age: timedelta,
-        max_blocking_duration: timedelta,
         status_sender: Sender[ComponentStatus],
         set_power_result_receiver: Receiver[SetPowerResult],
+        *,
+        max_data_age: timedelta,
+        max_blocking_duration: timedelta,
     ) -> None:
         """Initialize this instance.
 
         Args:
             component_id: ID of the EV charger to monitor the status of.
-            max_data_age: max duration to wait for, before marking a component as
-                NOT_WORKING, unless new data arrives.
-            max_blocking_duration: duration for which the component status should be
-                UNCERTAIN if a request to the component failed unexpectedly.
             status_sender: Channel sender to send status updates to.
             set_power_result_receiver: Receiver to fetch PowerDistributor responses
                 from, to get the status of the most recent request made for an EV
                 Charger.
+            max_data_age: max duration to wait for, before marking a component as
+                NOT_WORKING, unless new data arrives.
+            max_blocking_duration: duration for which the component status should be
+                UNCERTAIN if a request to the component failed unexpectedly.
         """
         self._component_id = component_id
         self._max_data_age = max_data_age
@@ -87,13 +84,25 @@ class EVChargerStatusTracker(ComponentStatusTracker, BackgroundService):
 
     def _is_working(self, ev_data: EVChargerData) -> bool:
         """Return whether the given data indicates that the component is working."""
-        return ev_data.cable_state in (
-            EVChargerCableState.EV_PLUGGED,
-            EVChargerCableState.EV_LOCKED,
-        ) and ev_data.component_state in (
-            EVChargerComponentState.READY,
-            EVChargerComponentState.CHARGING,
-            EVChargerComponentState.DISCHARGING,
+        return bool(
+            (
+                {
+                    ComponentStateCode.EV_CHARGING_CABLE_LOCKED_AT_EV,
+                    ComponentStateCode.EV_CHARGING_CABLE_LOCKED_AT_STATION,
+                }
+                & ev_data.states
+                or {
+                    ComponentStateCode.EV_CHARGING_CABLE_PLUGGED_AT_EV,
+                    ComponentStateCode.EV_CHARGING_CABLE_PLUGGED_AT_STATION,
+                }
+                & ev_data.states
+            )
+            and {
+                ComponentStateCode.READY,
+                ComponentStateCode.CHARGING,
+                ComponentStateCode.DISCHARGING,
+            }
+            & ev_data.states
         )
 
     def _is_stale(self, ev_data: EVChargerData) -> bool:
@@ -123,11 +132,9 @@ class EVChargerStatusTracker(ComponentStatusTracker, BackgroundService):
 
         if self._last_status == ComponentStatusEnum.WORKING:
             _logger.warning(
-                "EV charger %s is in NOT_WORKING state. "
-                "Cable state: %s, component state: %s",
+                "EV charger %s is in NOT_WORKING state. component states: %s",
                 self._component_id,
-                ev_data.cable_state,
-                ev_data.component_state,
+                ev_data.states,
             )
         return ComponentStatusEnum.NOT_WORKING
 
@@ -149,8 +156,9 @@ class EVChargerStatusTracker(ComponentStatusTracker, BackgroundService):
 
     async def _run(self) -> None:
         """Run the status tracker."""
-        api_client = connection_manager.get().api_client
-        ev_data_rx = await api_client.ev_charger_data(self._component_id)
+        ev_data_rx = await EVChargerData.subscribe(
+            connection_manager.get().api_client, self._component_id
+        )
         set_power_result_rx = self._set_power_result_receiver
         missing_data_timer = Timer(self._max_data_age, SkipMissedAndDrift())
 
