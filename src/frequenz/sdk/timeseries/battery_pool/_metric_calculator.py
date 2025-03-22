@@ -11,6 +11,7 @@ from collections.abc import Mapping, Set
 from datetime import datetime, timezone
 from typing import Generic, TypeVar
 
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import ComponentMetricId
 from frequenz.quantities import Energy, Percentage, Power, Temperature
 
@@ -46,7 +47,7 @@ class MetricCalculator(ABC, Generic[T]):
         * how to calculate the result,
     """
 
-    def __init__(self, batteries: Set[int]) -> None:
+    def __init__(self, batteries: Set[ComponentId]) -> None:
         """Create class instance.
 
         Args:
@@ -64,7 +65,7 @@ class MetricCalculator(ABC, Generic[T]):
         """
 
     @property
-    def batteries(self) -> Set[int]:
+    def batteries(self) -> Set[ComponentId]:
         """Return set of batteries that should be used to calculate the metrics.
 
         Some batteries given in constructor can be discarded
@@ -78,7 +79,7 @@ class MetricCalculator(ABC, Generic[T]):
 
     @property
     @abstractmethod
-    def battery_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def battery_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each battery.
 
         Returns:
@@ -87,7 +88,7 @@ class MetricCalculator(ABC, Generic[T]):
 
     @property
     @abstractmethod
-    def inverter_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def inverter_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each inverter.
 
         Returns:
@@ -97,8 +98,8 @@ class MetricCalculator(ABC, Generic[T]):
     @abstractmethod
     def calculate(
         self,
-        metrics_data: dict[int, ComponentMetricsData],
-        working_batteries: set[int],
+        metrics_data: dict[ComponentId, ComponentMetricsData],
+        working_batteries: set[ComponentId],
     ) -> T:
         """Aggregate the metrics_data and calculate high level metric.
 
@@ -121,7 +122,7 @@ class MetricCalculator(ABC, Generic[T]):
 class CapacityCalculator(MetricCalculator[Sample[Energy]]):
     """Define how to calculate Capacity metrics."""
 
-    def __init__(self, batteries: Set[int]) -> None:
+    def __init__(self, batteries: Set[ComponentId]) -> None:
         """Create class instance.
 
         Args:
@@ -145,7 +146,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
         return "Capacity"
 
     @property
-    def battery_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def battery_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each battery.
 
         Returns:
@@ -154,7 +155,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
         return {bid: self._metrics for bid in self._batteries}
 
     @property
-    def inverter_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def inverter_metrics(self) -> Mapping[ComponentId, list[CompoentMetricId]]:
         """Return what metrics are needed for each inverter.
 
         Returns:
@@ -164,8 +165,8 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
 
     def calculate(
         self,
-        metrics_data: dict[int, ComponentMetricsData],
-        working_batteries: set[int],
+        metrics_data: dict[ComponentId, ComponentMetricsData],
+        working_batteries: set[ComponentId],
     ) -> Sample[Energy]:
         """Aggregate the metrics_data and calculate high level metric.
 
@@ -213,7 +214,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
 class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
     """Define how to calculate temperature metrics."""
 
-    def __init__(self, batteries: Set[int]) -> None:
+    def __init__(self, batteries: Set[ComponentId]) -> None:
         """Create class instance.
 
         Args:
@@ -235,7 +236,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
         return "temperature"
 
     @property
-    def battery_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def battery_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each battery.
 
         Returns:
@@ -244,7 +245,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
         return {bid: self._metrics for bid in self._batteries}
 
     @property
-    def inverter_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def inverter_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each inverter.
 
         Returns:
@@ -254,8 +255,8 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
 
     def calculate(
         self,
-        metrics_data: dict[int, ComponentMetricsData],
-        working_batteries: set[int],
+        metrics_data: dict[ComponentId, ComponentMetricsData],
+        working_batteries: set[ComponentId],
     ) -> Sample[Temperature]:
         """Aggregate the metrics_data and calculate high level metric for temperature.
 
@@ -300,7 +301,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
 class SoCCalculator(MetricCalculator[Sample[Percentage]]):
     """Define how to calculate SoC metrics."""
 
-    def __init__(self, batteries: Set[int]) -> None:
+    def __init__(self, batteries: Set[ComponentId]) -> None:
         """Create class instance.
 
         Args:
@@ -325,7 +326,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
         return "SoC"
 
     @property
-    def battery_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def battery_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each battery.
 
         Returns:
@@ -334,7 +335,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
         return {bid: self._metrics for bid in self._batteries}
 
     @property
-    def inverter_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def inverter_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each inverter.
 
         Returns:
@@ -344,8 +345,8 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
 
     def calculate(
         self,
-        metrics_data: dict[int, ComponentMetricsData],
-        working_batteries: set[int],
+        metrics_data: dict[ComponentId, ComponentMetricsData],
+        working_batteries: set[ComponentId],
     ) -> Sample[Percentage]:
         """Aggregate the metrics_data and calculate high level metric.
 
@@ -437,7 +438,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
 
     def __init__(
         self,
-        batteries: Set[int],
+        batteries: Set[ComponentId],
     ) -> None:
         """Create class instance.
 
@@ -491,7 +492,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
         return "PowerBounds"
 
     @property
-    def battery_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def battery_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each battery.
 
         Returns:
@@ -500,7 +501,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
         return {bid: self._battery_metrics for bid in set(self._bat_inv_map.keys())}
 
     @property
-    def inverter_metrics(self) -> Mapping[int, list[ComponentMetricId]]:
+    def inverter_metrics(self) -> Mapping[ComponentId, list[ComponentMetricId]]:
         """Return what metrics are needed for each inverter.
 
         Returns:
@@ -515,8 +516,8 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
     # pylint: disable=too-many-locals
     def calculate(
         self,
-        metrics_data: dict[int, ComponentMetricsData],
-        working_batteries: set[int],
+        metrics_data: dict[ComponentId, ComponentMetricsData],
+        working_batteries: set[ComponentId],
     ) -> SystemBounds:
         """Aggregate the metrics_data and calculate high level metric.
 
@@ -544,7 +545,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
         }
 
         def get_validated_bounds(
-            comp_id: int, comp_metric_ids: list[ComponentMetricId]
+            comp_id: ComponentId, comp_metric_ids: list[ComponentMetricId]
         ) -> PowerBounds | None:
             results: list[float] = []
             # Make timestamp accessible
@@ -570,7 +571,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
             )
 
         def get_bounds_list(
-            comp_ids: frozenset[int], comp_metric_ids: list[ComponentMetricId]
+            comp_ids: frozenset[ComponentId], comp_metric_ids: list[ComponentMetricId]
         ) -> list[PowerBounds]:
             return list(
                 x

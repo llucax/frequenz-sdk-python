@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Generic
 
 from frequenz.channels import Sender
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import Component, ComponentCategory, ComponentMetricId
 
 from ...._internal._channels import ChannelRegistry
@@ -46,7 +47,7 @@ frequency as the other streams.
 class FormulaGeneratorConfig:
     """Config for formula generators."""
 
-    component_ids: abc.Set[int] | None = None
+    component_ids: abc.Set[ComponentId] | None = None
     """The component IDs to use for generating the formula."""
 
     allow_fallback: bool = True

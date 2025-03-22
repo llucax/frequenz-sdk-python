@@ -10,6 +10,7 @@
 from unittest import mock
 
 import pytest
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import (
     Component,
     ComponentCategory,
@@ -48,10 +49,10 @@ def _add_connections(
 
 
 def _check_predecessors_and_successors(graph: gr.ComponentGraph) -> None:
-    expected_predecessors: dict[int, set[Component]] = {}
-    expected_successors: dict[int, set[Component]] = {}
+    expected_predecessors: dict[ComponentId, set[Component]] = {}
+    expected_successors: dict[ComponentId, set[Component]] = {}
 
-    components: dict[int, Component] = {
+    components: dict[ComponentId, Component] = {
         component.component_id: component for component in graph.components()
     }
 
@@ -85,21 +86,21 @@ class TestComponentGraph:
     def sample_input_components(self) -> set[Component]:
         """Create a sample set of components for testing purposes."""
         return {
-            Component(11, ComponentCategory.GRID),
-            Component(21, ComponentCategory.METER),
-            Component(41, ComponentCategory.METER),
-            Component(51, ComponentCategory.INVERTER),
-            Component(61, ComponentCategory.BATTERY),
+            Component(ComponentId(11), ComponentCategory.GRID),
+            Component(ComponentId(21), ComponentCategory.METER),
+            Component(ComponentId(41), ComponentCategory.METER),
+            Component(ComponentId(51), ComponentCategory.INVERTER),
+            Component(ComponentId(61), ComponentCategory.BATTERY),
         }
 
     @pytest.fixture()
     def sample_input_connections(self) -> set[Connection]:
         """Create a sample set of connections for testing purposes."""
         return {
-            Connection(11, 21),
-            Connection(21, 41),
-            Connection(41, 51),
-            Connection(51, 61),
+            Connection(ComponentId(11), ComponentId(21)),
+            Connection(ComponentId(21), ComponentId(41)),
+            Connection(ComponentId(41), ComponentId(51)),
+            Connection(ComponentId(51), ComponentId(61)),
         }
 
     @pytest.fixture()
@@ -124,58 +125,58 @@ class TestComponentGraph:
         assert graph.connections() == set()
         with pytest.raises(
             KeyError,
-            match="Component 1 not in graph, cannot get predecessors!",
+            match="Component CID1 not in graph, cannot get predecessors!",
         ):
-            graph.predecessors(1)
+            graph.predecessors(ComponentId(1))
         with pytest.raises(
             KeyError,
-            match="Component 1 not in graph, cannot get successors!",
+            match="Component CID1 not in graph, cannot get successors!",
         ):
-            graph.successors(1)
+            graph.successors(ComponentId(1))
 
         # simplest valid microgrid: a grid endpoint and a meter
         _graph_implementation.refresh_from(
             components={
-                Component(1, ComponentCategory.GRID),
-                Component(3, ComponentCategory.METER),
+                Component(ComponentId(1), ComponentCategory.GRID),
+                Component(ComponentId(3), ComponentCategory.METER),
             },
-            connections={Connection(1, 3)},
+            connections={Connection(ComponentId(1), ComponentId(3))},
         )
         expected_components = {
-            Component(1, ComponentCategory.GRID),
-            Component(3, ComponentCategory.METER),
+            Component(ComponentId(1), ComponentCategory.GRID),
+            Component(ComponentId(3), ComponentCategory.METER),
         }
         assert len(graph.components()) == len(expected_components)
         assert graph.components() == expected_components
-        assert graph.connections() == {Connection(1, 3)}
+        assert graph.connections() == {{Connection(ComponentId(1), ComponentId(3))}}
 
-        assert graph.predecessors(1) == set()
-        assert graph.successors(1) == {Component(3, ComponentCategory.METER)}
-        assert graph.predecessors(3) == {Component(1, ComponentCategory.GRID)}
-        assert graph.successors(3) == set()
+        assert graph.predecessors(ComponentId(1)) == set()
+        assert graph.successors(1) == {Component(ComponentId(3), ComponentCategory.METER)}
+        assert graph.predecessors(3) == {Component(ComponentId(1), ComponentCategory.GRID)}
+        assert graph.successors(ComponentId(3)) == set()
         with pytest.raises(
             KeyError,
-            match="Component 2 not in graph, cannot get predecessors!",
+            match="Component CID2 not in graph, cannot get predecessors!",
         ):
-            graph.predecessors(2)
+            graph.predecessors(ComponentId(2))
         with pytest.raises(
             KeyError,
-            match="Component 2 not in graph, cannot get successors!",
+            match="Component CID2 not in graph, cannot get successors!",
         ):
-            graph.successors(2)
+            graph.successors(ComponentId(2))
 
         input_components = {
-            101: Component(101, ComponentCategory.GRID),
-            102: Component(102, ComponentCategory.METER),
-            104: Component(104, ComponentCategory.METER),
-            105: Component(105, ComponentCategory.INVERTER),
-            106: Component(106, ComponentCategory.BATTERY),
+            ComponentId(101): Component(ComponentId(101), ComponentCategory.GRID),
+            ComponentId(102): Component(ComponentId(102), ComponentCategory.METER),
+            ComponentId(104): Component(ComponentId(104), ComponentCategory.METER),
+            ComponentId(105): Component(ComponentId(105), ComponentCategory.INVERTER),
+            ComponentId(106): Component(ComponentId(106), ComponentCategory.BATTERY),
         }
         input_connections = {
-            Connection(101, 102),
-            Connection(102, 104),
-            Connection(104, 105),
-            Connection(105, 106),
+            Connection(ComponentId(101), ComponentId(102)),
+            Connection(ComponentId(102), ComponentId(104)),
+            Connection(ComponentId(104), ComponentId(105)),
+            Connection(ComponentId(105), ComponentId(106)),
         }
 
         # more complex microgrid: grid endpoint, load, grid-side meter,
@@ -193,48 +194,52 @@ class TestComponentGraph:
 
         with pytest.raises(
             KeyError,
-            match="Component 9 not in graph, cannot get predecessors!",
+            match="Component CID9 not in graph, cannot get predecessors!",
         ):
-            graph.predecessors(9)
+            graph.predecessors(ComponentId(9))
         with pytest.raises(
             KeyError,
-            match="Component 99 not in graph, cannot get successors!",
+            match="Component CID99 not in graph, cannot get successors!",
         ):
-            graph.successors(99)
+            graph.successors(ComponentId(99))
 
     @pytest.mark.parametrize(
-        "ids, expected",
+        "int_ids, expected",
         [
             ({1}, set()),
             ({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, set()),
-            ({11}, {Component(11, ComponentCategory.GRID)}),
-            ({21}, {Component(21, ComponentCategory.METER)}),
-            ({41}, {Component(41, ComponentCategory.METER)}),
-            ({51}, {Component(51, ComponentCategory.INVERTER)}),
-            ({61}, {Component(61, ComponentCategory.BATTERY)}),
+            ({11}, {Component(ComponentId(11), ComponentCategory.GRID)}),
+            ({21}, {Component(ComponentId(21), ComponentCategory.METER)}),
+            ({41}, {Component(ComponentId(41), ComponentCategory.METER)}),
+            ({51}, {Component(ComponentId(51), ComponentCategory.INVERTER)}),
+            ({61}, {Component(ComponentId(61), ComponentCategory.BATTERY)}),
             (
                 {11, 61},
                 {
-                    Component(11, ComponentCategory.GRID),
-                    Component(61, ComponentCategory.BATTERY),
+                    Component(ComponentId(11), ComponentCategory.GRID),
+                    Component(ComponentId(161), ComponentCategory.BATTERY),
                 },
             ),
             (
                 {9, 51, 41, 21, 101},
                 {
-                    Component(41, ComponentCategory.METER),
-                    Component(51, ComponentCategory.INVERTER),
-                    Component(21, ComponentCategory.METER),
+                    Component(ComponentId(41), ComponentCategory.METER),
+                    Component(ComponentId(51), ComponentCategory.INVERTER),
+                    Component(ComponentId(21), ComponentCategory.METER),
                 },
             ),
         ],
     )
     def test_filter_graph_components_by_id(
-        self, sample_graph: gr.ComponentGraph, ids: set[int], expected: set[Component]
+        self,
+        sample_graph: gr.ComponentGraph,
+        int_ids: set[int],
+        expected: set[Component],
     ) -> None:
         """Test the graph component query with component ID filter."""
         # with component_id filter specified, we get back only components whose ID
         # matches one of the specified values
+        ids = set(ComponentId(id) for id in int_ids)
         assert len(sample_graph.components(component_ids=ids)) == len(expected)
         assert sample_graph.components(component_ids=ids) == expected
 
@@ -244,23 +249,32 @@ class TestComponentGraph:
             ({ComponentCategory.EV_CHARGER}, set()),
             (
                 {ComponentCategory.BATTERY, ComponentCategory.EV_CHARGER},
-                {Component(61, ComponentCategory.BATTERY)},
+                {Component(ComponentId(61), ComponentCategory.BATTERY)},
             ),
-            ({ComponentCategory.GRID}, {Component(11, ComponentCategory.GRID)}),
+            (
+                {ComponentCategory.GRID},
+                {Component(ComponentId(11), ComponentCategory.GRID)},
+            ),
             (
                 {ComponentCategory.METER},
                 {
-                    Component(21, ComponentCategory.METER),
-                    Component(41, ComponentCategory.METER),
+                    Component(ComponentId(21), ComponentCategory.METER),
+                    Component(ComponentId(41), ComponentCategory.METER),
                 },
             ),
-            ({ComponentCategory.INVERTER}, {Component(51, ComponentCategory.INVERTER)}),
-            ({ComponentCategory.BATTERY}, {Component(61, ComponentCategory.BATTERY)}),
+            (
+                {ComponentCategory.INVERTER},
+                {Component(ComponentId(51), ComponentCategory.BATTERY_INVERTER)},
+            ),
+            (
+                {ComponentCategory.BATTERY},
+                {Component(ComponentId(61), ComponentCategory.BATTERY)},
+            ),
             (
                 {ComponentCategory.GRID, ComponentCategory.BATTERY},
                 {
-                    Component(11, ComponentCategory.GRID),
-                    Component(61, ComponentCategory.BATTERY),
+                    Component(ComponentId(11), ComponentCategory.GRID),
+                    Component(ComponentId(61), ComponentCategory.BATTERY),
                 },
             ),
             (
@@ -270,9 +284,9 @@ class TestComponentGraph:
                     ComponentCategory.EV_CHARGER,
                 },
                 {
-                    Component(21, ComponentCategory.METER),
-                    Component(61, ComponentCategory.BATTERY),
-                    Component(41, ComponentCategory.METER),
+                    Component(ComponentId(21), ComponentCategory.METER),
+                    Component(ComponentId(41), ComponentCategory.BATTERY),
+                    Component(ComponentId(61), ComponentCategory.METER),
                 },
             ),
         ],
@@ -290,21 +304,25 @@ class TestComponentGraph:
         assert sample_graph.components(component_categories=types) == expected
 
     @pytest.mark.parametrize(
-        "ids, types, expected",
+        "int_ids, types, expected",
         [
-            ({11}, {ComponentCategory.GRID}, {Component(11, ComponentCategory.GRID)}),
+            (
+                {11},
+                {ComponentCategory.GRID},
+                {Component(ComponentId(11), ComponentCategory.GRID)},
+            ),
             ({31}, {ComponentCategory.GRID}, set()),
             (
                 {61},
                 {ComponentCategory.BATTERY},
-                {Component(61, ComponentCategory.BATTERY)},
+                {Component(ComponentId(61), ComponentCategory.BATTERY)},
             ),
             (
                 {11, 21, 31, 61},
                 {ComponentCategory.METER, ComponentCategory.BATTERY},
                 {
-                    Component(61, ComponentCategory.BATTERY),
-                    Component(21, ComponentCategory.METER),
+                    Component(ComponentId(61), ComponentCategory.BATTERY),
+                    Component(ComponentId(21), ComponentCategory.METER),
                 },
             ),
         ],
@@ -312,7 +330,7 @@ class TestComponentGraph:
     def test_filter_graph_components_with_composite_filter(
         self,
         sample_graph: gr.ComponentGraph,
-        ids: set[int],
+        int_ids: set[int],
         types: set[ComponentCategory],
         expected: set[Component],
     ) -> None:
@@ -320,6 +338,7 @@ class TestComponentGraph:
         # when both filters are applied, they are combined via AND logic, i.e.
         # the component must have one of the specified IDs and be of one of
         # the specified types
+        ids = set(ComponentId(id) for id in int_ids)
         assert len(
             sample_graph.components(component_ids=ids, component_categories=types)
         ) == len(expected)

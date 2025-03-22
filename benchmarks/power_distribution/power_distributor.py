@@ -12,6 +12,7 @@ from datetime import timedelta
 from typing import Any
 
 from frequenz.channels import Broadcast
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import Component, ComponentCategory
 from frequenz.quantities import Power
 
@@ -37,7 +38,7 @@ PORT = 62060
 # send requests, and those no longer go directly to the power distributing actor, but
 # instead through the power managing actor.  So the below function needs to be updated
 # to use the PowerDistributingActor directly.
-async def send_requests(batteries: set[int], request_num: int) -> list[Result]:
+async def send_requests(batteries: set[ComponentId], request_num: int) -> list[Result]:
     """Send requests to the PowerDistributingActor and wait for the response.
 
     Args:
@@ -98,7 +99,7 @@ def parse_result(result: list[list[Result]]) -> dict[str, float]:
 
 async def run_test(  # pylint: disable=too-many-locals
     num_requests: int,
-    batteries: set[int],
+    batteries: set[ComponentId],
 ) -> dict[str, Any]:
     """Run test.
 

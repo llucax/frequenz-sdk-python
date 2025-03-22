@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import ComponentMetricId
 
 
@@ -15,7 +16,7 @@ from frequenz.client.microgrid import ComponentMetricId
 class ComponentMetricsData:
     """Store values of the component metrics."""
 
-    component_id: int
+    component_id: ComponentId
     """The component ID the data is for."""
 
     timestamp: datetime

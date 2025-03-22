@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from frequenz.channels import Receiver, Sender
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import ComponentMetricId
 from frequenz.quantities import Quantity
 
@@ -57,7 +58,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
         super().__init__(formula_name, create_method)
 
     def _get_resampled_receiver(
-        self, component_id: int, metric_id: ComponentMetricId
+        self, component_id: ComponentId, metric_id: ComponentMetricId
     ) -> Receiver[Sample[QuantityT]]:
         """Get a receiver with the resampled data for the given component id.
 
@@ -92,7 +93,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
 
     def push_component_metric(
         self,
-        component_id: int,
+        component_id: ComponentId,
         *,
         nones_are_zeros: bool,
         fallback: FallbackMetricFetcher[QuantityT] | None = None,
@@ -109,7 +110,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
         """
         receiver = self._get_resampled_receiver(component_id, self._metric_id)
         self.push_metric(
-            f"#{component_id}",
+            f"#{int(component_id)}",
             receiver,
             nones_are_zeros=nones_are_zeros,
             fallback=fallback,
@@ -145,7 +146,7 @@ class ResampledFormulaBuilder(FormulaBuilder[QuantityT]):
         for token in tokenizer:
             if token.type == TokenType.COMPONENT_METRIC:
                 self.push_component_metric(
-                    int(token.value), nones_are_zeros=nones_are_zeros
+                    ComponentId(int(token.value)), nones_are_zeros=nones_are_zeros
                 )
             elif token.type == TokenType.OPER:
                 self.push_oper(token.value)

@@ -9,6 +9,7 @@ import asyncio
 import logging
 
 from frequenz.channels import Receiver, Sender
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import Component, ComponentCategory, ComponentMetricId
 from frequenz.quantities import Frequency, Quantity
 
@@ -20,7 +21,7 @@ from ..timeseries._base_types import Sample
 _logger = logging.getLogger(__name__)
 
 
-def create_request(component_id: int) -> ComponentMetricRequest:
+def create_request(component_id: ComponentId) -> ComponentMetricRequest:
     """Create a request for grid frequency.
 
     Args:

@@ -11,6 +11,7 @@ from datetime import timedelta
 from typing import Any
 
 from frequenz.channels import Receiver, Sender
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import ComponentCategory
 
 from ..._internal._asyncio import cancel_and_await
@@ -47,7 +48,7 @@ class BatteryPoolReferenceStore:  # pylint: disable=too-many-instance-attributes
         power_manager_bounds_subscription_sender: Sender[ReportRequest],
         power_distribution_results_fetcher: ReceiverFetcher[Result],
         min_update_interval: timedelta,
-        batteries_id: Set[int] | None = None,
+        batteries_id: Set[ComponentId] | None = None,
     ) -> None:
         """Create the class instance.
 
@@ -81,13 +82,13 @@ class BatteryPoolReferenceStore:  # pylint: disable=too-many-instance-attributes
                 battery pool. If None or empty, then all batteries from the microgrid
                 will be used.
         """
-        self._batteries: frozenset[int]
+        self._batteries: frozenset[ComponentId]
         if batteries_id:
             self._batteries = frozenset(batteries_id)
         else:
             self._batteries = self._get_all_batteries()
 
-        self._working_batteries: set[int] = set()
+        self._working_batteries: set[ComponentId] = set()
 
         self._update_battery_status_task: asyncio.Task[None] | None = None
         self._batteries_status_receiver: Receiver[ComponentPoolStatus] = (
@@ -133,7 +134,7 @@ class BatteryPoolReferenceStore:  # pylint: disable=too-many-instance-attributes
         await asyncio.gather(*tasks_to_stop)
         self._batteries_status_receiver.close()
 
-    def _get_all_batteries(self) -> frozenset[int]:
+    def _get_all_batteries(self) -> frozenset[ComponentId]:
         """Get all batteries from the microgrid.
 
         Returns:

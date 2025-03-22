@@ -7,6 +7,7 @@
 import logging
 from collections import abc
 
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import ComponentMetricId
 from frequenz.quantities import Current
 
@@ -73,7 +74,7 @@ class EVChargerCurrentFormula(FormulaGenerator[Current]):
 
     def _gen_phase_formula(
         self,
-        component_ids: abc.Set[int],
+        component_ids: abc.Set[ComponentId],
         metric_id: ComponentMetricId,
     ) -> FormulaEngine[Current]:
         builder = self._get_builder("ev-current", metric_id, Current.from_amperes)

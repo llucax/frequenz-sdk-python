@@ -27,6 +27,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 
 import networkx as nx
+from frequenz.client.microgrid import ComponentId
 from frequenz.client.microgrid import (
     Component,
     ComponentCategory,
@@ -54,7 +55,7 @@ class ComponentGraph(ABC):
     @abstractmethod
     def components(
         self,
-        component_ids: set[int] | None = None,
+        component_ids: set[ComponentId] | None = None,
         component_categories: set[ComponentCategory] | None = None,
     ) -> set[Component]:
         """Fetch the components of the microgrid.
@@ -71,8 +72,8 @@ class ComponentGraph(ABC):
     @abstractmethod
     def connections(
         self,
-        start: set[int] | None = None,
-        end: set[int] | None = None,
+        start: set[ComponentId] | None = None,
+        end: set[ComponentId] | None = None,
     ) -> set[Connection]:
         """Fetch the connections between microgrid components.
 
@@ -86,7 +87,7 @@ class ComponentGraph(ABC):
         """
 
     @abstractmethod
-    def predecessors(self, component_id: int) -> set[Component]:
+    def predecessors(self, component_id: ComponentId) -> set[Component]:
         """Fetch the graph predecessors of the specified component.
 
         Args:
@@ -103,7 +104,7 @@ class ComponentGraph(ABC):
         """
 
     @abstractmethod
-    def successors(self, component_id: int) -> set[Component]:
+    def successors(self, component_id: ComponentId) -> set[Component]:
         """Fetch the graph successors of the specified component.
 
         Args:
@@ -379,7 +380,7 @@ class _MicrogridComponentGraph(
 
     def components(
         self,
-        component_ids: set[int] | None = None,
+        component_ids: set[ComponentId] | None = None,
         component_categories: set[ComponentCategory] | None = None,
     ) -> set[Component]:
         """Fetch the components of the microgrid.
@@ -408,8 +409,8 @@ class _MicrogridComponentGraph(
 
     def connections(
         self,
-        start: set[int] | None = None,
-        end: set[int] | None = None,
+        start: set[ComponentId] | None = None,
+        end: set[ComponentId] | None = None,
     ) -> set[Connection]:
         """Fetch the connections between microgrid components.
 
@@ -435,7 +436,7 @@ class _MicrogridComponentGraph(
 
         return set(self._graph.edges[i][_DATA_KEY] for i in selection_ids)
 
-    def predecessors(self, component_id: int) -> set[Component]:
+    def predecessors(self, component_id: ComponentId) -> set[Component]:
         """Fetch the graph predecessors of the specified component.
 
         Args:
@@ -459,7 +460,7 @@ class _MicrogridComponentGraph(
 
         return set(map(lambda idx: self._graph.nodes[idx][_DATA_KEY], predecessors_ids))
 
-    def successors(self, component_id: int) -> set[Component]:
+    def successors(self, component_id: ComponentId) -> set[Component]:
         """Fetch the graph successors of the specified component.
 
         Args:

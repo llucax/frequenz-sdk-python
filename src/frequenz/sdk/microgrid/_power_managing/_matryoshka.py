@@ -23,6 +23,7 @@ import logging
 import typing
 from datetime import timedelta
 
+from frequenz.client.microgrid import ComponentId
 from frequenz.quantities import Power
 from typing_extensions import override
 
@@ -42,8 +43,8 @@ class Matryoshka(BaseAlgorithm):
     def __init__(self, max_proposal_age: timedelta) -> None:
         """Create a new instance of the matryoshka algorithm."""
         self._max_proposal_age_sec = max_proposal_age.total_seconds()
-        self._component_buckets: dict[frozenset[int], set[Proposal]] = {}
-        self._target_power: dict[frozenset[int], Power] = {}
+        self._component_buckets: dict[frozenset[ComponentId], set[Proposal]] = {}
+        self._target_power: dict[frozenset[ComponentId], Power] = {}
 
     def _calc_target_power(
         self,
@@ -122,7 +123,7 @@ class Matryoshka(BaseAlgorithm):
 
     def _validate_component_ids(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
         system_bounds: SystemBounds,
     ) -> bool:
@@ -146,15 +147,14 @@ class Matryoshka(BaseAlgorithm):
                 if any(component_id in bucket for component_id in component_ids):
                     comp_ids = ", ".join(map(str, sorted(component_ids)))
                     raise NotImplementedError(
-                        f"PowerManagingActor: component IDs {comp_ids} are already"
-                        " part of another bucket.  Overlapping buckets are not"
-                        " yet supported."
+                        f"PowerManagingActor: {comp_ids} are already part of another "
+                        "bucket. Overlapping buckets are not yet supported."
                     )
         return True
 
     def get_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
     ) -> Power | None:
         """Get the target power for the given components.
 
@@ -170,7 +170,7 @@ class Matryoshka(BaseAlgorithm):
     @override
     def calculate_target_power(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
         system_bounds: SystemBounds,
         must_return_power: bool = False,
@@ -230,7 +230,7 @@ class Matryoshka(BaseAlgorithm):
     @override
     def get_status(
         self,
-        component_ids: frozenset[int],
+        component_ids: frozenset[ComponentId],
         priority: int,
         system_bounds: SystemBounds,
     ) -> _Report:
@@ -301,7 +301,7 @@ class Matryoshka(BaseAlgorithm):
         Args:
             loop_time: The current loop time.
         """
-        buckets_to_delete: list[frozenset[int]] = []
+        buckets_to_delete: list[frozenset[ComponentId]] = []
         for component_ids, proposals in self._component_buckets.items():
             to_delete: list[Proposal] = []
             for proposal in proposals:

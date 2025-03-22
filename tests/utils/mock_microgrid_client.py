@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from frequenz.channels import Broadcast, Receiver
 from frequenz.client.microgrid import (
+    ComponentId,
     BatteryData,
     Component,
     ComponentCategory,
@@ -17,6 +18,7 @@ from frequenz.client.microgrid import (
     InverterData,
     Location,
     MeterData,
+    MicrogridId,
 )
 from pytest_mock import MockerFixture
 
@@ -35,7 +37,7 @@ class MockMicrogridClient:
         self,
         components: set[Component],
         connections: set[Connection],
-        microgrid_id: int = 8,
+        microgrid_id: MicrogridId = MicrogridId(8),
         location: Location = Location(latitude=52.520008, longitude=13.404954),
     ):
         """Create mock microgrid with given components and connections.
@@ -154,7 +156,7 @@ class MockMicrogridClient:
         else:
             raise RuntimeError(f"{type(data)} is not supported in MockMicrogridClient.")
 
-    async def close_channel(self, cid: int) -> None:
+    async def close_channel(self, cid: ComponentId) -> None:
         """Close channel for given component id.
 
         Args:
