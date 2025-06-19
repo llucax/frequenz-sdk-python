@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timezone
 from typing import Any, Generic, Self, TypeVar
@@ -22,9 +22,9 @@ from frequenz.client.microgrid import (
     ComponentMetricId,
     InverterData,
 )
+from frequenz.core.typing import NoInitConstructibleMeta, disable_init
 from typing_extensions import override
 
-from ..._internal._asyncio import AsyncConstructible
 from ..._internal._constants import MAX_BATTERY_DATA_AGE_SEC
 from ...microgrid import connection_manager
 from ...microgrid._data_sourcing.microgrid_api_source import (
@@ -39,7 +39,11 @@ T = TypeVar("T", bound=ComponentData)
 """Type variable for component data."""
 
 
-class ComponentMetricFetcher(AsyncConstructible, ABC):
+class NoInitConstructibleABCMeta(NoInitConstructibleMeta, ABCMeta):
+    pass
+
+
+class ComponentMetricFetcher(metaclass=NoInitConstructibleABCMeta):
     """Define how to subscribe for and fetch the component metrics data."""
 
     _component_id: ComponentId
