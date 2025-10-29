@@ -8,13 +8,20 @@ from __future__ import annotations
 import asyncio
 import logging
 import sys
+import warnings
 from datetime import datetime, timedelta, timezone
 from typing import assert_never
 
 from frequenz.channels import Receiver, Sender, select, selected_from
 from frequenz.channels.timer import SkipMissedAndDrift, Timer
 from frequenz.client.common.microgrid.components import ComponentId
-from frequenz.client.microgrid.component import Battery, EvCharger, SolarInverter
+from frequenz.client.microgrid.component import (
+    Battery,
+    ComponentCategory,
+    EvCharger,
+    InverterType,
+    SolarInverter,
+)
 from typing_extensions import override
 
 from ..._internal._asyncio import run_forever
@@ -36,6 +43,77 @@ from ._shifting_matryoshka import ShiftingMatryoshka
 _logger = logging.getLogger(__name__)
 
 
+def _convert_legacy_params_to_component_class(
+    component_category: ComponentCategory,
+    component_type: InverterType | None,
+) -> type[Battery | EvCharger | SolarInverter]:
+    """Convert legacy parameters to component_class.
+
+    Args:
+        component_category: The legacy component category.
+        component_type: The legacy component type (used for INVERTER category).
+
+    Returns:
+        The corresponding component class.
+
+    Raises:
+        ValueError: If the combination is not supported.
+    """
+    match component_category:
+        case ComponentCategory.BATTERY:
+            return Battery
+        case ComponentCategory.EV_CHARGER:
+            return EvCharger
+        case ComponentCategory.INVERTER:
+            if component_type == InverterType.SOLAR:
+                return SolarInverter
+            raise ValueError(
+                f"Unsupported component_type for INVERTER: {component_type}. "
+                "Only InverterType.SOLAR is supported."
+            )
+        case _:
+            raise ValueError(f"Unsupported component_category: {component_category}")
+
+
+def _get_component_class_or_warn(
+    component_class: type[Battery | EvCharger | SolarInverter] | None,
+    component_category: ComponentCategory | None,
+    component_type: InverterType | None,
+) -> type[Battery | EvCharger | SolarInverter]:
+    """Get the component class, converting deprecated parameters if needed."""
+    if component_category is not None or component_type is not None:
+        if component_class is not None:
+            raise ValueError(
+                "Cannot specify both 'component_class' and deprecated parameters "
+                "'component_category'/'component_type'. Use only 'component_class'."
+            )
+
+        if component_category is None:
+            raise ValueError(
+                "If 'component_type' is specified, 'component_category' must also be specified. "
+                "Both arguments are deprecated though, use 'component_class' instead."
+            )
+
+        warnings.warn(
+            "Parameters 'component_category' and 'component_type' are deprecated "
+            "and will be removed in a future version. "
+            "Use 'component_class' instead (e.g., component_class=Battery).",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+
+        component_class = _convert_legacy_params_to_component_class(
+            component_category, component_type
+        )
+    elif component_class is None:
+        raise ValueError(
+            "Must specify either 'component_class' or deprecated parameters "
+            "'component_category'/'component_type'."
+        )
+
+    return component_class
+
+
 class PowerManagingActor(Actor):
     """The power manager."""
 
@@ -49,7 +127,9 @@ class PowerManagingActor(Actor):
         channel_registry: ChannelRegistry,
         algorithm: Algorithm,
         default_power: DefaultPower,
-        component_class: type[Battery | EvCharger | SolarInverter],
+        component_class: type[Battery | EvCharger | SolarInverter] | None = None,
+        component_category: ComponentCategory | None = None,
+        component_type: InverterType | None = None,
     ):
         """Create a new instance of the power manager.
 
@@ -64,7 +144,23 @@ class PowerManagingActor(Actor):
             algorithm: The power management algorithm to use.
             default_power: The default power to use for the components.
             component_class: The class of component this instance is going to support.
+            component_category: **DEPRECATED**. Use `component_class` instead.
+                The category of the component this power manager instance is going to
+                support.
+            component_type: **DEPRECATED**. Use `component_class` instead.
+                The type of the component of the given category that this actor is
+                responsible for. This is used only when the component category is not
+                enough to uniquely identify the component. For example, when the
+                category is `ComponentCategory.INVERTER`, the type is needed to identify
+                the inverter as a solar inverter. This can be `None` when the component
+                category is enough to uniquely identify the component.
         """
+        component_class = _get_component_class_or_warn(
+            component_class,
+            component_category,
+            component_type,
+        )
+
         self._default_power = default_power
         self._component_class = component_class
         self._bounds_subscription_receiver = bounds_subscription_receiver
