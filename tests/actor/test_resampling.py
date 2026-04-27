@@ -266,3 +266,47 @@ async def test_resubscribe(fake_time: time_machine.Coordinates) -> None:
         )
 
         await resampling_actor._resampler.stop()  # pylint: disable=protected-access
+
+
+async def test_stalled_request_does_not_block_later_subscriptions() -> None:
+    """Ensure one stalled data-source handshake doesn't block later requests."""
+    data_source_req_chan = Broadcast[ComponentMetricRequest](name="data-source-req")
+    data_source_req_recv = data_source_req_chan.new_receiver()
+    resampling_req_chan = Broadcast[ComponentMetricRequest](name="resample-req")
+    resampling_req_sender = resampling_req_chan.new_sender()
+
+    async with ComponentMetricsResamplingActor(
+        data_sourcing_request_sender=data_source_req_chan.new_sender(),
+        resampling_request_receiver=resampling_req_chan.new_receiver(),
+        config=ResamplerConfig2(
+            resampling_period=timedelta(seconds=0.2),
+            max_data_age_in_periods=2,
+        ),
+    ):
+        first_sender, _ = OneshotChannel[BroadcastReceiver[Sample[Quantity]]]()
+        second_sender, _ = OneshotChannel[BroadcastReceiver[Sample[Quantity]]]()
+
+        first_request = ComponentMetricRequest(
+            namespace="Resampling-A",
+            component_id=ComponentId(9),
+            metric=Metric.BATTERY_SOC_PCT,
+            start_time=None,
+            telem_stream_sender=first_sender,
+        )
+        second_request = ComponentMetricRequest(
+            namespace="Resampling-B",
+            component_id=ComponentId(10),
+            metric=Metric.AC_ACTIVE_POWER,
+            start_time=None,
+            telem_stream_sender=second_sender,
+        )
+
+        await resampling_req_sender.send(first_request)
+        stalled_data_source_request = await data_source_req_recv.receive()
+        assert stalled_data_source_request.component_id == ComponentId(9)
+
+        await resampling_req_sender.send(second_request)
+        later_data_source_request = await asyncio.wait_for(
+            data_source_req_recv.receive(), timeout=0.1
+        )
+        assert later_data_source_request.component_id == ComponentId(10)

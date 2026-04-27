@@ -15,17 +15,18 @@ from contextlib import AsyncExitStack
 from dataclasses import dataclass, is_dataclass, replace
 from datetime import datetime, timedelta, timezone
 from typing import Any, Generic, TypeVar
+from unittest.mock import MagicMock
 
 import async_solipsism
 import pytest
 import time_machine
-from frequenz.channels import Receiver, Sender
+from frequenz.channels import Broadcast, Receiver, Sender
 from frequenz.client.common.microgrid.components import ComponentId
 from frequenz.client.microgrid.component import Battery, Component
 from frequenz.quantities import Energy, Percentage, Power, Temperature
 from pytest_mock import MockerFixture
 
-from frequenz.sdk import microgrid
+from frequenz.sdk import microgrid, timeseries
 from frequenz.sdk._internal._constants import (
     MAX_BATTERY_DATA_AGE_SEC,
     WAIT_FOR_COMPONENT_DATA_SEC,
@@ -34,6 +35,7 @@ from frequenz.sdk.microgrid._power_distributing import ComponentPoolStatus
 from frequenz.sdk.microgrid._power_distributing._component_managers._battery_manager import (
     _get_battery_inverter_mappings,
 )
+from frequenz.sdk.microgrid._power_managing import ReportRequest, _Report
 from frequenz.sdk.timeseries import Bounds, ResamplerConfig2, Sample
 from frequenz.sdk.timeseries._base_types import SystemBounds
 from frequenz.sdk.timeseries.battery_pool import BatteryPool
@@ -1200,3 +1202,50 @@ async def run_temperature_test(  # pylint: disable=too-many-locals
     streamer.start_streaming(latest_data, sampling_rate=0.1)
     msg = await asyncio.wait_for(receiver.receive(), timeout=waiting_time_sec)
     compare_messages(msg, Sample(now, Temperature.from_celsius(15.0)))
+
+
+def _new_power_status_report(target_power_watts: float) -> _Report:
+    """Create a distinct report for power status assertions."""
+    target_power = Power.from_watts(target_power_watts)
+    return _Report(
+        target_power=target_power,
+        _inclusion_bounds=timeseries.Bounds(target_power, target_power),
+        _exclusion_bounds=None,
+    )
+
+
+async def test_power_status_same_instance_subscriptions_work() -> None:
+    """Ensure same-instance power_status subscriptions don't race each other."""
+    requests_channel = Broadcast[ReportRequest](name="battery-pool-requests")
+    requests_rx = requests_channel.new_receiver()
+    mock_ref_store = MagicMock()
+    mock_ref_store._batteries = frozenset(  # pylint: disable=protected-access
+        {ComponentId(8), ComponentId(18)}
+    )
+    mock_ref_store._power_manager_bounds_subscription_sender = (  # pylint: disable=protected-access
+        requests_channel.new_sender()
+    )
+    mock_ref_store._power_bounds_subs = {}  # pylint: disable=protected-access
+
+    pool = BatteryPool(pool_ref_store=mock_ref_store, name="battery-pool", priority=5)
+
+    first_status_rx = pool.power_status.new_receiver()
+    second_status_rx = pool.power_status.new_receiver()
+
+    await asyncio.sleep(0)
+
+    first_request = await asyncio.wait_for(requests_rx.receive(), timeout=1.0)
+    second_request = await asyncio.wait_for(requests_rx.receive(), timeout=1.0)
+
+    report_channel = Broadcast[_Report](name="test-report", resend_latest=True)
+    await first_request.report_stream_sender.send(report_channel.new_receiver())
+    await second_request.report_stream_sender.send(report_channel.new_receiver())
+
+    await asyncio.sleep(0)
+
+    await report_channel.new_sender().send(_new_power_status_report(123.0))
+
+    first_report = await asyncio.wait_for(first_status_rx.receive(), timeout=1.0)
+    second_report = await asyncio.wait_for(second_status_rx.receive(), timeout=1.0)
+    assert first_report.target_power == Power.from_watts(123.0)
+    assert second_report.target_power == Power.from_watts(123.0)

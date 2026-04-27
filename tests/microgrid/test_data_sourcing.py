@@ -11,7 +11,13 @@ from unittest import mock
 
 import pytest
 import pytest_mock
-from frequenz.channels import Broadcast, BroadcastReceiver, OneshotChannel
+from frequenz.channels import (
+    Broadcast,
+    BroadcastReceiver,
+    OneshotChannel,
+    Receiver,
+    ReceiverStoppedError,
+)
 from frequenz.client.common.microgrid import MicrogridId
 from frequenz.client.common.microgrid.components import ComponentId
 from frequenz.client.microgrid.component import (
@@ -37,9 +43,28 @@ from frequenz.sdk.microgrid._old_component_data import (
 )
 from frequenz.sdk.timeseries import Sample
 
+from ..utils.receive_timeout import Timeout
+
 T = TypeVar("T", bound=ComponentData)
+U = TypeVar("U")
 
 _MICROGRID_ID = MicrogridId(1)
+
+
+class Stopped:
+    """Sentinel for a closed receiver."""
+
+
+async def _receive_or_timeout(
+    receiver: Receiver[U], timeout: float = 0.1
+) -> U | type[Timeout] | type[Stopped]:
+    """Receive a message, or return a sentinel if the receiver stops or times out."""
+    try:
+        return await asyncio.wait_for(receiver.receive(), timeout=timeout)
+    except ReceiverStoppedError:
+        return Stopped
+    except asyncio.TimeoutError:
+        return Timeout
 
 
 @pytest.fixture
@@ -122,6 +147,102 @@ async def test_data_sourcing_actor(  # pylint: disable=too-many-locals
             sample = await telem_stream.receive()
             assert sample.value is not None
             assert expected_sample_value + i == sample.value.base_value
+
+
+async def test_duplicate_requests_reply_to_all_callers(
+    mock_connection_manager: mock.Mock,  # pylint: disable=redefined-outer-name,unused-argument
+) -> None:
+    """Ensure duplicate direct subscriptions reply to every requester."""
+    req_chan = Broadcast[ComponentMetricRequest](name="data_sourcing_requests")
+    req_sender = req_chan.new_sender()
+
+    async with DataSourcingActor(req_chan.new_receiver()):
+        first_sender, first_receiver = OneshotChannel[
+            BroadcastReceiver[Sample[Quantity]]
+        ]()
+        second_sender, second_receiver = OneshotChannel[
+            BroadcastReceiver[Sample[Quantity]]
+        ]()
+
+        request = ComponentMetricRequest(
+            "test-namespace",
+            ComponentId(4),
+            Metric.AC_ACTIVE_POWER,
+            None,
+            first_sender,
+        )
+        duplicate_request = ComponentMetricRequest(
+            "test-namespace",
+            ComponentId(4),
+            Metric.AC_ACTIVE_POWER,
+            None,
+            second_sender,
+        )
+
+        await req_sender.send(request)
+        _ = await asyncio.wait_for(first_receiver.receive(), timeout=1.0)
+
+        await req_sender.send(duplicate_request)
+        _ = await asyncio.wait_for(second_receiver.receive(), timeout=1.0)
+
+
+async def test_unknown_component_request_does_not_wait_forever(
+    mock_connection_manager: mock.Mock,  # pylint: disable=redefined-outer-name,unused-argument
+) -> None:
+    """Ensure invalid component requests fail fast instead of hanging callers."""
+    req_chan = Broadcast[ComponentMetricRequest](name="data_sourcing_requests")
+    req_sender = req_chan.new_sender()
+
+    async with DataSourcingActor(req_chan.new_receiver()):
+        telem_stream_sender, telem_stream_receiver = OneshotChannel[
+            BroadcastReceiver[Sample[Quantity]]
+        ]()
+        request = ComponentMetricRequest(
+            "test-namespace",
+            ComponentId(999),
+            Metric.AC_ACTIVE_POWER,
+            None,
+            telem_stream_sender,
+        )
+
+        await req_sender.send(request)
+        result = await _receive_or_timeout(telem_stream_receiver)
+        assert result is not Timeout
+
+
+async def test_invalid_metric_request_does_not_block_later_requests(
+    mock_connection_manager: mock.Mock,  # pylint: disable=redefined-outer-name,unused-argument
+) -> None:
+    """Ensure a bad request doesn't stall later valid subscriptions."""
+    req_chan = Broadcast[ComponentMetricRequest](name="data_sourcing_requests")
+    req_sender = req_chan.new_sender()
+
+    async with DataSourcingActor(req_chan.new_receiver()):
+        invalid_sender, _ = OneshotChannel[BroadcastReceiver[Sample[Quantity]]]()
+        valid_sender, valid_receiver = OneshotChannel[
+            BroadcastReceiver[Sample[Quantity]]
+        ]()
+
+        invalid_request = ComponentMetricRequest(
+            "test-namespace-invalid",
+            ComponentId(4),
+            Metric.BATTERY_SOC_PCT,
+            None,
+            invalid_sender,
+        )
+        valid_request = ComponentMetricRequest(
+            "test-namespace-valid",
+            ComponentId(4),
+            Metric.AC_ACTIVE_POWER,
+            None,
+            valid_sender,
+        )
+
+        await req_sender.send(invalid_request)
+        await req_sender.send(valid_request)
+
+        result = await _receive_or_timeout(valid_receiver)
+        assert result is not Timeout
 
 
 def _new_meter_data(
