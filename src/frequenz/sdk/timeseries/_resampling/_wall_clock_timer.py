@@ -268,7 +268,7 @@ class ClocksInfo:
     def wall_clock_jump(self) -> timedelta:
         """The amount of time the wall clock jumped compared to the monotonic time.
 
-        If the wall clock is faster then the monotonic time (or jumped forward in time),
+        If the wall clock is faster than the monotonic time (or jumped forward in time),
         the returned value will be positive. If the wall clock is slower than the
         monotonic time (or jumped backwards in time), the returned value will be
         negative.
@@ -291,7 +291,7 @@ class ClocksInfo:
             wall_clock_timedelta: The wall clock timedelta to convert.
 
         Returns:
-            The monotonic timedelta corresponding to `wall_clock_time` using the
+            The monotonic timedelta corresponding to `wall_clock_timedelta` using the
                 `wall_clock_factor`.
         """
         return wall_clock_timedelta * self.wall_clock_factor
@@ -307,7 +307,7 @@ class TickInfo:
     sleep_infos: Sequence[ClocksInfo]
     """The information about every sleep performed to trigger this tick.
 
-    If the timer didn't have do to a [`sleep()`][asyncio.sleep] to trigger the tick
+    If the timer didn't have to do a [`sleep()`][asyncio.sleep] to trigger the tick
     (i.e. the timer is catching up because there were big drifts in previous ticks),
     this will be empty.
     """
@@ -382,7 +382,7 @@ class WallClockTimer(Receiver[TickInfo]):
             raise ValueError(f"interval must be positive, not {interval}")
 
         self._interval: timedelta = interval
-        """The time to between timer ticks.
+        """The time between timer ticks.
 
         The wall clock is used, so this will be added to the current time to calculate
         the next tick time.

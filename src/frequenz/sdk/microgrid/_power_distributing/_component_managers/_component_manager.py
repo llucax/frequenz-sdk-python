@@ -56,7 +56,7 @@ class _UnreachablePower(typing.NamedTuple):
     """
 
     cache: LatestValueCache[Sample[Power]]
-    """A latest-value cache of the formula's result."""
+    """The latest-value cache of the formula's result."""
 
 
 class ComponentManager(abc.ABC):
@@ -91,7 +91,7 @@ class ComponentManager(abc.ABC):
 
     @abc.abstractmethod
     def component_ids(self) -> collections.abc.Set[ComponentId]:
-        """Return the set of component ids."""
+        """Return the set of component IDs."""
 
     @abc.abstractmethod
     async def start(self) -> None:

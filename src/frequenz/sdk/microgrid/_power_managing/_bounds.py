@@ -99,7 +99,7 @@ def clamp_to_bounds(  # pylint: disable=too-many-return-statements
 ) -> tuple[Power | None, Power | None]:
     """Clamp the given value to the given bounds.
 
-    When the given value can falls within the exclusion zone, and can be clamped to
+    When the given value falls within the exclusion zone, and can be clamped to
     both sides, both options will be returned.
 
     When the given value falls outside the usable bounds and can be clamped only to
@@ -112,7 +112,7 @@ def clamp_to_bounds(  # pylint: disable=too-many-return-statements
         exclusion_bounds: The exclusion bounds to clamp outside of.
 
     Returns:
-        The clamped value.
+        The clamped value(s): a tuple of the lower and/or upper clamped options.
     """
     # If the given bounds are within the exclusion bounds, return zero.
     #

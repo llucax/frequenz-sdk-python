@@ -44,7 +44,7 @@ class AggregatedBatteryData:
     """The aggregated power bounds of the batteries."""
 
     def __init__(self, batteries: list[BatteryData]) -> None:
-        """Create DistBatteryData from BatteryData.
+        """Create an instance from a list of battery data.
 
         Aggregates the data of the batteries:
 
@@ -111,7 +111,7 @@ def _aggregate_battery_power_bounds(
         battery_metrics: List of PowerBounds for each battery.
 
     Returns:
-        A PowerBounds object containing the aggregated bounds for all given batteries
+        A PowerBounds object containing the aggregated bounds for all given batteries.
     """
     assert len(battery_metrics) > 0, "No batteries given."
 
@@ -182,7 +182,7 @@ class AvailabilityRatio:
     """The availability ratio."""
 
     min_power: Power
-    """The minimum power that can be set for the battery-inverters pair."""
+    """The minimum power that can be set for the battery-inverter pair."""
 
 
 @dataclass
@@ -230,7 +230,7 @@ class BatteryDistributionAlgorithm:
     r"""Distribute power between many components.
 
     The purpose of this tool is to keep equal SoC level in the batteries.
-    It takes total power that should be to be set for some subset of battery-inverter
+    It takes total power that should be set for some subset of battery-inverter
     pairs. The total power is distributed between given battery-inverter pairs.
     Distribution is calculated based on data below:
 
@@ -242,7 +242,7 @@ class BatteryDistributionAlgorithm:
 
     # Distribution algorithm
 
-    Lets assume that:
+    Let's assume that:
 
     * `N` - number of batteries
     * `power_w` - power to distribute
@@ -315,15 +315,15 @@ class BatteryDistributionAlgorithm:
         """Create distribution algorithm instance.
 
         Args:
-            distributor_exponent: How fast the batteries should strive to the
-                equal SoC level. Should be float >= 0. Defaults=1.
+            distributor_exponent: How fast the batteries should strive towards an
+                equal SoC level. Should be float >= 0. Defaults to 1.
                 For example for distributor_exponent equal:
                     * 1 - means that proportion will be linear from SoC.
                     * 2 - means proportion would be like squared from SoC
                     * 3 - means proportion would be like x^3 from SoC.
 
         Example:
-            Lets say we have two batteries `Bat1` and `Bat2`. All parameters
+            Let's say we have two batteries `Bat1` and `Bat2`. All parameters
             except SoC are equal. SoC bounds for each battery is `lower = 20`,
             `upper = 80`.
 
@@ -382,7 +382,7 @@ class BatteryDistributionAlgorithm:
             | 0.5                   | 600  | 400  |
 
         Raises:
-            ValueError: If distributor_exponent < 0
+            ValueError: If distributor_exponent < 0.
 
         """
         if distributor_exponent < 0:
@@ -393,7 +393,7 @@ class BatteryDistributionAlgorithm:
         """Sum capacity between all batteries in the components list.
 
         Args:
-            components: list of the components
+            components: list of the components.
 
         Raises:
             ValueError: If total capacity is 0.
@@ -427,7 +427,7 @@ class BatteryDistributionAlgorithm:
             available_soc: How much SoC remained to reach
                 * SoC upper bound - if need to distribute consumption power
                 * SoC lower bound - if need to distribute supply power
-            excl_bounds: Exclusion bounds for each inverter
+            excl_bounds: Exclusion bounds for each inverter.
 
         Returns:
             Tuple where first argument is battery availability ratio for each
@@ -491,12 +491,12 @@ class BatteryDistributionAlgorithm:
 
         Args:
             components: list of components.
-            power: power to distribute
+            power: power to distribute.
             available_soc: how much SoC remained to reach:
                 * SoC upper bound - if need to distribute consumption power
                 * SoC lower bound - if need to distribute supply power
-            incl_bounds: Inclusion bounds for each inverter
-            excl_bounds: Exclusion bounds for each inverter
+            incl_bounds: Inclusion bounds for each inverter.
+            excl_bounds: Exclusion bounds for each inverter.
 
         Returns:
             Distribution result.
@@ -624,9 +624,9 @@ class BatteryDistributionAlgorithm:
         """Distribute power between inverters in a set for a single pair.
 
         Args:
-            distribution: distribution with key: inverter_ids, value: (battery_id, power)
-            excl_bounds: exclusion bounds for inverters and batteries
-            incl_bounds: inclusion bounds for inverters and batteries
+            distribution: distribution with key: inverter_ids, value: (battery_id, power).
+            excl_bounds: exclusion bounds for inverters and batteries.
+            incl_bounds: inclusion bounds for inverters and batteries.
 
         Returns:
             Return the power for each inverter in given distribution.
@@ -667,8 +667,8 @@ class BatteryDistributionAlgorithm:
         Distribution for each inverter will not exceed its upper bound.
 
         Args:
-            distribution: distribution
-            remaining_power: power to distribute
+            distribution: distribution.
+            remaining_power: power to distribute.
 
         Returns:
             Return the new distribution and remaining power.
@@ -717,12 +717,12 @@ class BatteryDistributionAlgorithm:
         """Distribute given power between given components.
 
         Args:
-            power: Power to distribute
+            power: Power to distribute.
             components: InvBatPaired components data. Each pair should have data
                 for battery and adjacent inverter.
 
         Returns:
-            Distribution result
+            Distribution result.
         """
         if power.isclose(Power.zero()):
             return DistributionResult(
@@ -744,10 +744,10 @@ class BatteryDistributionAlgorithm:
 
         Distribute power in a way that the SoC level between given components will:
             * stay on the same level, equal in all given components
-            * will try to align himself to the same level.
+            * will try to align itself to the same level.
 
         Args:
-            power: power to distribute
+            power: power to distribute.
             components: list of components between which the power should be
                 distributed.
 
@@ -782,10 +782,10 @@ class BatteryDistributionAlgorithm:
 
         Distribute power in a way that the SoC level between given components will:
             * stay on the same level, equal in all given components
-            * will try to align himself to the same level.
+            * will try to align itself to the same level.
 
         Args:
-            power: power to distribute
+            power: power to distribute.
             components: list of components between which the power should be
                 distributed.
 

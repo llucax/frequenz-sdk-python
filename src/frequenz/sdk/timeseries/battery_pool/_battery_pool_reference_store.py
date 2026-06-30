@@ -25,7 +25,7 @@ from ._methods import MetricAggregator
 
 
 class BatteryPoolReferenceStore(ComponentPoolReferenceStore):
-    """A class for maintaining the shared state/tasks for a set of pool of batteries.
+    """A class for maintaining the shared state/tasks for a pool of batteries.
 
     This includes ownership of
     - the formula pool and metric calculators.
@@ -57,8 +57,8 @@ class BatteryPoolReferenceStore(ComponentPoolReferenceStore):
             resampler_subscription_sender: A sender for sending metric requests to the
                 resampling actor.
             batteries_status_receiver: Receiver to receive status of the batteries.
-                Receivers should has maxsize = 1 to fetch only the latest status.
-                Battery status channel should has resend_latest = True.
+                Receivers should have maxsize = 1 to fetch only the latest status.
+                Battery status channel should have resend_latest = True.
                 It should send information when any battery changed status.
                 Battery status should include status of the inverter adjacent to this
                 battery.
@@ -68,7 +68,7 @@ class BatteryPoolReferenceStore(ComponentPoolReferenceStore):
                 power bounds requests to the power managing actor.
             power_distribution_results_fetcher: A ReceiverFetcher for the results from
                 the power distributing actor.
-            min_update_interval: Some metrics in BatteryPool are send only when they
+            min_update_interval: Some metrics in BatteryPool are sent only when they
                 change. For these metrics min_update_interval is the minimum time
                 interval between the following messages.
                 Note that this argument is similar to the resampling period
@@ -78,7 +78,7 @@ class BatteryPoolReferenceStore(ComponentPoolReferenceStore):
                 It is currently impossible to use resampling actor for these metrics,
                 because we can't specify resampling function for them.
             component_ids: An optional list of component_ids belonging to this pool.  If
-                not specified, IDs of all components of the components type of this pool
+                not specified, IDs of all components of the component type of this pool
                 in the microgrid will be fetched from the component graph.
         """
         super().__init__(

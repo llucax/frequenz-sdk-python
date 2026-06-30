@@ -31,7 +31,7 @@ class ReportRequest:
     """The component IDs to report on."""
 
     priority: int
-    """The priority of the actor ."""
+    """The priority of the actor."""
 
     def get_channel_name(self) -> str:
         """Get the channel name for the report request.
@@ -234,7 +234,7 @@ class BaseAlgorithm(abc.ABC):
 
         Args:
             component_ids: The component IDs to calculate the target power for.
-            proposal: If given, the proposal to added to the bucket, before the target
+            proposal: If given, the proposal to add to the bucket, before the target
                 power is calculated.
             system_bounds: The system bounds for the components in the proposal.
 

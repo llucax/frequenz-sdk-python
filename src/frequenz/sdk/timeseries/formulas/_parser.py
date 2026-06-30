@@ -72,7 +72,7 @@ class _Parser(Generic[QuantityT]):
         self._create_method: Callable[[float], QuantityT] = create_method
 
     def _peek_next_token(self) -> _token.Token | None:
-        """Get the next token from the lexer, or None if there is None."""
+        """Get the next token from the lexer, or None if there are no more tokens."""
         try:
             return self._lexer.peek()
         except StopIteration:
@@ -246,7 +246,7 @@ class _Parser(Generic[QuantityT]):
     def _parse_primary(self) -> AstNode[QuantityT] | None:
         """Parse a primary.
 
-        A primary(expression) can be any of the following:
+        A primary (expression) can be any of the following:
         - A number literal
         - A component ID
         - A function call

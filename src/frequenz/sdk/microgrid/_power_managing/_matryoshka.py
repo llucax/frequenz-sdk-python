@@ -166,7 +166,7 @@ class Matryoshka(BaseAlgorithm):
 
         Args:
             component_ids: The component IDs to calculate the target power for.
-            proposal: If given, the proposal to added to the bucket, before the target
+            proposal: If given, the proposal to add to the bucket, before the target
                 power is calculated.
             system_bounds: The system bounds for the components in the proposal.
 

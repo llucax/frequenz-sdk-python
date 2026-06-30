@@ -188,7 +188,7 @@ class MicrogridApiSource:
         """Get the component category of the given component.
 
         Args:
-            comp_id: Id of the requested component.
+            comp_id: ID of the requested component.
 
         Returns:
             The category of the given component, if it is a valid component, or None
@@ -214,11 +214,11 @@ class MicrogridApiSource:
         """Check if the requests are valid Battery metrics.
 
         Raises:
-            ValueError: if the requested metric is not available for batteries.
+            ValueError: If the requested metric is not available for batteries.
 
         Args:
-            comp_id: The id of the requested component.
-            requests: A list of metric requests received from external actors
+            comp_id: The ID of the requested component.
+            requests: A mapping of metrics to metric requests received from external actors
                 for the given battery.
         """
         for metric in requests:
@@ -239,11 +239,11 @@ class MicrogridApiSource:
         """Check if the requests are valid EV Charger metrics.
 
         Raises:
-            ValueError: if the requested metric is not available for ev charger.
+            ValueError: If the requested metric is not available for EV chargers.
 
         Args:
-            comp_id: The id of the requested component.
-            requests: A list of metric requests received from external actors
+            comp_id: The ID of the requested component.
+            requests: A mapping of metrics to metric requests received from external actors
                 for the given EV Charger.
         """
         for metric in requests:
@@ -264,11 +264,11 @@ class MicrogridApiSource:
         """Check if the requests are valid Inverter metrics.
 
         Raises:
-            ValueError: if the requested metric is not available for inverters.
+            ValueError: If the requested metric is not available for inverters.
 
         Args:
-            comp_id: The id of the requested component.
-            requests: A list of metric requests received from external actors
+            comp_id: The ID of the requested component.
+            requests: A mapping of metrics to metric requests received from external actors
                 for the given inverter.
         """
         for metric in requests:
@@ -289,11 +289,11 @@ class MicrogridApiSource:
         """Check if the requests are valid CHP metrics.
 
         Raises:
-            ValueError: if the requested metric is not available for CHP.
+            ValueError: If the requested metric is not available for CHP.
 
         Args:
-            comp_id: The id of the requested component.
-            requests: A list of metric requests received from external actors
+            comp_id: The ID of the requested component.
+            requests: A mapping of metrics to metric requests received from external actors
                 for the given CHP.
         """
         for metric in requests:
@@ -314,11 +314,11 @@ class MicrogridApiSource:
         """Check if the requests are valid Meter metrics.
 
         Raises:
-            ValueError: if the requested metric is not available for meters.
+            ValueError: If the requested metric is not available for meters.
 
         Args:
-            comp_id: The id of the requested component.
-            requests: A list of metric requests received from external actors
+            comp_id: The ID of the requested component.
+            requests: A mapping of metrics to metric requests received from external actors
                 for the given meter.
         """
         for metric in requests:
@@ -340,13 +340,13 @@ class MicrogridApiSource:
         """Check if the requested component and metrics are valid.
 
         Raises:
-            ValueError: if the category is unknown or if the requested metric
+            ValueError: If the category is unknown or if the requested metric
                 is unavailable to the given category.
 
         Args:
-            comp_id: The id of the requested component.
+            comp_id: The ID of the requested component.
             category: The category of the requested component.
-            requests: A list of metric requests received from external actors
+            requests: A mapping of metrics to metric requests received from external actors
                 for the given component.
         """
         if comp_id in self.comp_data_receivers:
@@ -373,7 +373,7 @@ class MicrogridApiSource:
         """Get the data extraction method for the given metric.
 
         Raises:
-            ValueError: if the category is unknown.
+            ValueError: If the category is unknown.
 
         Args:
             category: The category of the component.
@@ -406,7 +406,7 @@ class MicrogridApiSource:
 
         Args:
             category: The category of the component.
-            requests: A list of metric requests received from external actors for a
+            requests: A mapping of metrics to metric requests received from external actors for a
                 certain component.
 
         Returns:
@@ -434,11 +434,11 @@ class MicrogridApiSource:
         """Stream component data and send the requested metrics out.
 
         Args:
-            comp_id: Id of the requested component.
+            comp_id: ID of the requested component.
             category: The category of the component.
 
         Raises:
-            Exception: if an error occurs while handling the data stream.
+            Exception: If an error occurs while handling the data stream.
         """
         try:
             stream_senders = []
@@ -499,7 +499,7 @@ class MicrogridApiSource:
         """Update the requested metric streams for the given component.
 
         Args:
-            comp_id: Id of the requested component.
+            comp_id: ID of the requested component.
             category: Category of the requested component.
         """
         if comp_id in self.comp_data_tasks:

@@ -137,7 +137,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
         should be used as the only source of truth for unwritten data.
 
         Args:
-            sample: Sample to add to the ringbuffer
+            sample: Sample to add to the ringbuffer.
 
         Raises:
             IndexError: When the timestamp to be added is too old.
@@ -230,7 +230,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
         Args:
             timestamp: Timestamp to convert.
             allow_outside_range: If True, don't throw an exception when the
-                timestamp is outside our bounds
+                timestamp is outside our bounds.
 
         Raises:
             IndexError: When requesting a timestamp outside the range this container holds.
@@ -293,7 +293,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
             end: End index. Optional, defaults to None.
 
         Returns:
-            tuple of start and end indices on the range currently covered by the buffer.
+            Tuple of start and end indices on the range currently covered by the buffer.
         """
         return slice(start, end).indices(self.count_covered())[:2]
 
@@ -322,8 +322,8 @@ class OrderedRingBuffer(Generic[FloatArray]):
         missing entries, they can safely do so.
 
         Args:
-            start: start timestamp of the window.
-            end: end timestamp of the window.
+            start: Start timestamp of the window.
+            end: End timestamp of the window.
             force_copy: optional, default True. If True, will always create a
                 copy of the data.
             fill_value: If not None, will use this value to fill missing values.
@@ -335,7 +335,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
             ValueError: When fill_value is not None and force_copy is False.
 
         Returns:
-            The requested window
+            The requested window.
         """
         # We don't want to modify the original buffer
         if fill_value is not None and not force_copy:
@@ -667,7 +667,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
 
         Returns:
             The time range between the oldest and newest valid samples or 0 if
-                there are is no time range covered.
+                there is no time range covered.
         """
         if not self.oldest_timestamp:
             return timedelta(0)
@@ -702,7 +702,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
 
         Returns:
             The count of samples between the oldest and newest (inclusive) valid samples
-                or 0 if there are is no time range covered.
+                or 0 if there is no time range covered.
         """
         return self._covered_time_range(since, until) // self._sampling_period
 

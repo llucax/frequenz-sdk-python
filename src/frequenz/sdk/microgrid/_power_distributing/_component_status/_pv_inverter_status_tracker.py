@@ -56,9 +56,9 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
 
         Args:
             component_id: ID of the PV inverter to monitor the status of.
-            max_data_age: max duration to wait for, before marking a component as
+            max_data_age: Max duration to wait for, before marking a component as
                 NOT_WORKING, unless new data arrives.
-            max_blocking_duration: max duration to wait for, before marking a component
+            max_blocking_duration: Max duration to wait for, before marking a component
                 as BLOCKING, unless new data arrives.
             status_sender: Sender to send the status of the PV inverter.
             set_power_result_receiver: Receiver for the power assignment result.

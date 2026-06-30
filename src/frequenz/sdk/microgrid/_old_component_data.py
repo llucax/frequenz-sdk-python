@@ -80,7 +80,7 @@ DATA_STREAM_BUFFER_SIZE: int = 50
 
 
 class TransitionalMetric(Enum):
-    """An enum representing the metrics we had in v0.15 but are not a metric in v0.17."""
+    """An enum representing the metrics we had in v0.15 but are not metrics in v0.17."""
 
     SOC_LOWER_BOUND = "soc_lower_bound"
     """Lower bound of state of charge."""
@@ -195,7 +195,7 @@ class ComponentData(ABC):
             component_id: Component id to check.
 
         Raises:
-            ValueError: if the given id is unknown or has a different type.
+            ValueError: If the given id is unknown or has a different type.
         """
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from .. import microgrid
@@ -294,7 +294,7 @@ class MeterData(ComponentData):
     """
 
     current_per_phase: PhaseTuple = (0.0, 0.0, 0.0)
-    """AC current in Amperes (A) for phase/line 1,2 and 3 respectively.
+    """AC current in Amperes (A) for phase/line 1, 2 and 3 respectively.
 
     Represented in the passive sign convention.
 
@@ -303,8 +303,8 @@ class MeterData(ComponentData):
     """
 
     voltage_per_phase: PhaseTuple = (0.0, 0.0, 0.0)
-    """The ac voltage in volts (v) between the line and the neutral wire for phase/line
-        1,2 and 3 respectively.
+    """The AC voltage in Volts (V) between the line and the neutral wire for phase/line
+        1, 2 and 3 respectively.
     """
 
     frequency: float = 0.0
@@ -446,7 +446,7 @@ class BatteryData(ComponentData):  # pylint: disable=too-many-instance-attribute
     """A wrapper class for holding battery data."""
 
     soc: float = 0.0
-    """Battery's overall SoC in percent (%)."""
+    """The battery's overall SoC in percent (%)."""
 
     soc_lower_bound: float = 0.0
     """The SoC below which discharge commands will be blocked by the system,
@@ -1153,7 +1153,7 @@ class EVChargerData(ComponentData):  # pylint: disable=too-many-instance-attribu
     """
 
     current_per_phase: PhaseTuple = (0.0, 0.0, 0.0)
-    """AC current in Amperes (A) for phase/line 1,2 and 3 respectively.
+    """AC current in Amperes (A) for phase/line 1, 2 and 3 respectively.
 
     Represented in the passive sign convention.
 
@@ -1179,7 +1179,7 @@ class EVChargerData(ComponentData):  # pylint: disable=too-many-instance-attribu
 
     voltage_per_phase: PhaseTuple = (0.0, 0.0, 0.0)
     """The AC voltage in Volts (V) between the line and the neutral
-        wire for phase/line 1,2 and 3 respectively.
+        wire for phase/line 1, 2 and 3 respectively.
     """
 
     active_power_inclusion_lower_bound: float = 0.0
@@ -1472,9 +1472,9 @@ def _try_create_bounds(lower: float, upper: float, description: str) -> list[Bou
     """Safely create a bounds object, handling any exceptions gracefully.
 
     Args:
-        lower: Lower bound value
-        upper: Upper bound value
-        description: Description for logging
+        lower: Lower bound value.
+        upper: Upper bound value.
+        description: Description for logging.
 
     Returns:
         List containing the created Bounds object or an empty list if creation failed.

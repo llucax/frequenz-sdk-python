@@ -12,7 +12,7 @@ from os.path import exists
 from .buffer import FloatArray, OrderedRingBuffer
 
 FILE_FORMAT_VERSION: int = 1
-"""Version of the latest file dumping/loading format."""
+"""The version of the latest file dumping/loading format."""
 
 
 def load(path: str) -> OrderedRingBuffer[FloatArray] | None:
@@ -22,7 +22,7 @@ def load(path: str) -> OrderedRingBuffer[FloatArray] | None:
         path: Path to the file where the data is stored.
 
     Raises:
-        RuntimeError: when the file format version is unknown.
+        RuntimeError: When the file format version is unknown.
 
     Returns:
         `None` when the file doesn't exist, otherwise an instance of the

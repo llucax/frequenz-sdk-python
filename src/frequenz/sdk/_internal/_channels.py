@@ -64,7 +64,7 @@ class MappingReceiverFetcher(typing.Generic[T_co, U_co]):
 
 
 class ChannelRegistry:
-    """Dynamically creates, own and provide access to broadcast channels.
+    """Dynamically creates, owns and provides access to broadcast channels.
 
     It can be used by actors to dynamically establish a communication channel
     between each other.

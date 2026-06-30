@@ -23,7 +23,7 @@ _logger = logging.getLogger(__name__)
 
 @dataclass(kw_only=True)
 class TelemetryStream(AstNode[QuantityT]):
-    """A AST node that retrieves values from a component's telemetry stream."""
+    """An AST node that retrieves values from a component's telemetry stream."""
 
     source: str
     """The source formula string."""

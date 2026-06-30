@@ -116,7 +116,7 @@ class PeriodicFeatureExtractor:
             period: The distance between two succeeding intervals.
 
         Raises:
-            ValueError: If the MovingWindow size is not a integer multiple of the period.
+            ValueError: If the MovingWindow size is not an integer multiple of the period.
         """
         self._moving_window = moving_window
 
@@ -152,9 +152,9 @@ class PeriodicFeatureExtractor:
         """
         Get the index of a timestamp relative to the oldest sample in the MovingWindow.
 
-        In other word consider an integer axis where the zero is defined as the
+        In other words consider an integer axis where the zero is defined as the
         oldest element in the MovingWindow. This function returns the index of
-        the given timestamp an this axis.
+        the given timestamp on this axis.
 
         This method can return negative values.
 
@@ -184,7 +184,7 @@ class PeriodicFeatureExtractor:
         """
         Reshape a numpy array to a 2D array where each row represents a window.
 
-        There are three cases to consider
+        There are three cases to consider:
 
         1. The array size is a multiple of window_size + period,
            i.e. num_windows is integer and we can simply reshape.
@@ -239,7 +239,7 @@ class PeriodicFeatureExtractor:
         timestamp, the end timestamps as well as the next position that is
         overwritten in the ringbuffer.
         Shifted in that context means that the positions are moved as close
-        assume possible to the oldest sample in the MovingWindow.
+        as possible to the oldest sample in the MovingWindow.
 
         Args:
             start: The start timestamp of the window.
@@ -397,7 +397,7 @@ class PeriodicFeatureExtractor:
 
         This method calculates the average of a window by averaging over all
         windows fully inside the MovingWindow having the period
-        `self.period`.
+        `self._period`.
 
         Args:
             start: The start of the window to average over.

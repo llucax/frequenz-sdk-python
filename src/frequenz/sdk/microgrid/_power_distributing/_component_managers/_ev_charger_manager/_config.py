@@ -16,7 +16,7 @@ class EVDistributionConfig:
     """Configuration for the power distributor's EV charger manager."""
 
     component_ids: abc.Set[ComponentId]
-    """The component ids of the EV chargers."""
+    """The component IDs of the EV chargers."""
 
     min_current: Current = field(default_factory=lambda: Current.from_amperes(6.0))
     """The minimum current that can be allocated to an EV charger."""

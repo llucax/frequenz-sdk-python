@@ -45,7 +45,7 @@ class MetricCalculator(ABC, Generic[T]):
     """Define how to calculate high level metrics from many components data.
 
     It specifies:
-        * what components and metrics its needs to calculate the results,
+        * what components and metrics it needs to calculate the results,
         * how to calculate the result,
     """
 
@@ -87,7 +87,7 @@ class MetricCalculator(ABC, Generic[T]):
         """Return what metrics are needed for each battery.
 
         Returns:
-            Map between battery id and set of required metrics id.
+            Map between battery ID and set of required metric IDs.
         """
 
     @property
@@ -98,7 +98,7 @@ class MetricCalculator(ABC, Generic[T]):
         """Return what metrics are needed for each inverter.
 
         Returns:
-            Map between inverter id and set of required metrics id.
+            Map between inverter ID and set of required metric IDs.
         """
 
     @abstractmethod
@@ -113,11 +113,11 @@ class MetricCalculator(ABC, Generic[T]):
         working batteries that are in metrics_data.
 
         Args:
-            metrics_data: Components metrics data, that should be used to calculate the
+            metrics_data: Components metrics data that should be used to calculate the
                 result.
-            working_batteries: working batteries. These batteries will be used
-                to calculate the result. It should be subset of the batteries given in a
-                constructor.
+            working_batteries: Working batteries. These batteries will be used
+                to calculate the result. It should be a subset of the batteries given in
+                the constructor.
 
         Returns:
             High level metric calculated from the given metrics.
@@ -160,7 +160,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
         """Return what metrics are needed for each battery.
 
         Returns:
-            Map between battery id and set of required metrics id.
+            Map between battery ID and set of required metric IDs.
         """
         return {bid: self._metrics for bid in self._batteries}
 
@@ -172,7 +172,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
         """Return what metrics are needed for each inverter.
 
         Returns:
-            Map between inverter id and set of required metrics id.
+            Map between inverter ID and set of required metric IDs.
         """
         return {}
 
@@ -188,11 +188,11 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
         working batteries that are in metrics_data.
 
         Args:
-            metrics_data: Components metrics data, that should be used to calculate the
+            metrics_data: Components metrics data that should be used to calculate the
                 result.
-            working_batteries: working batteries. These batteries will be used
-                to calculate the result. It should be subset of the batteries given in a
-                constructor.
+            working_batteries: Working batteries. These batteries will be used
+                to calculate the result. It should be a subset of the batteries given in
+                the constructor.
 
         Returns:
             High level metric calculated from the given metrics.
@@ -258,7 +258,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
         """Return what metrics are needed for each battery.
 
         Returns:
-            Map between battery id and set of required metrics id.
+            Map between battery ID and set of required metric IDs.
         """
         return {bid: self._metrics for bid in self._batteries}
 
@@ -270,7 +270,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
         """Return what metrics are needed for each inverter.
 
         Returns:
-            Map between inverter id and set of required metrics id.
+            Map between inverter ID and set of required metric IDs.
         """
         return {}
 
@@ -286,11 +286,11 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
         working batteries that are in metrics_data.
 
         Args:
-            metrics_data: Components metrics data, that should be used to calculate the
+            metrics_data: Components metrics data that should be used to calculate the
                 result.
-            working_batteries: working batteries. These batteries will be used
-                to calculate the result. It should be subset of the batteries given in a
-                constructor.
+            working_batteries: Working batteries. These batteries will be used
+                to calculate the result. It should be a subset of the batteries given in
+                the constructor.
 
         Returns:
             High level metric calculated from the given metrics.
@@ -356,7 +356,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
         """Return what metrics are needed for each battery.
 
         Returns:
-            Map between battery id and set of required metrics id.
+            Map between battery ID and set of required metric IDs.
         """
         return {bid: self._metrics for bid in self._batteries}
 
@@ -368,7 +368,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
         """Return what metrics are needed for each inverter.
 
         Returns:
-            Map between inverter id and set of required metrics id.
+            Map between inverter ID and set of required metric IDs.
         """
         return {}
 
@@ -384,11 +384,11 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
         working batteries that are in metrics_data.
 
         Args:
-            metrics_data: Components metrics data, that should be used to calculate the
+            metrics_data: Components metrics data that should be used to calculate the
                 result.
-            working_batteries: working batteries. These batteries will be used
-                to calculate the result. It should be subset of the batteries given in a
-                constructor.
+            working_batteries: Working batteries. These batteries will be used
+                to calculate the result. It should be a subset of the batteries given in
+                the constructor.
 
         Returns:
             High level metric calculated from the given metrics.
@@ -532,7 +532,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
         """Return what metrics are needed for each battery.
 
         Returns:
-            Map between battery id and set of required metrics id.
+            Map between battery ID and set of required metric IDs.
         """
         return {bid: self._battery_metrics for bid in set(self._bat_inv_map.keys())}
 
@@ -544,7 +544,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
         """Return what metrics are needed for each inverter.
 
         Returns:
-            Map between inverter id and set of required metrics id.
+            Map between inverter ID and set of required metric IDs.
         """
         return {
             inverter_id: self._inverter_metrics

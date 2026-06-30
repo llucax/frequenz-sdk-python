@@ -35,7 +35,7 @@ class ComponentPool(ABC, Generic[RefStoreT, ReportT]):
         name: str | None,
         priority: int,
     ) -> None:
-        """Create an `AbstractPool` instance.
+        """Create a `ComponentPool` instance.
 
         Args:
             pool_ref_store: The pool reference store instance.
@@ -107,7 +107,7 @@ class ComponentPool(ABC, Generic[RefStoreT, ReportT]):
         These include
           - the current inclusion/exclusion bounds available for the pool's priority,
           - the current target power for the pool's set of components,
-          - the result of the last distribution request for the pool's set of components,.
+          - the result of the last distribution request for the pool's set of components.
 
         Returns:
             A receiver that will stream power status reports for the pool's priority.

@@ -122,7 +122,7 @@ class Resampler:
 
         Returns:
             `True` if the timeseries was added, `False` if the timeseries was
-            not added because there already a timeseries using the provided
+            not added because there was already a timeseries using the provided
             receiver.
         """
         if source in self._resamplers:
@@ -142,7 +142,7 @@ class Resampler:
 
         Returns:
             `True` if the timeseries was removed, `False` if nothing was
-                removed (because the a timeseries with that `source` wasn't
+                removed (because a timeseries with that `source` wasn't
                 being resampled).
         """
         try:
@@ -158,7 +158,7 @@ class Resampler:
         from a source or sending to a sink (or `one_shot` is used).
 
         Args:
-            one_shot: Wether the resampling should run only for one resampling
+            one_shot: Whether the resampling should run only for one resampling
                 period.
 
         Raises:
@@ -167,7 +167,7 @@ class Resampler:
                 timer still runs and the timeseries will keep receiving data.
                 The user should remove (and re-add if desired) the faulty
                 timeseries from the resampler before calling this method
-                again).
+                again.
         """
         # We use a tolerance of 10% of the resampling period
         tolerance = timedelta(
@@ -233,7 +233,7 @@ class Resampler:
         The calculated resampling window end is a multiple of
         `self._config.resampling_period` starting at `self._config.align_to`.
 
-        if `self._config.align_to` is `None`, the current time is used.
+        If `self._config.align_to` is `None`, the current time is used.
 
         If the current time is not aligned to `self._config.resampling_period`, then
         the end of the current resampling window will be more than one period away, to
@@ -491,8 +491,8 @@ class _ResamplingHelper:
         """Log that no relevant samples were found.
 
         Args:
-            minimum_relevant_timestamp: Minimum timestamp that was requested
-            timestamp: Timestamp that was requested
+            minimum_relevant_timestamp: Minimum timestamp that was requested.
+            timestamp: Timestamp that was requested.
         """
         if not _logger.isEnabledFor(logging.WARNING):
             return

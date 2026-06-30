@@ -29,7 +29,7 @@ _logger = logging.getLogger(__name__)
 
 
 class MetricAggregator(Generic[T], ABC):
-    """Interface to control how the component data should be aggregated and send."""
+    """Interface to control how the component data should be aggregated and sent."""
 
     @abstractmethod
     def update_working_batteries(self, new_working_batteries: set[ComponentId]) -> None:
@@ -44,7 +44,7 @@ class MetricAggregator(Generic[T], ABC):
         """Return new receiver for the aggregated metric results.
 
         Args:
-            limit: Buffer size of the receiver
+            limit: Buffer size of the receiver.
 
         Returns:
             Receiver for the metric results.
@@ -52,7 +52,7 @@ class MetricAggregator(Generic[T], ABC):
 
     @abstractmethod
     async def stop(self) -> None:
-        """Stop the all pending async task."""
+        """Stop all the pending async tasks."""
 
     @classmethod
     @abstractmethod
@@ -81,7 +81,7 @@ class SendOnUpdate(MetricAggregator[T]):
         """Create class instance.
 
         Args:
-            working_batteries: Set of the working batteries
+            working_batteries: Set of the working batteries.
             metric_calculator: Module that tells how to aggregate the component metrics.
             min_update_interval: Minimum frequency for sending update about the change.
         """
@@ -127,7 +127,7 @@ class SendOnUpdate(MetricAggregator[T]):
         """Return new receiver for the aggregated metric results.
 
         Args:
-            limit: Buffer size of the receiver
+            limit: Buffer size of the receiver.
 
         Returns:
             Receiver for the metric results.
@@ -161,7 +161,7 @@ class SendOnUpdate(MetricAggregator[T]):
             self._update_event.set()
 
     async def stop(self) -> None:
-        """Stop the all pending async task."""
+        """Stop all the pending async tasks."""
         await asyncio.gather(
             *[cancel_and_await(task) for task in self._pending_data_fetchers]
         )

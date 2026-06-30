@@ -22,7 +22,7 @@ class _BaseResultMixin:
 
 @dataclasses.dataclass
 class _BaseSuccessMixin:
-    """Result returned when setting the power succeed for all components."""
+    """Result returned when setting the power succeeds for all components."""
 
     succeeded_power: Power
     """The part of the requested power that was successfully set."""
@@ -56,7 +56,7 @@ class PartialFailure(_BaseSuccessMixin, _BaseResultMixin):
     """The part of the requested power that failed to be set."""
 
     failed_components: abc.Set[ComponentId]
-    """The subset of batteries for which the request failed."""
+    """The subset of components for which the request failed."""
 
 
 @dataclasses.dataclass
@@ -64,7 +64,7 @@ class Error(_BaseResultMixin):
     """Result returned when an error occurred and power was not set at all."""
 
     msg: str
-    """The error message explaining why error happened."""
+    """The error message explaining why the error happened."""
 
 
 @dataclasses.dataclass
@@ -95,8 +95,8 @@ class OutOfBounds(_BaseResultMixin):
     bounds: PowerBounds
     """The power bounds for the requested components.
 
-    If the requested power negative, then this value is the lower bound.
-    Otherwise it is upper bound.
+    If the requested power is negative, then this value is the lower bound.
+    Otherwise it is the upper bound.
     """
 
 

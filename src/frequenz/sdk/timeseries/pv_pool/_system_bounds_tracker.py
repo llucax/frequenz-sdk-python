@@ -37,7 +37,7 @@ class PVSystemBoundsTracker(BackgroundService):
         """Initialize the system bounds tracker.
 
         Args:
-            component_ids: The ids of the components to track.
+            component_ids: The IDs of the components to track.
             status_receiver: A receiver that streams the status of the PV inverters in
                 the pool.
             bounds_sender: A sender to send the system bounds to.

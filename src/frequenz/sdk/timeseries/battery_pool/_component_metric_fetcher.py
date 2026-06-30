@@ -56,8 +56,8 @@ class ComponentMetricFetcher(AsyncConstructible, ABC):
         `fetch_next` is called.
 
         Args:
-            component_id: component id
-            metrics: metrics that should be fetched from this component.
+            component_id: Component ID.
+            metrics: Metrics that should be fetched from this component.
 
         Returns:
             This class instance.
@@ -89,20 +89,20 @@ class LatestMetricsFetcher(ComponentMetricFetcher, Generic[T], ABC):
         component_id: ComponentId,
         metrics: Iterable[Metric | TransitionalMetric],
     ) -> Self:
-        """Create instance of this class.
+        """Create an instance of this class.
 
         Subscribe for the requested component data and fetch only the latest component
         metrics.
 
         Args:
-            component_id: component id
-            metrics: metrics
+            component_id: Component ID.
+            metrics: Metrics.
 
         Raises:
-            ValueError: If any requested metric id is not supported.
+            ValueError: If any requested metric ID is not supported.
 
         Returns:
-            This class instance
+            This class instance.
         """
         self: Self = await super().async_new(component_id, metrics)
 
@@ -172,7 +172,7 @@ class LatestMetricsFetcher(ComponentMetricFetcher, Generic[T], ABC):
     def _subscribe(self) -> Receiver[Any]:
         """Subscribe for this component data.
 
-        Size of the receiver buffer should should be 1 to make sure we receive only
+        Size of the receiver buffer should be 1 to make sure we receive only
         the latest component data.
 
         Returns:
@@ -190,20 +190,20 @@ class LatestBatteryMetricsFetcher(LatestMetricsFetcher[BatteryData]):
         component_id: ComponentId,
         metrics: Iterable[Metric | TransitionalMetric],
     ) -> LatestBatteryMetricsFetcher:
-        """Create instance of this class.
+        """Create an instance of this class.
 
         Subscribe for the requested component data and fetch only the latest component
         metrics.
 
         Args:
-            component_id: component id
-            metrics: metrics
+            component_id: Component ID.
+            metrics: Metrics.
 
         Raises:
-            ValueError: If any requested metric id is not supported.
+            ValueError: If any requested metric ID is not supported.
 
         Returns:
-            This class instance
+            This class instance.
         """
         self: LatestBatteryMetricsFetcher = await super().async_new(
             component_id, metrics
@@ -224,7 +224,7 @@ class LatestBatteryMetricsFetcher(LatestMetricsFetcher[BatteryData]):
     def _subscribe(self) -> Receiver[BatteryData]:
         """Subscribe for this component data.
 
-        Size of the receiver buffer should should be 1 to make sure we receive only
+        Size of the receiver buffer should be 1 to make sure we receive only
         the latest component data.
 
         Returns:
@@ -248,20 +248,20 @@ class LatestInverterMetricsFetcher(LatestMetricsFetcher[InverterData]):
         component_id: ComponentId,
         metrics: Iterable[Metric | TransitionalMetric],
     ) -> LatestInverterMetricsFetcher:
-        """Create instance of this class.
+        """Create an instance of this class.
 
         Subscribe for the requested component data and fetch only the latest component
         metrics.
 
         Args:
-            component_id: component id
-            metrics: metrics
+            component_id: Component ID.
+            metrics: Metrics.
 
         Raises:
-            ValueError: If any requested metric id is not supported.
+            ValueError: If any requested metric ID is not supported.
 
         Returns:
-            This class instance
+            This class instance.
         """
         self: LatestInverterMetricsFetcher = await super().async_new(
             component_id, metrics
@@ -282,7 +282,7 @@ class LatestInverterMetricsFetcher(LatestMetricsFetcher[InverterData]):
     def _subscribe(self) -> Receiver[InverterData]:
         """Subscribe for this component data.
 
-        Size of the receiver buffer should should be 1 to make sure we receive only
+        Size of the receiver buffer should be 1 to make sure we receive only
         the latest component data.
 
         Returns:

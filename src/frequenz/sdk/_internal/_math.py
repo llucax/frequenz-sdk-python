@@ -15,11 +15,11 @@ def is_close_to_zero(value: float, abs_tol: float = 1e-9) -> bool:
     For more technical details, see https://peps.python.org/pep-0485/#behavior-near-zero
 
     Args:
-        value: the floating point value to compare to.
-        abs_tol: the minimum absolute tolerance. Defaults to 1e-9.
+        value: The floating point value to compare to.
+        abs_tol: The minimum absolute tolerance. Defaults to 1e-9.
 
     Returns:
-        whether the floating point value is close to zero.
+        Whether the floating point value is close to zero.
     """
     zero: float = 0.0
     return math.isclose(a=value, b=zero, abs_tol=abs_tol)

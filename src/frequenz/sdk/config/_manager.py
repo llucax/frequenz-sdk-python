@@ -76,7 +76,7 @@ class ConfigManager(BackgroundService):
             force_polling: Whether to force file polling to check for changes.
             logging_config_key: The key to use for the logging configuration. If `None`,
                 logging configuration will not be managed.  If a key is provided, the
-                manager update the logging configuration whenever the configuration
+                manager updates the logging configuration whenever the configuration
                 changes.
             name: A name to use when creating actors. If `None`, `str(id(self))` will
                 be used. This is used mostly for debugging purposes.
@@ -144,13 +144,13 @@ class ConfigManager(BackgroundService):
 
     @override
     async def wait(self) -> None:
-        """Wait this config manager to finish.
+        """Wait for this config manager to finish.
 
         Wait until all tasks and actors are finished.
 
         Raises:
             BaseExceptionGroup: If any of the tasks spawned by this service raised an
-                exception (`CancelError` is not considered an error and not returned in
+                exception (`CancelledError` is not considered an error and not returned in
                 the exception group).
         """
         exceptions: list[BaseException] = []
@@ -217,7 +217,7 @@ class ConfigManager(BackgroundService):
             skip_unchanged: Whether to skip sending the configuration if it hasn't
                 changed compared to the last one received.
             base_schema: An optional class to be used as a base schema for the
-                configuration class. This allow using custom fields for example. Will be
+                configuration class. This allows using custom fields for example. Will be
                 passed to [`marshmallow_dataclass.class_schema`][].
             marshmallow_load_kwargs: Additional arguments to be passed to
                 [`marshmallow.Schema.load`][].
@@ -285,7 +285,7 @@ async def wait_for_first(
     allow_none: bool = False,
     timeout: timedelta = timedelta(minutes=1),
 ) -> DataclassT | None:
-    """Wait for and receive the the first configuration.
+    """Wait for and receive the first configuration.
 
     For a more in-depth introduction and examples, please read the [module
     documentation][frequenz.sdk.config].
@@ -294,8 +294,8 @@ async def wait_for_first(
         receiver: The receiver to receive the first configuration from.
         receiver_name: The name of the receiver, used for logging. If `None`, the
             string representation of the receiver will be used.
-        allow_none: Whether consider a `None` value as a valid configuration.
-        timeout: The timeout in seconds to wait for the first configuration.
+        allow_none: Whether to consider a `None` value as a valid configuration.
+        timeout: The maximum time to wait for the first configuration.
 
     Returns:
         The first configuration received.

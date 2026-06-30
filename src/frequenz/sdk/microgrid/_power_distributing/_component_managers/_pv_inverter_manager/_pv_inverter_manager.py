@@ -69,7 +69,7 @@ class PVManager(ComponentManager):
 
     @override
     def component_ids(self) -> collections.abc.Set[ComponentId]:
-        """Return the set of PV inverter ids."""
+        """Return the set of PV inverter IDs."""
         return self._pv_inverter_ids
 
     @override

@@ -164,7 +164,7 @@ _T = TypeVar("_T", bound=Comparable | None)
 class Bounds(Generic[_T]):
     """Lower and upper bound values.
 
-    Depending on the genertic type `_T`, the lower and upper bounds can be `None`, in
+    Depending on the generic type `_T`, the lower and upper bounds can be `None`, in
     which case it means that there is no lower or upper bound, respectively.
 
     When checking if an item is within the bounds, the item must always be not `None`.

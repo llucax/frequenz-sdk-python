@@ -42,8 +42,8 @@ def _get_all_from_map(
     """Get all values for the given keys from the given map.
 
     Args:
-        source: map to get values from.
-        keys: keys to get values for.
+        source: Map to get values from.
+        keys: Keys to get values for.
 
     Returns:
         Set of values for the given keys.
@@ -61,13 +61,13 @@ def _get_battery_inverter_mappings(
     """Create maps between battery and adjacent inverters.
 
     Args:
-        battery_ids: set of battery ids
-        inv_bats: whether to create the inverter to batteries map
-        bat_bats: whether to create the battery to batteries map
-        inv_invs: whether to create the inverter to inverters map
+        battery_ids: Set of battery IDs.
+        inv_bats: Whether to create the inverter to batteries map.
+        bat_bats: Whether to create the battery to batteries map.
+        inv_invs: Whether to create the inverter to inverters map.
 
     Returns:
-        a dict of the requested maps, using the following keys:
+        A dict of the requested maps, using the following keys:
             * "bat_invs": battery to inverters map
             * "inv_bats": inverter to batteries map
             * "bat_bats": battery to batteries map
@@ -188,7 +188,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
 
     @override
     def component_ids(self) -> collections.abc.Set[ComponentId]:
-        """Return the set of component ids."""
+        """Return the set of component IDs."""
         return self._battery_ids
 
     @override
@@ -332,7 +332,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         """Get power bounds for given batteries.
 
         Args:
-            pairs_data: list of battery and adjacent inverter data pairs.
+            pairs_data: List of battery and adjacent inverter data pairs.
 
         Returns:
             Power bounds for given batteries.
@@ -401,11 +401,11 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         request: Request,
         pairs_data: list[InvBatPair],
     ) -> Result | None:
-        """Check whether the given request if correct.
+        """Check whether the given request is correct.
 
         Args:
-            request: request to check
-            pairs_data: list of battery and adjacent inverter data pairs.
+            request: Request to check.
+            pairs_data: List of battery and adjacent inverter data pairs.
 
         Returns:
             Result for the user if the request is wrong, None otherwise.
@@ -456,8 +456,8 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         So check all the metrics and if any are "NaN" then return None.
 
         Args:
-            battery_ids: battery ids
-            inverter_ids: inverter ids
+            battery_ids: Battery IDs.
+            inverter_ids: Inverter IDs.
 
         Returns:
             Data for the battery and adjacent inverter without NaN values.
@@ -614,8 +614,8 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         """Get power distribution result for the batteries in the request.
 
         Args:
-            request: the power request to process.
-            components: the battery component data including pairs of battery
+            request: The power request to process.
+            components: The battery component data including pairs of battery
                 and adjacent inverter data, and unreachable power.
 
         Returns:
@@ -662,12 +662,12 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
 
         Args:
             request: Request to set the power for.
-            distribution: Distribution result
-            timeout: How long wait for the response
+            distribution: Distribution result.
+            timeout: How long to wait for the response.
 
         Returns:
-            Tuple where first element is total failed power, and the second element
-            set of batteries that failed.
+            A tuple where the first element is the total failed power, and the second
+            element is the set of batteries that failed.
         """
         client = connection_manager.get().api_client
 
@@ -783,7 +783,7 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         """Cancel given asyncio tasks and wait for them.
 
         Args:
-            tasks: tasks to cancel.
+            tasks: Tasks to cancel.
         """
         for aws in tasks:
             aws.cancel()

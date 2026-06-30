@@ -1,7 +1,7 @@
 # License: MIT
 # Copyright © 2024 Frequenz Energy-as-a-Service GmbH
 
-"""Power distribution state tracking for ev chargers."""
+"""Power distribution state tracking for EV chargers."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -15,10 +15,10 @@ from ...._old_component_data import EVChargerData
 
 @dataclass
 class EvcState:
-    """A class for tracking state of an ev charger."""
+    """A class for tracking the state of an EV charger."""
 
     component_id: ComponentId
-    """The component id of the ev charger."""
+    """The component ID of the EV charger."""
 
     last_data: EVChargerData
     """The last data received from the EV charger."""
@@ -30,15 +30,15 @@ class EvcState:
     """The last allocation made for the EV."""
 
     last_reallocation_time: datetime
-    """The last time the ev charger was allocated power.
+    """The last time the EV charger was allocated power.
 
-    Used to make sure we don't allocate power to the ev charger too often.
+    Used to make sure we don't allocate power to the EV charger too often.
     """
 
     last_charging_time: datetime
-    """The last time the ev charger was charging.
+    """The last time the EV charger was charging.
 
-    Used to de-allocate power from the ev charger if it has not been charging
+    Used to de-allocate power from the EV charger if it has not been charging
     for a while.
     """
 
@@ -46,7 +46,7 @@ class EvcState:
         """Update the last allocation and related timestamps.
 
         Args:
-            allocation: The most allocation allocation made for the EV.
+            allocation: The most recent allocation made for the EV.
             alloc_time: The time at which the allocation was made.
         """
         self.last_allocation = allocation
@@ -60,7 +60,7 @@ class EvcState:
         """Update EvcState from component data.
 
         Args:
-            latest_ev_data: latest ev data from component data stream.
+            latest_ev_data: Latest EV data from component data stream.
         """
         self.power = Power.from_watts(latest_ev_data.active_power)
         self.last_data = latest_ev_data
@@ -70,7 +70,7 @@ class EvcState:
 
 
 class EvcStates:
-    """Tracks states of all ev chargers."""
+    """Tracks states of all EV chargers."""
 
     _states: dict[ComponentId, EvcState]
 
@@ -96,7 +96,7 @@ class EvcStates:
         """Return a reference to the EvcState object with the given component_id.
 
         Args:
-            component_id: identifies the object to retrieve.
+            component_id: Identifies the object to retrieve.
 
         Returns:
             The EvcState object with the given component_id.
@@ -123,7 +123,7 @@ class EvcStates:
         """Check if the given component_id has an associated EvcState object.
 
         Args:
-            component_id: The component id to test.
+            component_id: The component ID to test.
 
         Returns:
             Boolean indicating whether the given component_id is a known

@@ -26,7 +26,7 @@ class LogicalMeter:
 
     !!! note
         `LogicalMeter` instances are not meant to be created directly by users.  Use the
-        [`microgrid.logical_meter`][frequenz.sdk.microgrid.logical_meter] method for
+        [`microgrid.logical_meter`][frequenz.sdk.microgrid.logical_meter] function for
         creating `LogicalMeter` instances.
 
     Example:
@@ -63,7 +63,7 @@ class LogicalMeter:
 
         !!! note
             `LogicalMeter` instances are not meant to be created directly by users.  Use
-            the [`microgrid.logical_meter`][frequenz.sdk.microgrid.logical_meter] method
+            the [`microgrid.logical_meter`][frequenz.sdk.microgrid.logical_meter] function
             for creating `LogicalMeter` instances.
 
         Args:
@@ -93,19 +93,19 @@ class LogicalMeter:
     ) -> Formula[Quantity]:
         """Start execution of the given formula.
 
-        Formulas can have Component IDs that are preceded by a pound symbol(`#`),
+        Formulas can have Component IDs that are preceded by a pound symbol (`#`),
         constant values and these operators: `+`, `-`, `*`, `/`, `(`, `)`.
 
         These functions are also supported: `COALESCE`, `MAX`, `MIN`.
 
         For example, the input string: `#20 + #5` is a formula for adding metrics from
-        two components with ids 20 and 5.
+        two components with IDs 20 and 5.
 
         A more detailed description of the formula syntax with examples can be found
         [here](https://github.com/frequenz-floss/frequenz-microgrid-formula-engine-rs?tab=readme-ov-file#formula-syntax-overview).
 
         Args:
-            formula: formula to execute.
+            formula: The formula to execute.
             metric: The metric to use when fetching receivers from the resampling actor.
 
         Returns:

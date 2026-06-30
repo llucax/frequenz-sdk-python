@@ -54,7 +54,7 @@ class FormulaPool:
         """Create a new instance.
 
         Args:
-            namespace: namespace to use with the data pipeline.
+            namespace: The namespace to use with the data pipeline.
             channel_registry: A channel registry instance shared with the resampling
                 actor.
             resampler_subscription_sender: A sender for sending metric requests to the
@@ -82,7 +82,7 @@ class FormulaPool:
         """Get a receiver for a manual formula.
 
         Args:
-            formula_str: formula to execute.
+            formula_str: The formula to execute.
             metric: The metric to use when fetching receivers from the resampling
                 actor.
 

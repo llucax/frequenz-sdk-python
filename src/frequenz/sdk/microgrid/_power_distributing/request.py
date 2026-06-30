@@ -17,7 +17,7 @@ class Request:
     """The requested power."""
 
     component_ids: abc.Set[ComponentId]
-    """The component ids of the components to be used for this request."""
+    """The component IDs of the components to be used for this request."""
 
     adjust_power: bool = True
     """Whether to adjust the power to match the bounds.
@@ -26,5 +26,5 @@ class Request:
     only the reduced power will be set.
 
     If `False` and the power is outside the available bounds, the request will
-    fail and be replied to with an `OutOfBound` result.
+    fail and be replied to with an `OutOfBounds` result.
     """

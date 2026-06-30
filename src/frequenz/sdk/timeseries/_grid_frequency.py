@@ -27,7 +27,7 @@ def create_request(component_id: ComponentId) -> ComponentMetricRequest:
     """Create a request for grid frequency.
 
     Args:
-        component_id: The component id to use for the request.
+        component_id: The component ID to use for the request.
 
     Returns:
         A component metric request for grid frequency.

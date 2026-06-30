@@ -67,7 +67,7 @@ class BlockingStatus:
         """Check if the component is blocked.
 
         Returns:
-            True if battery is blocked, False otherwise.
+            True if the component is blocked, False otherwise.
         """
         if self.blocked_until is None:
             return False

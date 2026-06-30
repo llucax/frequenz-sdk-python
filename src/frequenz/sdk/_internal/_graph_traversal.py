@@ -32,7 +32,7 @@ def find_first_descendant_component(
 
     Args:
         graph: The component graph to search.
-        descendants: The descendant classes to search for the first
+        descendants: The descendant categories to search for the first
             descendant component in.
 
     Returns:

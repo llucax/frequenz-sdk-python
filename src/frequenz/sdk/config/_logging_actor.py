@@ -61,11 +61,11 @@ class LoggingConfig:
         default_factory=lambda: RootLoggerConfig(level="INFO"),
         metadata={
             "metadata": {
-                "description": "Default default configuration for all loggers.",
+                "description": "Default configuration for all loggers.",
             },
         },
     )
-    """The default log level."""
+    """The configuration for the root logger."""
 
     loggers: dict[str, LoggerConfig] = field(
         default_factory=dict,
@@ -75,7 +75,7 @@ class LoggingConfig:
             },
         },
     )
-    """The list of loggers configurations."""
+    """The mapping of logger names to their configurations."""
 
 
 class LoggingConfigUpdatingActor(Actor):

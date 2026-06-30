@@ -56,7 +56,7 @@ def load_config(
     Note:
         This method will raise [`marshmallow.ValidationError`][] if the configuration
         dictionary is invalid and you have to have in mind all of the gotchas of
-        [`marshmallow`][] and [`marshmallow_dataclass`][] applies when using this
+        [`marshmallow`][] and [`marshmallow_dataclass`][] apply when using this
         function.  It is recommended to carefully read the documentation of these
         libraries.
 

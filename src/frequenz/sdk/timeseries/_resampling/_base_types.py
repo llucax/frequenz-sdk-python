@@ -42,7 +42,7 @@ class SourceProperties:
     sampling_start: datetime | None = None
     """The time when resampling started for this source.
 
-    `None` means it didn't started yet.
+    `None` means it hasn't started yet.
     """
 
     received_samples: int = 0

@@ -58,9 +58,9 @@ class EVChargerStatusTracker(ComponentStatusTracker, BackgroundService):
             set_power_result_receiver: Receiver to fetch PowerDistributor responses
                 from, to get the status of the most recent request made for an EV
                 Charger.
-            max_data_age: max duration to wait for, before marking a component as
+            max_data_age: Max duration to wait for, before marking a component as
                 NOT_WORKING, unless new data arrives.
-            max_blocking_duration: duration for which the component status should be
+            max_blocking_duration: Duration for which the component status should be
                 UNCERTAIN if a request to the component failed unexpectedly.
         """
         self._component_id = component_id

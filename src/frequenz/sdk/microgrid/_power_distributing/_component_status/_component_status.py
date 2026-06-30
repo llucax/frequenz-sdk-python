@@ -20,7 +20,7 @@ class ComponentPoolStatus:
     """Status of all components of a certain category in the microgrid."""
 
     working: set[ComponentId]
-    """Set of working component ids."""
+    """Set of working component IDs."""
 
     uncertain: set[ComponentId]
     """Set of components to be used only when there are none known to be working."""
@@ -56,7 +56,7 @@ class ComponentStatusEnum(enum.Enum):
     """
 
     WORKING = 2
-    """Component is working"""
+    """Component is working."""
 
 
 @dataclass(frozen=True)
@@ -97,13 +97,13 @@ class ComponentStatusTracker(BackgroundService, ABC):
         """Create class instance.
 
         Args:
-            component_id: Id of this component
+            component_id: ID of this component.
             status_sender: Channel to send status updates.
             set_power_result_receiver: Channel to receive results of the requests to the
                 components.
             max_data_age: If component stopped sending data, then this is the maximum
                 time when its last message should be considered as valid. After that
                 time, component won't be used until it starts sending data.
-            max_blocking_duration: This value tell what should be the maximum
-                timeout used for blocking failing component.
+            max_blocking_duration: This value tells what should be the maximum
+                timeout used for blocking a failing component.
         """

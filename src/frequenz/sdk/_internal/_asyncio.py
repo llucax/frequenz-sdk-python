@@ -24,7 +24,7 @@ async def cancel_and_await(task: asyncio.Task[Any]) -> None:
         task: The task to be cancelled and waited for.
 
     Raises:
-        asyncio.CancelledError: when our task was cancelled
+        asyncio.CancelledError: When our task was cancelled.
     """
     if task.done():
         return

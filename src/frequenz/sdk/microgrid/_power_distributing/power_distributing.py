@@ -5,7 +5,7 @@
 
 The purpose of this actor is to distribute power between components in a microgrid.
 
-The actor receives power requests from the power manager, process them by
+The actor receives power requests from the power manager, processes them by
 distributing the power between the components and sends the results back to it.
 """
 
@@ -37,10 +37,10 @@ class PowerDistributingActor(Actor):  # pylint: disable=too-many-instance-attrib
     """Actor to distribute the power between components in a microgrid.
 
     One instance of the actor can handle only one component category and type,
-    which needs to be specified at actor startup and it will setup the correct
+    which needs to be specified at actor startup and it will set up the correct
     component manager based on the given category and type.
 
-    Only one power request is processed at a time to prevent from sending
+    Only one power request is processed at a time to prevent sending
     multiple requests for the same components to the microgrid API at the
     same time.
 
@@ -121,8 +121,8 @@ class PowerDistributingActor(Actor):  # pylint: disable=too-many-instance-attrib
     async def _run(self) -> None:
         """Run this actor's logic.
 
-        It waits for new power requests and process them. Only one power request
-        can be processed at a time to prevent from sending multiple requests for
+        It waits for new power requests and processes them. Only one power request
+        can be processed at a time to prevent sending multiple requests for
         the same components to the microgrid API at the same time.
 
         A new power request will be ignored if a power request with the same

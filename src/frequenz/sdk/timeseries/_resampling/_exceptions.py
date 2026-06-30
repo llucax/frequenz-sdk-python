@@ -31,10 +31,10 @@ class SourceStoppedError(RuntimeError):
 
 
 class ResamplingError(RuntimeError):
-    """An Error occurred while resampling.
+    """An error occurred while resampling.
 
-    This error is a container for errors raised by the underlying sources and
-    or sinks.
+    This error is a container for errors raised by the underlying sources and/or
+    sinks.
     """
 
     def __init__(

@@ -3,7 +3,7 @@
 
 """Background service that tracks the status of a battery.
 
-A battery is consider to be WORKING if both the battery and the adjacent inverter are
+A battery is considered to be WORKING if both the battery and the adjacent inverter are
 sending data that shows that they are working.
 
 If either of them stops sending data, or if the data shows that they are not working,
@@ -46,7 +46,7 @@ _logger = logging.getLogger(__name__)
 @dataclass
 class _ComponentStreamStatus:
     component_id: ComponentId
-    """Component id."""
+    """Component ID."""
 
     data_recv_timer: Timer
     """Timer that is set when no component data has been received for some time."""
@@ -67,7 +67,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
     _battery_valid_relay: frozenset[ComponentStateCode] = frozenset(
         [ComponentStateCode.RELAY_CLOSED]
     )
-    """The list of valid relay states of a battery.
+    """The set of valid relay states of a battery.
 
     A working battery in any other battery relay state will be reported as failing.
     """
@@ -79,7 +79,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
             ComponentStateCode.DISCHARGING,
         ]
     )
-    """The list of valid states of a battery.
+    """The set of valid states of a battery.
 
     A working battery in any other battery state will be reported as failing.
     """
@@ -92,7 +92,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
             ComponentStateCode.DISCHARGING,
         ]
     )
-    """The list of valid states of an inverter.
+    """The set of valid states of an inverter.
 
     A working inverter in any other inverter state will be reported as failing.
     """
@@ -110,15 +110,15 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         """Create class instance.
 
         Args:
-            component_id: Id of this battery
+            component_id: ID of this battery.
             status_sender: Channel to send status updates.
             set_power_result_receiver: Channel to receive results of the requests to the
                 components.
             max_data_age: If component stopped sending data, then this is the maximum
                 time when its last message should be considered as valid. After that
                 time, component won't be used until it starts sending data.
-            max_blocking_duration: This value tell what should be the maximum
-                timeout used for blocking failing component.
+            max_blocking_duration: This value tells what should be the maximum
+                timeout used for blocking a failing component.
 
         Raises:
             RuntimeError: If battery has no adjacent inverter.
@@ -244,7 +244,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
     ) -> None:
         """Process data from the components and set_power_result_receiver.
 
-        New status is send only when it change.
+        New status is sent only when it changes.
 
         Args:
             status_sender: Channel to send status updates.
@@ -348,10 +348,10 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         If battery capacity is missing, then we can't work with it.
 
         Args:
-            msg: battery message
+            msg: battery message.
 
         Returns:
-            True if battery capacity is present, false otherwise.
+            True if battery capacity is present, False otherwise.
         """
         if math.isnan(msg.capacity):
             if self._last_status == ComponentStatusEnum.WORKING:
@@ -386,7 +386,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         """Check if inverter is in correct state from message.
 
         Args:
-            msg: message
+            msg: message.
 
         Returns:
             True if inverter is in correct state. False otherwise.
@@ -409,7 +409,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         """Check if battery is in correct state from message.
 
         Args:
-            msg: message
+            msg: message.
 
         Returns:
             True if battery is in correct state. False otherwise.
@@ -441,13 +441,13 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         return True
 
     def _is_timestamp_outdated(self, timestamp: datetime) -> bool:
-        """Return if timestamp is to old.
+        """Return whether timestamp is too old.
 
         Args:
-            timestamp: timestamp
+            timestamp: timestamp.
 
         Returns:
-            _True if timestamp is to old, False otherwise
+            True if timestamp is too old, False otherwise.
         """
         now = datetime.now(tz=timezone.utc)
         diff = now - timestamp
@@ -457,7 +457,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         """Check if message is too old to be considered as reliable.
 
         Args:
-            message: message to check
+            message: message to check.
 
         Returns:
             True if message is reliable, False otherwise.
@@ -477,10 +477,10 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         """Find inverter adjacent to this battery.
 
         Args:
-            battery_id: battery id adjacent to the wanted inverter
+            battery_id: battery ID adjacent to the wanted inverter.
 
         Returns:
-            Id of the inverter. If battery hasn't adjacent inverter, then return None.
+            ID of the inverter. If battery has no adjacent inverter, then return None.
         """
         graph = connection_manager.get().component_graph
         return next(

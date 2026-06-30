@@ -19,7 +19,7 @@ class Producer:
     """Calculate high level producer metrics in a microgrid.
 
     Under normal circumstances this is expected to correspond to the gross
-    production of the sites active parts excluding EV chargers and batteries.
+    production of the site's active parts excluding EV chargers and batteries.
 
     Producer provides methods for fetching power values from different points
     in the microgrid. These methods return `FormulaReceiver` objects, which can

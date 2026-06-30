@@ -14,7 +14,7 @@ from ._system_bounds_tracker import PVSystemBoundsTracker
 
 
 class PVPoolReferenceStore(ComponentPoolReferenceStore):
-    """A class for maintaining the shared state/tasks for a set of pool of PV inverters.
+    """A class for maintaining the shared state/tasks for a pool of PV inverters.
 
     This includes ownership of
     - the formula pool and metric calculators.

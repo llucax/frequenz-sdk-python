@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
 
 class ConfigManagingActor(Actor):
-    """An actor that monitors a TOML configuration files for updates.
+    """An actor that monitors TOML configuration files for updates.
 
     When the actor is started the configuration files will be read and sent to the
     output sender. Then the actor will start monitoring the files for updates. If any
@@ -179,7 +179,7 @@ class ConfigManagingActor(Actor):
         """Monitor for and send configuration file updates.
 
         At startup, the Config Manager sends the current config so that it
-        can be cache in the Broadcast channel and served to receivers even if
+        can be cached in the Broadcast channel and served to receivers even if
         there hasn't been any change to the config file itself.
         """
         await self.send_config()

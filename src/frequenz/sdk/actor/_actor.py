@@ -25,7 +25,7 @@ class Actor(BackgroundService, abc.ABC):
 
     !!! info
 
-        Please read the [`actor` module documentation][frequenz.sdk.actor] for more
+        Please read the [`actor` module documentation][frequenz.sdk.actor] for a more
         comprehensive guide on how to use and implement actors properly.
     """
 
@@ -36,7 +36,7 @@ class Actor(BackgroundService, abc.ABC):
     """The number of times actors can be restarted when they are stopped by unhandled exceptions.
 
     If this is bigger than 0 or `None`, the actor will be restarted when there is an
-    unhanded exception in the `_run()` method.
+    unhandled exception in the `_run()` method.
 
     If `None`, the actor will be restarted an unlimited number of times.
 

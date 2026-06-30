@@ -68,7 +68,7 @@ streams zero values.
 
 This is the main power consumer at the site of a microgrid, and often the
 {{glossary("load")}} the microgrid is built to support.  The power drawn by the consumer
-is available through [`consumer_power`][frequenz.sdk.timeseries.consumer.Consumer.power]
+is available through [`consumer_power`][frequenz.sdk.timeseries.consumer.Consumer.power].
 
 In locations without a consumer, this method streams zero values.
 

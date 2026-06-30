@@ -20,7 +20,7 @@ async def run(*actors: Actor) -> None:
         comprehensive guide on how to use and implement actors properly.
 
     Args:
-        *actors: the actors to be awaited.
+        *actors: The actors to be awaited.
     """
     _logger.info("Starting %s actor(s)...", len(actors))
 

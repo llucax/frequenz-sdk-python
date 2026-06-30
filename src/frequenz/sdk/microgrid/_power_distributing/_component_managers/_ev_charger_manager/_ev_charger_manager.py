@@ -48,7 +48,7 @@ class EVChargerManager(ComponentManager):
         results_sender: Sender[Result],
         api_power_request_timeout: timedelta,
     ):
-        """Initialize the ev charger data manager.
+        """Initialize the EV charger data manager.
 
         Args:
             component_pool_status_sender: Channel for sending information about which
@@ -82,19 +82,19 @@ class EVChargerManager(ComponentManager):
 
     @override
     def component_ids(self) -> collections.abc.Set[ComponentId]:
-        """Return the set of ev charger ids."""
+        """Return the set of EV charger IDs."""
         return self._ev_charger_ids
 
     @override
     async def start(self) -> None:
-        """Start the ev charger data manager."""
+        """Start the EV charger data manager."""
         # Need to start a task only if there are EV chargers in the component graph.
         if self._ev_charger_ids:
             self._task = asyncio.create_task(run_forever(self._run))
 
     @override
     async def distribute_power(self, request: Request) -> None:
-        """Distribute the requested power to the ev chargers.
+        """Distribute the requested power to the EV chargers.
 
         Args:
             request: Request to get the distribution for.
@@ -104,7 +104,7 @@ class EVChargerManager(ComponentManager):
 
     @override
     async def stop(self) -> None:
-        """Stop the ev charger manager."""
+        """Stop the EV charger manager."""
         await self._voltage_cache.stop()
         await self._component_pool_status_tracker.stop()
 
@@ -306,7 +306,7 @@ class EVChargerManager(ComponentManager):
             to_deallocate: The amount of power to reduce the total allocated power by.
 
         Returns:
-            A list of new (reduced) charging current limits for a subset of ev
+            A list of new (reduced) charging current limits for a subset of EV
                 chargers, required to bring down the consumption by the given value.
         """
         voltage = self._voltage_cache.get().min()
@@ -353,7 +353,7 @@ class EVChargerManager(ComponentManager):
             throttle_by: The amount of power to reduce the total EV charging power by.
 
         Returns:
-            A list of new (reduced) charging current limits for a subset of ev
+            A list of new (reduced) charging current limits for a subset of EV
                 chargers, required to bring down the consumption by the given value.
         """
         min_power = Power.zero()

@@ -37,7 +37,7 @@ class EVCSystemBoundsTracker(BackgroundService):
         """Initialize this instance.
 
         Args:
-            component_ids: The ids of the components to track.
+            component_ids: The IDs of the components to track.
             status_receiver: A receiver that streams the status of the EV Chargers in
                 the pool.
             bounds_sender: A sender to send the system bounds to.

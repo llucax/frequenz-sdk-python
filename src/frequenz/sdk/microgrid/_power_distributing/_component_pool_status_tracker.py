@@ -1,7 +1,7 @@
 # License: MIT
 # Copyright © 2022 Frequenz Energy-as-a-Service GmbH
 
-"""Class that tracks the status of pool of components."""
+"""Class that tracks the status of a pool of components."""
 
 import asyncio
 import contextlib
@@ -24,8 +24,8 @@ from ._component_status import (
 class ComponentPoolStatusTracker:
     """Track status of components of a given category.
 
-    Send set of working and uncertain components, when the status of any of the tracked
-    components changes.
+    Send a set of working and uncertain components, when the status of any of the
+    tracked components changes.
     """
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -40,15 +40,15 @@ class ComponentPoolStatusTracker:
         """Create ComponentPoolStatusTracker instance.
 
         Args:
-            component_ids: set of component ids whose status is to be tracked.
+            component_ids: Set of component IDs whose status is to be tracked.
             component_status_sender: The sender used for sending the status of the
                 tracked components.
             max_data_age: If a component stops sending data, then this is the maximum
                 time for which its last message should be considered as valid. After
                 that time, the component won't be used until it starts sending data.
-            max_blocking_duration: This value tell what should be the maximum timeout
-                used for blocking failing component.
-            component_status_tracker_type: component status tracker to use for tracking
+            max_blocking_duration: This value tells what should be the maximum timeout
+                used for blocking a failing component.
+            component_status_tracker_type: Component status tracker to use for tracking
                 the status of the components.
         """
         self._component_ids = component_ids

@@ -15,4 +15,4 @@ class Fuse:
     """Fuse data class."""
 
     max_current: Current
-    """Rated current of the fuse."""
+    """The rated current of the fuse."""

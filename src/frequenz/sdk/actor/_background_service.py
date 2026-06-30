@@ -226,13 +226,13 @@ class BackgroundService(abc.ABC):
         await self.stop()
 
     async def wait(self) -> None:
-        """Wait this background service to finish.
+        """Wait for this background service to finish.
 
         Wait until all background service tasks are finished.
 
         Raises:
             BaseExceptionGroup: If any of the tasks spawned by this service raised an
-                exception (`CancelError` is not considered an error and not returned in
+                exception (`CancelledError` is not considered an error and not returned in
                 the exception group).
         """
         # We need to account for tasks that were created between when we started

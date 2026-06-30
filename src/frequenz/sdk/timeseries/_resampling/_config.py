@@ -88,7 +88,7 @@ class ResamplingFunction(Protocol):
             source_properties: The properties of the source being resampled.
 
         Returns:
-            The value of new sample produced after the resampling.
+            The value of the new sample produced after the resampling.
         """
         ...  # pylint: disable=unnecessary-ellipsis
 
@@ -100,7 +100,7 @@ class ResamplerConfig:
     resampling_period: timedelta
     """The resampling period.
 
-    This is the time it passes between resampled data should be calculated.
+    This is the time that passes between resampled data calculations.
 
     It must be a positive time span.
     """
@@ -187,7 +187,7 @@ class ResamplerConfig:
     emitted in the logs if the buffer length needs to be truncated to this
     value.
 
-    It must be at bigger than `warn_buffer_len`.
+    It must be bigger than `warn_buffer_len`.
     """
 
     align_to: datetime | None = UNIX_EPOCH
@@ -306,7 +306,7 @@ class ResamplingFunction2(Protocol):
             source_properties: The properties of the source being resampled.
 
         Returns:
-            The value of new sample produced after the resampling.
+            The value of the new sample produced after the resampling.
         """
         ...  # pylint: disable=unnecessary-ellipsis
 
@@ -318,7 +318,7 @@ class ResamplerConfig2(ResamplerConfig):
     resampling_period: timedelta
     """The resampling period.
 
-    This is the time it passes between resampled data should be calculated.
+    This is the time that passes between resampled data calculations.
 
     It must be a positive time span.
     """
@@ -382,7 +382,7 @@ class ResamplerConfig2(ResamplerConfig):
     emitted in the logs if the buffer length needs to be truncated to this
     value.
 
-    It must be at bigger than `warn_buffer_len`.
+    It must be bigger than `warn_buffer_len`.
     """
 
     align_to: datetime | None = field(default=None, init=False)

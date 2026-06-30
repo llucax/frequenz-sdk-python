@@ -200,7 +200,7 @@ composed easily.
     1. We define a new actor class called `EchoActor` that inherits from
         [`Actor`][frequenz.sdk.actor.Actor].
 
-    2. We accept an `receiver` argument that will be used to receive messages from
+    2. We accept a `receiver` argument that will be used to receive messages from
         a channel.
     3. We accept an `output` argument that will be used to send messages to a channel.
     4. We accept an optional `name` argument that will be used to identify the actor in

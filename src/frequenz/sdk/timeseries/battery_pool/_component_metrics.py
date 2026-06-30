@@ -30,7 +30,7 @@ class ComponentMetricsData:
         """Get metric value.
 
         Args:
-            metric: metric id
+            metric: Metric ID.
 
         Returns:
             Value of the metric.
@@ -40,14 +40,14 @@ class ComponentMetricsData:
     def __eq__(self, other: object) -> bool:
         """Compare two objects of this class.
 
-        Object are considered as equal if all stored values except for timestamp
+        Objects are considered as equal if all stored values except for timestamp
         are equal.
 
         Args:
-            other: object to compare.
+            other: Object to compare.
 
         Returns:
-            True if two objects are equal, false otherwise.
+            True if two objects are equal, False otherwise.
         """
         if not isinstance(other, ComponentMetricsData):
             return False

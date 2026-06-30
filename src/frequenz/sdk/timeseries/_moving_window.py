@@ -34,7 +34,7 @@ class MovingWindow(BackgroundService):
     integers or timestamps.
 
     Note that a numpy ndarray is returned and thus users can use
-    numpys operations directly on a window.
+    numpy's operations directly on a window.
 
     The window uses a ring buffer for storage and the first element is aligned to
     a fixed defined point in time. Since the moving nature of the window, the
@@ -83,7 +83,7 @@ class MovingWindow(BackgroundService):
                 # ... wait for 5 seconds until the buffer is filled
                 await asyncio.sleep(5)
 
-                # return an numpy array from the window
+                # return a numpy array from the window
                 array = window[time_start:time_end]
                 # and use it to for example calculate the mean
                 mean = array.mean()
@@ -436,7 +436,7 @@ class MovingWindow(BackgroundService):
 
         Returns:
             The count of samples between the oldest and newest (inclusive) valid samples
-                or 0 if there are is no time range covered.
+                or 0 if there is no time range covered.
         """
         return self._buffer.count_covered(since=since, until=until)
 
@@ -482,7 +482,7 @@ class MovingWindow(BackgroundService):
 
         Returns:
             A float if the key is a number or a timestamp.
-            an numpy array if the key is a slice.
+            a numpy array if the key is a slice.
         """
         if isinstance(key, slice):
             if not (key.step is None or key.step == 1):

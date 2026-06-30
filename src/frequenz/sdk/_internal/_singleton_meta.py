@@ -24,8 +24,8 @@ class SingletonMeta(type):
         """Overload function call operator to return the singleton instance.
 
         Args:
-            *args: positional args
-            **kwargs: and keyword args for the super class.
+            *args: Positional args for the super class.
+            **kwargs: Keyword args for the super class.
 
         Returns:
             The singleton instance.

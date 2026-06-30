@@ -14,7 +14,7 @@ from ._system_bounds_tracker import EVCSystemBoundsTracker
 
 
 class EVChargerPoolReferenceStore(ComponentPoolReferenceStore):
-    """A class for maintaining the shared state/tasks for a set of pool of EV chargers.
+    """A class for maintaining the shared state/tasks for a pool of EV chargers.
 
     This includes ownership of
     - the formula pool and metric calculators.

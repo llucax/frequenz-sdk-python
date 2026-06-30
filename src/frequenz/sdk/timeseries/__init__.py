@@ -12,7 +12,7 @@ A timeseries is a stream (normally an async iterator) of
 All the data produced by this package is always periodic, in UTC, and aligned to the
 [Epoch](https://en.wikipedia.org/wiki/Epoch_(computing)) (by default).
 
-Classes normally take a (re)sampling period as and argument and, optionally, an
+Classes normally take a (re)sampling period as an argument and, optionally, an
 `align_to` argument.
 
 This means timestamps are always separated exactly by a period, and that this

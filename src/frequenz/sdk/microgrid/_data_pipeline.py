@@ -4,7 +4,7 @@
 """Create, connect and own instances of data pipeline components.
 
 Provides SDK users direct access to higher level components of the data pipeline,
-eliminating the boiler plate code required to setup the DataSourcingActor and the
+eliminating the boilerplate code required to setup the DataSourcingActor and the
 ResamplingActor.
 """
 
@@ -79,8 +79,8 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
     """Create, connect and own instances of data pipeline components.
 
     Provides SDK users direct access to higher level components of the data pipeline,
-    eliminating the boiler plate code required to setup the DataSourcingActor and the
-    ResamplingActor.
+        eliminating the boilerplate code required to setup the DataSourcingActor and the
+        ResamplingActor.
     """
 
     def __init__(
@@ -149,7 +149,7 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         self._voltage_instance: VoltageStreamer | None = None
 
         self._known_pool_keys: set[str] = set()
-        """A set of keys for corresponding to created EVChargerPool instances.
+        """A set of keys corresponding to created EVChargerPool instances.
 
         This is used to warn the user if they try to create a new EVChargerPool instance
         for the same set of component IDs, and with the same priority.
@@ -256,9 +256,9 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         component_ids: abc.Set[ComponentId] | None = None,
         name: str | None = None,
     ) -> EVChargerPool:
-        """Return the corresponding EVChargerPool instance for the given ids.
+        """Return the corresponding EVChargerPool instance for the given IDs.
 
-        If an EVChargerPool instance for the given ids doesn't exist, a new one is
+        If an EVChargerPool instance for the given IDs doesn't exist, a new one is
         created and returned.
 
         Args:
@@ -332,9 +332,9 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         component_ids: abc.Set[ComponentId] | None = None,
         name: str | None = None,
     ) -> PVPool:
-        """Return a new `PVPool` instance for the given ids.
+        """Return a new `PVPool` instance for the given IDs.
 
-        If a `PVPoolReferenceStore` instance for the given PV inverter ids doesn't
+        If a `PVPoolReferenceStore` instance for the given PV inverter IDs doesn't
         exist, a new one is created and used for creating the `PVPool`.
 
         Args:
@@ -405,9 +405,9 @@ class _DataPipeline:  # pylint: disable=too-many-instance-attributes
         component_ids: abc.Set[ComponentId] | None = None,
         name: str | None = None,
     ) -> BatteryPool:
-        """Return a new `BatteryPool` instance for the given ids.
+        """Return a new `BatteryPool` instance for the given IDs.
 
-        If a `BatteryPoolReferenceStore` instance for the given battery ids doesn't
+        If a `BatteryPoolReferenceStore` instance for the given battery IDs doesn't
         exist, a new one is created and used for creating the `BatteryPool`.
 
         Args:

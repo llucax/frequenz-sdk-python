@@ -92,10 +92,10 @@ class ConnectionManager(ABC):
 
 
 class _InsecureConnectionManager(ConnectionManager):
-    """Microgrid Api with insecure channel implementation."""
+    """Microgrid API with insecure channel implementation."""
 
     def __init__(self, server_url: str) -> None:
-        """Create and stores core features.
+        """Create and store core features.
 
         Args:
             server_url: The location of the microgrid API server in the form of a URL.

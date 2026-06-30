@@ -117,7 +117,7 @@ class Grid:
         This formula produces values that are in the Passive Sign Convention (PSC).
 
         A receiver from the formula can be created using the
-        `new_receiver`method.
+        `new_receiver` method.
 
         Returns:
             A Formula that will calculate and stream grid 3-phase power.
