@@ -12,7 +12,7 @@ from frequenz.quantities import Current
 
 @dataclass(frozen=True)
 class Fuse:
-    """Fuse data class."""
+    """A fuse."""
 
     max_current: Current
     """The rated current of the fuse."""

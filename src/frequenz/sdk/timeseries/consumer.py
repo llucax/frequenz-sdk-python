@@ -16,7 +16,7 @@ from .formulas._formula_pool import FormulaPool
 
 
 class Consumer:
-    """Calculate high level consumer metrics in a microgrid.
+    """A calculator for high level consumer metrics in a microgrid.
 
     Under normal circumstances this is expected to correspond to the gross
     consumption of the site excluding active parts and battery.
@@ -26,7 +26,7 @@ class Consumer:
     be used like normal `Receiver`s, but can also be composed to form
     higher-order formula streams.
 
-    !!! note
+    Note:
         `Consumer` instances are not meant to be created directly by users.
         Use the [`microgrid.consumer`][frequenz.sdk.microgrid.consumer] method
         for creating `Consumer` instances.
@@ -75,7 +75,7 @@ class Consumer:
 
     @property
     def power(self) -> Formula[Power]:
-        """Fetch the consumer power for the microgrid.
+        """The consumer power for the microgrid.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -84,9 +84,6 @@ class Consumer:
 
         A receiver from the formula can be created using the
         `new_receiver` method.
-
-        Returns:
-            A Formula that will calculate and stream consumer power.
         """
         return self._formula_pool.from_power_formula(
             "consumer_power",

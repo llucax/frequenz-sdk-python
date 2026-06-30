@@ -5,11 +5,11 @@
 
 
 class FormulaError(Exception):
-    """Base class for exceptions in this module."""
+    """A base class for exceptions in this module."""
 
 
 class FormulaSyntaxError(FormulaError):
-    """Exception raised for syntax errors in the formula."""
+    """An exception raised for syntax errors in the formula."""
 
     def __init__(
         self, *, formula: str, span: tuple[int, int] | None, message: str

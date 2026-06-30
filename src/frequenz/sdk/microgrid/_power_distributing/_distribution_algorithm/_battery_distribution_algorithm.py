@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
 @dataclass()
 class AggregatedBatteryData:
-    """Aggregated battery data."""
+    """An aggregation of battery data."""
 
     component_id: ComponentId
     """The component ID of the first battery.
@@ -144,7 +144,7 @@ def _aggregate_battery_power_bounds(
 
 
 class InvBatPair(NamedTuple):
-    """InvBatPair with inverter and adjacent battery data."""
+    """A pair of an inverter and its adjacent battery data."""
 
     battery: AggregatedBatteryData
     """The battery data."""
@@ -155,7 +155,7 @@ class InvBatPair(NamedTuple):
 
 @dataclass
 class BatteryComponentsData:
-    """Container for battery component data and unreachable power."""
+    """A container for battery component data and unreachable power."""
 
     inv_bat_pairs: list[InvBatPair]
     """The battery and inverter data pairs."""
@@ -170,7 +170,7 @@ class BatteryComponentsData:
 
 @dataclass
 class AvailabilityRatio:
-    """Availability ratio for a battery-inverter pair."""
+    """An availability ratio for a battery-inverter pair."""
 
     battery_id: ComponentId
     """The battery ID."""
@@ -213,7 +213,7 @@ class _Allocation:
 
 @dataclass
 class DistributionResult:
-    """Distribution result."""
+    """A distribution result."""
 
     distribution: dict[ComponentId, Power]
     """The power to be set for each inverter.
@@ -227,7 +227,7 @@ class DistributionResult:
 
 
 class BatteryDistributionAlgorithm:
-    r"""Distribute power between many components.
+    r"""An algorithm to distribute power between many components.
 
     The purpose of this tool is to keep equal SoC level in the batteries.
     It takes total power that should be set for some subset of battery-inverter
@@ -383,7 +383,6 @@ class BatteryDistributionAlgorithm:
 
         Raises:
             ValueError: If distributor_exponent < 0.
-
         """
         if distributor_exponent < 0:
             raise ValueError("Distribution factor should be float >= 0.")
@@ -395,11 +394,11 @@ class BatteryDistributionAlgorithm:
         Args:
             components: list of the components.
 
-        Raises:
-            ValueError: If total capacity is 0.
-
         Returns:
             Sum of all batteries capacity in the components list.
+
+        Raises:
+            ValueError: If total capacity is 0.
         """
         total_capacity: float = sum(bat.capacity for bat, _ in components)
         if is_close_to_zero(total_capacity):

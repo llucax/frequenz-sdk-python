@@ -11,7 +11,7 @@ from frequenz.quantities import Power
 
 @dataclasses.dataclass
 class Request:
-    """Request to set power to the `PowerDistributingActor`."""
+    """A request to set power to the `PowerDistributingActor`."""
 
     power: Power
     """The requested power."""

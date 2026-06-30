@@ -250,7 +250,7 @@ class ConfigManagingActor(Actor):
 def _recursive_update(
     target: dict[str, Any], overrides: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Recursively updates dictionary d1 with values from dictionary d2.
+    """Recursively update `target` with values from `overrides`.
 
     Args:
         target: The original dictionary to be updated.

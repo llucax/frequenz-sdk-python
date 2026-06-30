@@ -64,7 +64,7 @@ class BlockingStatus:
         self.blocked_until = None
 
     def is_blocked(self) -> bool:
-        """Check if the component is blocked.
+        """Return whether the component is blocked.
 
         Returns:
             True if the component is blocked, False otherwise.

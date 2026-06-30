@@ -50,11 +50,7 @@ class ComponentPool(ABC, Generic[RefStoreT, ReportT]):
 
     @property
     def component_ids(self) -> abc.Set[ComponentId]:
-        """Return component IDs of all component IDs managed by this pool.
-
-        Returns:
-            Set of managed component IDs.
-        """
+        """The set of component IDs managed by this pool."""
         return self._pool_ref_store.component_ids
 
     async def propose_power(
@@ -93,24 +89,16 @@ class ComponentPool(ABC, Generic[RefStoreT, ReportT]):
     @property
     @abstractmethod
     def power(self) -> Formula[Power]:
-        """Fetch the total power for the components in the pool.
-
-        Returns:
-            A Formula that will calculate and stream the total power of all
-            components in the pool.
-        """
+        """The total power for the components in the pool."""
 
     @property
     def power_status(self) -> ReceiverFetcher[ReportT]:
-        """Get a receiver to receive new power status reports when they change.
+        """A receiver to receive new power status reports when they change.
 
         These include
           - the current inclusion/exclusion bounds available for the pool's priority,
           - the current target power for the pool's set of components,
           - the result of the last distribution request for the pool's set of components.
-
-        Returns:
-            A receiver that will stream power status reports for the pool's priority.
         """
         sub = _power_managing.ReportRequest(
             source_id=self._source_id,
@@ -132,12 +120,7 @@ class ComponentPool(ABC, Generic[RefStoreT, ReportT]):
 
     @property
     def power_distribution_results(self) -> ReceiverFetcher[_power_distributing.Result]:
-        """Get a receiver to receive power distribution results.
-
-        Returns:
-            A receiver that will stream power distribution results for the pool's set of
-            components.
-        """
+        """A receiver to receive power distribution results."""
         return MappingReceiverFetcher(
             self._pool_ref_store.power_distribution_results_fetcher,
             lambda recv: recv.filter(
@@ -147,7 +130,7 @@ class ComponentPool(ABC, Generic[RefStoreT, ReportT]):
 
     @property
     def system_power_bounds(self) -> ReceiverFetcher[SystemBounds]:
-        """Return a receiver fetcher for the system power bounds."""
+        """A receiver fetcher for the system power bounds."""
         return self._pool_ref_store.bounds_channel
 
     async def stop(self) -> None:

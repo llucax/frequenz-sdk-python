@@ -124,7 +124,7 @@ def _get_battery_inverter_mappings(
 
 
 class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-attributes
-    """Class to manage the data streams for batteries."""
+    """A manager for the data streams for batteries."""
 
     @override
     def __init__(
@@ -488,12 +488,12 @@ class BatteryManager(ComponentManager):  # pylint: disable=too-many-instance-att
         DataType = typing.TypeVar("DataType", BatteryData, InverterData)
 
         def metric_is_nan(data: DataType, metrics: list[str]) -> bool:
-            """Check if non-replaceable metrics are NaN."""
+            """Return whether non-replaceable metrics are NaN."""
             assert data is not None
             return any(map(lambda metric: math.isnan(getattr(data, metric)), metrics))
 
         def nan_metric_in_list(data: list[DataType], metrics: list[str]) -> bool:
-            """Check if any metric is NaN."""
+            """Return whether any metric is NaN."""
             return any(map(lambda datum: metric_is_nan(datum, metrics), data))
 
         crucial_metrics_bat = [

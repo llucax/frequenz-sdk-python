@@ -20,7 +20,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
     """A representation of a microgrid's component graph."""
 
     def is_pv_inverter(self, component: Component) -> bool:
-        """Check if the specified component is a PV inverter.
+        """Return whether the specified component is a PV inverter.
 
         Args:
             component: The component to check.
@@ -31,7 +31,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
         return isinstance(component, SolarInverter)
 
     def is_pv_chain(self, component: Component) -> bool:
-        """Check if the specified component is part of a PV chain.
+        """Return whether the specified component is part of a PV chain.
 
         A component is part of a PV chain if it is either a PV inverter or a PV
         meter.
@@ -46,7 +46,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
 
     @override
     def is_pv_meter(self, component: Component | ComponentId) -> bool:
-        """Check if the specified component is a PV meter.
+        """Return whether the specified component is a PV meter.
 
         Args:
             component: The component or component ID to check.
@@ -59,7 +59,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
         return super().is_pv_meter(component)
 
     def is_ev_charger(self, component: Component) -> bool:
-        """Check if the specified component is an EV charger.
+        """Return whether the specified component is an EV charger.
 
         Args:
             component: The component to check.
@@ -70,7 +70,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
         return isinstance(component, EvCharger)
 
     def is_ev_charger_chain(self, component: Component) -> bool:
-        """Check if the specified component is part of an EV charger chain.
+        """Return whether the specified component is part of an EV charger chain.
 
         A component is part of an EV charger chain if it is either an EV charger or an
         EV charger meter.
@@ -85,7 +85,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
 
     @override
     def is_ev_charger_meter(self, component: Component | ComponentId) -> bool:
-        """Check if the specified component is an EV charger meter.
+        """Return whether the specified component is an EV charger meter.
 
         Args:
             component: The component or component ID to check.
@@ -98,7 +98,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
         return super().is_ev_charger_meter(component)
 
     def is_battery_inverter(self, component: Component) -> bool:
-        """Check if the specified component is a battery inverter.
+        """Return whether the specified component is a battery inverter.
 
         Args:
             component: The component to check.
@@ -109,7 +109,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
         return isinstance(component, BatteryInverter)
 
     def is_battery_chain(self, component: Component) -> bool:
-        """Check if the specified component is part of a battery chain.
+        """Return whether the specified component is part of a battery chain.
 
         A component is part of a battery chain if it is either a battery inverter or a
         battery meter.
@@ -124,7 +124,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
 
     @override
     def is_battery_meter(self, component: Component | ComponentId) -> bool:
-        """Check if the specified component is a battery meter.
+        """Return whether the specified component is a battery meter.
 
         Args:
             component: The component or component ID to check.
@@ -137,7 +137,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
         return super().is_battery_meter(component)
 
     def is_chp(self, component: Component) -> bool:
-        """Check if the specified component is a CHP.
+        """Return whether the specified component is a CHP.
 
         Args:
             component: The component to check.
@@ -148,7 +148,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
         return isinstance(component, Chp)
 
     def is_chp_chain(self, component: Component) -> bool:
-        """Check if the specified component is part of a CHP chain.
+        """Return whether the specified component is part of a CHP chain.
 
         A component is part of a CHP chain if it is either a CHP or a CHP meter.
 
@@ -162,7 +162,7 @@ class ComponentGraph(BaseComponentGraph[Component, ComponentConnection, Componen
 
     @override
     def is_chp_meter(self, component: Component | ComponentId) -> bool:
-        """Check if the specified component is a CHP meter.
+        """Return whether the specified component is a CHP meter.
 
         Args:
             component: The component or component ID to check.

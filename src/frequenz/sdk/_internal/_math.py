@@ -7,7 +7,7 @@ import math
 
 
 def is_close_to_zero(value: float, abs_tol: float = 1e-9) -> bool:
-    """Check if a floating point value is close to zero.
+    """Return whether a floating point value is close to zero.
 
     A value of 1e-9 is a commonly used absolute tolerance to balance precision
     and robustness for floating-point numbers comparisons close to zero. Note

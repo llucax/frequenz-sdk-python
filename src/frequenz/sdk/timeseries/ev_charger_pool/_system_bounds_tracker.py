@@ -19,7 +19,7 @@ from .._base_types import Bounds, SystemBounds
 
 
 class EVCSystemBoundsTracker(BackgroundService):
-    """Track the system bounds for the EV chargers.
+    """A tracker for the system bounds of the EV chargers.
 
     System bounds are the aggregate bounds for the EV chargers in the pool that are
     working and have an EV attached to them.  They are calculated from the individual

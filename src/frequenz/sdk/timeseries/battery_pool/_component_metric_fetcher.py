@@ -41,7 +41,7 @@ T = TypeVar("T", bound=ComponentData)
 
 
 class ComponentMetricFetcher(AsyncConstructible, ABC):
-    """Define how to subscribe for and fetch the component metrics data."""
+    """A fetcher to subscribe for and fetch the component metrics data."""
 
     _component_id: ComponentId
     _metrics: Iterable[Metric | TransitionalMetric]
@@ -77,7 +77,7 @@ class ComponentMetricFetcher(AsyncConstructible, ABC):
 
 
 class LatestMetricsFetcher(ComponentMetricFetcher, Generic[T], ABC):
-    """Subscribe for the latest component data and extract the needed metrics."""
+    """A fetcher for the latest component data, extracting the needed metrics."""
 
     _receiver: Receiver[T]
     _max_waiting_time: float
@@ -181,7 +181,7 @@ class LatestMetricsFetcher(ComponentMetricFetcher, Generic[T], ABC):
 
 
 class LatestBatteryMetricsFetcher(LatestMetricsFetcher[BatteryData]):
-    """Subscribe for the latest battery data using MicrogridApiClient."""
+    """A fetcher for the latest battery data using MicrogridApiClient."""
 
     @classmethod
     @override
@@ -239,7 +239,7 @@ class LatestBatteryMetricsFetcher(LatestMetricsFetcher[BatteryData]):
 
 
 class LatestInverterMetricsFetcher(LatestMetricsFetcher[InverterData]):
-    """Subscribe for the latest inverter data using MicrogridApiClient."""
+    """A fetcher for the latest inverter data using MicrogridApiClient."""
 
     @classmethod
     @override

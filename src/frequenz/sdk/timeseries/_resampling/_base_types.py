@@ -29,9 +29,6 @@ This should be an `async` callable, for example:
 async some_sink(Sample) -> None:
     ...
 ```
-
-Args:
-    sample (Sample): A sample to be sent out.
 """
 
 

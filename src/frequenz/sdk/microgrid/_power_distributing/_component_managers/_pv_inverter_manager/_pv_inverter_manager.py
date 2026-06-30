@@ -28,7 +28,7 @@ _logger = logging.getLogger(__name__)
 
 
 class PVManager(ComponentManager):
-    """Manage PV inverters for the power distributor."""
+    """A manager for PV inverters used by the power distributor."""
 
     @override
     def __init__(

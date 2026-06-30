@@ -90,11 +90,7 @@ class Resampler:
 
     @property
     def config(self) -> ResamplerConfig:
-        """Get the resampler configuration.
-
-        Returns:
-            The resampler configuration.
-        """
+        """The resampler configuration."""
         return self._config
 
     def get_source_properties(self, source: Source) -> SourceProperties:
@@ -267,7 +263,7 @@ class Resampler:
 
 
 class _ResamplingHelper:
-    """Keeps track of *relevant* samples to pass them to the resampling function.
+    """A helper that keeps track of *relevant* samples for the resampling function.
 
     Samples are stored in an internal ring buffer. All collected samples that
     are newer than `max(resampling_period, input_period)
@@ -292,11 +288,7 @@ class _ResamplingHelper:
 
     @property
     def source_properties(self) -> SourceProperties:
-        """Return the properties of the source.
-
-        Returns:
-            The properties of the source.
-        """
+        """The properties of the source."""
         return self._source_properties
 
     def add_sample(self, sample: tuple[datetime, float]) -> None:
@@ -515,7 +507,7 @@ class _ResamplingHelper:
 
 
 class _StreamingHelper:
-    """Resample data coming from a source, sending the results to a sink."""
+    """A helper that resamples data from a source, sending the results to a sink."""
 
     def __init__(
         self,
@@ -539,11 +531,7 @@ class _StreamingHelper:
 
     @property
     def source_properties(self) -> SourceProperties:
-        """Get the source properties.
-
-        Returns:
-            The source properties.
-        """
+        """The source properties."""
         return self._helper.source_properties
 
     async def stop(self) -> None:

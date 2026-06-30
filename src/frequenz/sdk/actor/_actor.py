@@ -23,8 +23,7 @@ class Actor(BackgroundService, abc.ABC):
     base class when the actor is started, and is expected to run until the actor is
     stopped.
 
-    !!! info
-
+    Info:
         Please read the [`actor` module documentation][frequenz.sdk.actor] for a more
         comprehensive guide on how to use and implement actors properly.
     """
@@ -40,8 +39,7 @@ class Actor(BackgroundService, abc.ABC):
 
     If `None`, the actor will be restarted an unlimited number of times.
 
-    !!! note
-
+    Note:
         This is mostly used for testing purposes and shouldn't be set in production.
     """
 

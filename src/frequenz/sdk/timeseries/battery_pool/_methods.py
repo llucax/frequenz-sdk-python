@@ -29,7 +29,7 @@ _logger = logging.getLogger(__name__)
 
 
 class MetricAggregator(Generic[T], ABC):
-    """Interface to control how the component data should be aggregated and sent."""
+    """An interface to control how the component data should be aggregated and sent."""
 
     @abstractmethod
     def update_working_batteries(self, new_working_batteries: set[ComponentId]) -> None:
@@ -65,7 +65,7 @@ class MetricAggregator(Generic[T], ABC):
 
 
 class SendOnUpdate(MetricAggregator[T]):
-    """Wait for the change of the components metrics and send updated result.
+    """An aggregator that waits for component metric changes and sends the updated result.
 
     This method will cache the component metrics. When any metric change it will
     recalculate high level metric. If the calculation result change, it will

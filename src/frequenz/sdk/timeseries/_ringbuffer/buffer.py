@@ -20,7 +20,7 @@ FloatArray = TypeVar("FloatArray", list[float], npt.NDArray[np.float64])
 
 @dataclass
 class Gap:
-    """A gap defines the range for which we haven't received values yet."""
+    """A range of time for which no values have been received yet."""
 
     start: datetime
     """Start timestamp of the range, inclusive."""
@@ -28,7 +28,7 @@ class Gap:
     """End timestamp of the range, exclusive."""
 
     def contains(self, timestamp: datetime) -> bool:
-        """Check if a given timestamp is inside this gap.
+        """Return whether a given timestamp is inside this gap.
 
         Args:
             timestamp: Timestamp to check.
@@ -43,7 +43,7 @@ class Gap:
 
 
 class OrderedRingBuffer(Generic[FloatArray]):
-    """Time aware ringbuffer that keeps its entries sorted by time."""
+    """A time-aware ringbuffer that keeps its entries sorted by time."""
 
     _TIMESTAMP_MIN = datetime.min.replace(tzinfo=timezone.utc)
     """The minimum representable timestamp."""
@@ -87,26 +87,19 @@ class OrderedRingBuffer(Generic[FloatArray]):
 
     @property
     def sampling_period(self) -> timedelta:
-        """Return the sampling period of the ring buffer.
-
-        Returns:
-            Sampling period of the ring buffer.
-        """
+        """The sampling period of the ring buffer."""
         return self._sampling_period
 
     @property
     def gaps(self) -> list[Gap]:
-        """Get the list of ranges for which no values were provided.
+        """The list of ranges for which no values were provided.
 
         See definition of dataclass @Gaps for more info.
-
-        Returns:
-            List of gaps.
         """
         return self._gaps
 
     def has_value(self, sample: Sample[QuantityT]) -> bool:
-        """Check if a sample has a value and it's not NaN.
+        """Return whether a sample has a value and it's not NaN.
 
         Args:
             sample: sample to check.
@@ -118,11 +111,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
 
     @property
     def maxlen(self) -> int:
-        """Get the max length.
-
-        Returns:
-            The max amount of items this container can hold.
-        """
+        """The maximum number of items this container can hold."""
         return len(self._buffer)
 
     def update(self, sample: Sample[QuantityT]) -> None:
@@ -173,33 +162,17 @@ class OrderedRingBuffer(Generic[FloatArray]):
 
     @property
     def time_bound_oldest(self) -> datetime:
-        """
-        Return the time bounds of the ring buffer.
-
-        Returns:
-            The timestamp of the oldest sample of the ring buffer.
-        """
+        """The timestamp of the oldest sample of the ring buffer."""
         return self._timestamp_oldest
 
     @property
     def time_bound_newest(self) -> datetime:
-        """
-        Return the time bounds of the ring buffer.
-
-        Returns:
-            The timestamp of the newest sample of the ring buffer
-            or None if the buffer is empty.
-        """
+        """The timestamp of the newest sample of the ring buffer."""
         return self._timestamp_newest
 
     @property
     def oldest_timestamp(self) -> datetime | None:
-        """Return the oldest timestamp in the buffer.
-
-        Returns:
-            The oldest timestamp in the buffer
-            or None if the buffer is empty.
-        """
+        """The oldest timestamp in the buffer, or None if the buffer is empty."""
         if self.count_valid() == 0:
             return None
 
@@ -210,11 +183,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
 
     @property
     def newest_timestamp(self) -> datetime | None:
-        """Return the newest timestamp in the buffer.
-
-        Returns:
-            The newest timestamp in the buffer.
-        """
+        """The newest timestamp in the buffer, or None if the buffer is empty."""
         if self.count_valid() == 0:
             return None
 
@@ -225,18 +194,20 @@ class OrderedRingBuffer(Generic[FloatArray]):
     ) -> int:
         """Convert the given timestamp to the position in the buffer.
 
-        !!! Note: This method is meant for advanced use cases and should not generally be used.
+        Note:
+            This method is meant for advanced use cases and should not generally
+            be used.
 
         Args:
             timestamp: Timestamp to convert.
             allow_outside_range: If True, don't throw an exception when the
                 timestamp is outside our bounds.
 
-        Raises:
-            IndexError: When requesting a timestamp outside the range this container holds.
-
         Returns:
             Index where the value for the given timestamp can be found.
+
+        Raises:
+            IndexError: When requesting a timestamp outside the range this container holds.
         """
         timestamp = self.normalize_timestamp(timestamp)
 
@@ -262,8 +233,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
         Index 0 corresponds to the oldest timestamp in the buffer.
         If negative indices are used, the newest timestamp is used as reference.
 
-        !!!warning
-
+        Warning:
             The resulting timestamp can be outside the range of the buffer.
 
         Args:
@@ -330,12 +300,12 @@ class OrderedRingBuffer(Generic[FloatArray]):
                 If missing values should be filled, force_copy must be True.
                 Defaults to NaN to avoid returning outdated data unexpectedly.
 
+        Returns:
+            The requested window.
+
         Raises:
             IndexError: When start and end are not both datetime or index.
             ValueError: When fill_value is not None and force_copy is False.
-
-        Returns:
-            The requested window.
         """
         # We don't want to modify the original buffer
         if fill_value is not None and not force_copy:
@@ -451,7 +421,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
         return arr
 
     def is_missing(self, timestamp: datetime) -> bool:
-        """Check if the given timestamp falls within a gap.
+        """Return whether the given timestamp falls within a gap.
 
         Args:
             timestamp: The timestamp to check for missing data.

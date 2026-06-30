@@ -154,7 +154,7 @@ _CHP_DATA_METHODS: dict[Metric | TransitionalMetric, Callable[[ChpData], float]]
 
 
 class MicrogridApiSource:
-    """Fetches requested metrics from the Microgrid API.
+    """A data source that fetches requested metrics from the Microgrid API.
 
     Used by the DataSourcingActor.
     """
@@ -213,13 +213,13 @@ class MicrogridApiSource:
     ) -> None:
         """Check if the requests are valid Battery metrics.
 
-        Raises:
-            ValueError: If the requested metric is not available for batteries.
-
         Args:
             comp_id: The ID of the requested component.
             requests: A mapping of metrics to metric requests received from external actors
                 for the given battery.
+
+        Raises:
+            ValueError: If the requested metric is not available for batteries.
         """
         for metric in requests:
             if metric not in _BATTERY_DATA_METHODS:
@@ -238,13 +238,13 @@ class MicrogridApiSource:
     ) -> None:
         """Check if the requests are valid EV Charger metrics.
 
-        Raises:
-            ValueError: If the requested metric is not available for EV chargers.
-
         Args:
             comp_id: The ID of the requested component.
             requests: A mapping of metrics to metric requests received from external actors
                 for the given EV Charger.
+
+        Raises:
+            ValueError: If the requested metric is not available for EV chargers.
         """
         for metric in requests:
             if metric not in _EV_CHARGER_DATA_METHODS:
@@ -263,13 +263,13 @@ class MicrogridApiSource:
     ) -> None:
         """Check if the requests are valid Inverter metrics.
 
-        Raises:
-            ValueError: If the requested metric is not available for inverters.
-
         Args:
             comp_id: The ID of the requested component.
             requests: A mapping of metrics to metric requests received from external actors
                 for the given inverter.
+
+        Raises:
+            ValueError: If the requested metric is not available for inverters.
         """
         for metric in requests:
             if metric not in _INVERTER_DATA_METHODS:
@@ -288,13 +288,13 @@ class MicrogridApiSource:
     ) -> None:
         """Check if the requests are valid CHP metrics.
 
-        Raises:
-            ValueError: If the requested metric is not available for CHP.
-
         Args:
             comp_id: The ID of the requested component.
             requests: A mapping of metrics to metric requests received from external actors
                 for the given CHP.
+
+        Raises:
+            ValueError: If the requested metric is not available for CHP.
         """
         for metric in requests:
             if metric not in _CHP_DATA_METHODS:
@@ -313,13 +313,13 @@ class MicrogridApiSource:
     ) -> None:
         """Check if the requests are valid Meter metrics.
 
-        Raises:
-            ValueError: If the requested metric is not available for meters.
-
         Args:
             comp_id: The ID of the requested component.
             requests: A mapping of metrics to metric requests received from external actors
                 for the given meter.
+
+        Raises:
+            ValueError: If the requested metric is not available for meters.
         """
         for metric in requests:
             if metric not in _METER_DATA_METHODS:
@@ -339,15 +339,15 @@ class MicrogridApiSource:
     ) -> None:
         """Check if the requested component and metrics are valid.
 
-        Raises:
-            ValueError: If the category is unknown or if the requested metric
-                is unavailable to the given category.
-
         Args:
             comp_id: The ID of the requested component.
             category: The category of the requested component.
             requests: A mapping of metrics to metric requests received from external actors
                 for the given component.
+
+        Raises:
+            ValueError: If the category is unknown or if the requested metric
+                is unavailable to the given category.
         """
         if comp_id in self.comp_data_receivers:
             return
@@ -372,9 +372,6 @@ class MicrogridApiSource:
     ) -> Callable[[Any], float]:
         """Get the data extraction method for the given metric.
 
-        Raises:
-            ValueError: If the category is unknown.
-
         Args:
             category: The category of the component.
             metric: The metric for which we need an extraction method.
@@ -382,6 +379,9 @@ class MicrogridApiSource:
         Returns:
             A method that accepts a `ComponentData` object and returns a float
                 representing the given metric.
+
+        Raises:
+            ValueError: If the category is unknown.
         """
         if category == ComponentCategory.BATTERY:
             return _BATTERY_DATA_METHODS[metric]

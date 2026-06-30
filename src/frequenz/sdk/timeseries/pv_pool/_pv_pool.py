@@ -64,7 +64,7 @@ class PVPool(ComponentPool[PVPoolReferenceStore, PVPoolReport]):
     @property
     @override
     def power(self) -> Formula[Power]:
-        """Fetch the total power for the PV inverters in the pool.
+        """The total power for the PV inverters in the pool.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -73,10 +73,6 @@ class PVPool(ComponentPool[PVPoolReferenceStore, PVPoolReport]):
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream the total power of all PV
-                inverters.
         """
         return self._pool_ref_store.formula_pool.from_power_formula(
             "pv_power",

@@ -115,7 +115,7 @@ class LogicalMeter:
 
     @property
     def chp_power(self) -> Formula[Power]:
-        """Fetch the CHP power production in the microgrid.
+        """The CHP power production in the microgrid.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -124,9 +124,6 @@ class LogicalMeter:
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream CHP power production.
         """
         return self._formula_pool.from_power_formula(
             channel_key="chp_power",

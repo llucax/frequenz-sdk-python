@@ -105,22 +105,22 @@ class BatteryPoolReferenceStore(ComponentPoolReferenceStore):
 
     @staticmethod
     def get_component_class() -> Type[Component]:
-        """Class of the component type."""
+        """Return the class of the component type."""
         return Battery
 
     @staticmethod
     def get_pool_type_name() -> str:
-        """Name of the pool type, for display purposes."""
+        """Return the name of the pool type, for display purposes."""
         return "BatteryPool"
 
     @staticmethod
     def get_component_type_name_plural() -> str:
-        """Name of the component type, for display purposes."""
+        """Return the name of the component type, for display purposes."""
         return "batteries"
 
     @override
     def get_namespace(self) -> str:
-        """Namespace to use with the data pipeline."""
+        """Return the namespace to use with the data pipeline."""
         return f"battery-pool-{self.component_ids}-{uuid.uuid4()}"
 
     @override

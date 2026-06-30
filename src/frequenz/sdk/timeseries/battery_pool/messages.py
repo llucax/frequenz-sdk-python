@@ -59,7 +59,7 @@ class BatteryPoolReport(ComponentPoolReport, typing.Protocol):
         If the given power falls within an exclusion zone that's contained within the
         usable bounds, the closest possible power values on both sides will be returned.
 
-        !!! note
+        Note:
             It is completely optional to use this method to adjust power values before
             proposing them, because the battery pool will do this automatically.  This
             method is provided for convenience, and for granular control when there are

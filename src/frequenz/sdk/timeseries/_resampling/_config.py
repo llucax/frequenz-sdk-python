@@ -46,7 +46,7 @@ If a buffer length would get bigger than this, a warning will be logged.
 
 
 class WindowSide(Enum):
-    """Represents a side of a resampling window."""
+    """A side of a resampling window."""
 
     LEFT = "left"
     """The left side of the resampling window."""
@@ -95,7 +95,7 @@ class ResamplingFunction(Protocol):
 
 @dataclass(frozen=True)
 class ResamplerConfig:
-    """Resampler configuration."""
+    """A configuration for the resampler."""
 
     resampling_period: timedelta
     """The resampling period.
@@ -313,7 +313,7 @@ class ResamplingFunction2(Protocol):
 
 @dataclass(frozen=True)
 class ResamplerConfig2(ResamplerConfig):
-    """Resampler configuration."""
+    """A configuration for the resampler."""
 
     resampling_period: timedelta
     """The resampling period.

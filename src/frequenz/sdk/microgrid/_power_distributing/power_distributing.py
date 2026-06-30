@@ -34,7 +34,7 @@ _logger = logging.getLogger(__name__)
 
 
 class PowerDistributingActor(Actor):  # pylint: disable=too-many-instance-attributes
-    """Actor to distribute the power between components in a microgrid.
+    """An actor to distribute the power between components in a microgrid.
 
     One instance of the actor can handle only one component category and type,
     which needs to be specified at actor startup and it will set up the correct
@@ -92,10 +92,10 @@ class PowerDistributingActor(Actor):  # pylint: disable=too-many-instance-attrib
         self._processing_tasks: dict[
             frozenset[ComponentId], asyncio.Task[datetime | None]
         ] = {}
-        """Track the power request tasks currently being processed."""
+        """The power request tasks currently being processed."""
 
         self._pending_requests: dict[frozenset[ComponentId], Request] = {}
-        """Track the power requests that are waiting to be processed.
+        """The power requests that are waiting to be processed.
 
         Only one pending power request is kept for each set of components, the
         latest request will overwrite the previous one.

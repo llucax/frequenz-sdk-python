@@ -13,7 +13,7 @@ from frequenz.quantities import Current
 
 @dataclass(frozen=True)
 class EVDistributionConfig:
-    """Configuration for the power distributor's EV charger manager."""
+    """A configuration for the power distributor's EV charger manager."""
 
     component_ids: abc.Set[ComponentId]
     """The component IDs of the EV chargers."""

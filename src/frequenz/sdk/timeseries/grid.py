@@ -32,7 +32,7 @@ _logger = logging.getLogger(__name__)
 class Grid:
     """A grid connection point.
 
-    !!! note
+    Note:
         The `Grid` instance is not meant to be created directly by users.
         Use the [`microgrid.grid`][frequenz.sdk.microgrid.grid] method for
         creating or getting the `Grid` instance.
@@ -72,7 +72,7 @@ class Grid:
 
     @property
     def power(self) -> Formula[Power]:
-        """Fetch the grid power for the microgrid.
+        """The grid power for the microgrid.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -81,9 +81,6 @@ class Grid:
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream grid power.
         """
         return self._formula_pool.from_power_formula(
             "grid_power",
@@ -92,7 +89,7 @@ class Grid:
 
     @property
     def reactive_power(self) -> Formula[ReactivePower]:
-        """Fetch the grid reactive power for the microgrid.
+        """The grid reactive power for the microgrid.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -101,9 +98,6 @@ class Grid:
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream grid reactive power.
         """
         return self._formula_pool.from_reactive_power_formula(
             "grid_reactive_power",
@@ -112,15 +106,12 @@ class Grid:
 
     @property
     def _power_per_phase(self) -> Formula3Phase[Power]:
-        """Fetch the per-phase grid power for the microgrid.
+        """The per-phase grid power for the microgrid.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
         A receiver from the formula can be created using the
         `new_receiver` method.
-
-        Returns:
-            A Formula that will calculate and stream grid 3-phase power.
         """
         return self._formula_pool.from_power_3_phase_formula(
             "grid_power_3_phase",
@@ -129,7 +120,7 @@ class Grid:
 
     @property
     def current_per_phase(self) -> Formula3Phase[Current]:
-        """Fetch the per-phase grid current for the microgrid.
+        """The per-phase grid current for the microgrid.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -138,9 +129,6 @@ class Grid:
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream grid current.
         """
         return self._formula_pool.from_current_3_phase_formula(
             "grid_current",

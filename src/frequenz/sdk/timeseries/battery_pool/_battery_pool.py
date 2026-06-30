@@ -124,7 +124,7 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
     @property
     @override
     def power(self) -> Formula[Power]:
-        """Fetch the total power of the batteries in the pool.
+        """The total power of the batteries in the pool.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -133,10 +133,6 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
         A receiver from the formula can be obtained by calling the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream the total power of all
-                batteries in the pool.
         """
         return self._pool_ref_store.formula_pool.from_power_formula(
             "battery_pool_power",
@@ -147,7 +143,7 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
     @property
     def soc(self) -> ReceiverFetcher[Sample[Percentage]]:
-        """Fetch the normalized average weighted-by-capacity SoC values for the pool.
+        """The normalized average weighted-by-capacity SoC values for the pool.
 
         The SoC values are normalized to the 0-100% range and clamped if they are out
         of bounds. Only values from working batteries with operational inverters are
@@ -174,11 +170,6 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
         A receiver from the MetricAggregator can be obtained by calling the
         `new_receiver` method.
-
-        Returns:
-            A MetricAggregator that will calculate and stream the aggregate SoC of all
-                batteries in the pool, considering only working batteries with
-                operational inverters.
         """
         assert isinstance(self._pool_ref_store, BatteryPoolReferenceStore)
 
@@ -196,12 +187,7 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
     @property
     def temperature(self) -> ReceiverFetcher[Sample[Temperature]]:
-        """Fetch the average temperature of the batteries in the pool.
-
-        Returns:
-            A MetricAggregator that will calculate and stream the average temperature
-                of all batteries in the pool.
-        """
+        """The average temperature of the batteries in the pool."""
         assert isinstance(self._pool_ref_store, BatteryPoolReferenceStore)
 
         method_name = SendOnUpdate.name() + "_" + TemperatureCalculator.name()
@@ -217,7 +203,7 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
     @property
     def capacity(self) -> ReceiverFetcher[Sample[Energy]]:
-        """Get a receiver to receive new capacity metrics when they change.
+        """The capacity of the batteries in the pool.
 
         The reported capacity values consider only working batteries with operational
         inverters.
@@ -236,11 +222,6 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
         A receiver from the MetricAggregator can be obtained by calling the
         `new_receiver` method.
-
-        Returns:
-            A MetricAggregator that will calculate and stream the capacity of all
-                batteries in the pool, considering only working batteries with
-                operational inverters.
         """
         assert isinstance(self._pool_ref_store, BatteryPoolReferenceStore)
 
@@ -259,7 +240,7 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
     @override
     @property
     def system_power_bounds(self) -> ReceiverFetcher[SystemBounds]:
-        """Get receiver to receive new power bounds when they change.
+        """The power bounds of the batteries in the pool.
 
         Power bounds refer to the min and max power that a battery can
         discharge or charge at and is also denoted as SoP.
@@ -269,10 +250,6 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
         A receiver from the MetricAggregator can be obtained by calling the
         `new_receiver` method.
-
-        Returns:
-            A MetricAggregator that will calculate and stream the power bounds
-                of all batteries in the pool.
         """
         assert isinstance(self._pool_ref_store, BatteryPoolReferenceStore)
 

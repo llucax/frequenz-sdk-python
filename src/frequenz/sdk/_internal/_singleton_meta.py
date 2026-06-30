@@ -8,7 +8,7 @@ from typing import Any
 
 
 class SingletonMeta(type):
-    """This is a thread-safe implementation of Singleton."""
+    """A thread-safe implementation of the Singleton pattern."""
 
     _instances: dict[Any, type] = {}
     """The dictionary of instances of the singleton classes."""

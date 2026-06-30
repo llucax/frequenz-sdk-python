@@ -30,7 +30,7 @@ _logger = logging.getLogger(__name__)
 
 
 class VoltageStreamer:
-    """Fetch and stream the phase-to-neutral voltage from a source component.
+    """A streamer for the phase-to-neutral voltage of a source component.
 
     Example:
         ```python
@@ -68,7 +68,6 @@ class VoltageStreamer:
             source_component: The source component to receive the
                 phase-to-neutral voltage. If None, it fetches the source
                 component from the connection manager.
-
         """
         self._resampler_subscription_sender = resampler_subscription_sender
         """The sender for sending metric requests to the resampling actor."""
@@ -101,11 +100,7 @@ class VoltageStreamer:
 
     @property
     def source(self) -> Component:
-        """Get the component to fetch the phase-to-neutral voltage from.
-
-        Returns:
-            The component to fetch the phase-to-neutral voltage from.
-        """
+        """The component to fetch the phase-to-neutral voltage from."""
         return self._source_component
 
     def new_receiver(self) -> Receiver[Sample3Phase[Voltage]]:

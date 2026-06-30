@@ -19,7 +19,7 @@ from .._base_types import Bounds, SystemBounds
 
 
 class PVSystemBoundsTracker(BackgroundService):
-    """Track the system bounds for PV inverters.
+    """A tracker for the system bounds of PV inverters.
 
     System bounds are the aggregate bounds for the PV inverters in the pool that are in
     a working state.  They are calculated from the individual bounds received from the

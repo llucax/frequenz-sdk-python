@@ -45,7 +45,7 @@ class ReportRequest:
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class _Report:
-    """Current PowerManager report for a set of components."""
+    """A current PowerManager report for a set of components."""
 
     target_power: Power | None
     """The currently set power for the components."""
@@ -97,7 +97,7 @@ class _Report:
         If the given power falls within an exclusion zone that's contained within the
         usable bounds, the closest possible power values on both sides will be returned.
 
-        !!! note
+        Note:
             It is completely optional to use this method to adjust power values before
             proposing them, because the PowerManager will do this automatically.  This
             method is provided for convenience, and for granular control when there are
@@ -221,7 +221,7 @@ class PowerManagerAlgorithm(enum.Enum):
 
 
 class BaseAlgorithm(abc.ABC):
-    """The base class for algorithms."""
+    """An abstract base class for algorithms."""
 
     @abc.abstractmethod
     def calculate_target_power(

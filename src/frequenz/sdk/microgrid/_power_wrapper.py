@@ -31,7 +31,7 @@ _logger = logging.getLogger(__name__)
 
 
 class PowerWrapper:  # pylint: disable=too-many-instance-attributes
-    """Wrapper around the power managing and power distributing actors."""
+    """A wrapper around the power managing and power distributing actors."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -141,7 +141,7 @@ class PowerWrapper:  # pylint: disable=too-many-instance-attributes
 
     @property
     def started(self) -> bool:
-        """Return True if power managing and power distributing actors are started."""
+        """Whether the power managing and power distributing actors are started."""
         return (
             self._power_managing_actor is not None
             and self._power_distributing_actor is not None

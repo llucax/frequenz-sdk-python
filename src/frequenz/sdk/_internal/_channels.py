@@ -115,7 +115,7 @@ class ChannelRegistry:
         return entry.message_type
 
     def __contains__(self, key: str) -> bool:
-        """Check whether the channel for the given `key` exists."""
+        """Return whether the channel for the given `key` exists."""
         return key in self._channels
 
     def get_or_create(self, message_type: type[T], key: str) -> Broadcast[T]:

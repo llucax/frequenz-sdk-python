@@ -21,12 +21,12 @@ def load(path: str) -> OrderedRingBuffer[FloatArray] | None:
     Args:
         path: Path to the file where the data is stored.
 
-    Raises:
-        RuntimeError: When the file format version is unknown.
-
     Returns:
         `None` when the file doesn't exist, otherwise an instance of the
         `OrderedRingBuffer` class, loaded from disk.
+
+    Raises:
+        RuntimeError: When the file format version is unknown.
     """
     if not exists(path):
         return None

@@ -61,7 +61,7 @@ class Function(abc.ABC, Generic[QuantityT]):
     @property
     @abc.abstractmethod
     def name(self) -> str:
-        """Return the name of the function."""
+        """The name of the function."""
 
     @abc.abstractmethod
     async def __call__(self) -> Sample[QuantityT] | QuantityT | None:
@@ -114,7 +114,7 @@ class Coalesce(Function[QuantityT]):
     @property
     @override
     def name(self) -> str:
-        """Return the name of the function."""
+        """The name of the function."""
         return "COALESCE"
 
     @override
@@ -208,7 +208,7 @@ class Max(Function[QuantityT]):
     @property
     @override
     def name(self) -> str:
-        """Return the name of the function."""
+        """The name of the function."""
         return "MAX"
 
     @override
@@ -243,7 +243,7 @@ class Min(Function[QuantityT]):
     @property
     @override
     def name(self) -> str:
-        """Return the name of the function."""
+        """The name of the function."""
         return "MIN"
 
     @override

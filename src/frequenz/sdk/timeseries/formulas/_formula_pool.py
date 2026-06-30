@@ -40,7 +40,7 @@ other streams.
 
 
 class FormulaPool:
-    """Creates and owns formulas from string formulas.
+    """A pool that creates and owns formulas from string formulas.
 
     If a formula already exists with a given name, it is reused instead.
     """

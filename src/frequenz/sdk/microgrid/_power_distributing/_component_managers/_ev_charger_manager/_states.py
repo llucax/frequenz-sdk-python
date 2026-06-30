@@ -70,7 +70,7 @@ class EvcState:
 
 
 class EvcStates:
-    """Tracks states of all EV chargers."""
+    """A tracker for the states of all EV chargers."""
 
     _states: dict[ComponentId, EvcState]
 
@@ -120,13 +120,12 @@ class EvcStates:
         return self._states.values()
 
     def __contains__(self, component_id: ComponentId) -> bool:
-        """Check if the given component_id has an associated EvcState object.
+        """Return whether the given component_id has an associated EvcState object.
 
         Args:
             component_id: The component ID to test.
 
         Returns:
-            Boolean indicating whether the given component_id is a known
-            EvCharger.
+            Whether the given component_id is a known EvCharger.
         """
         return component_id in self._states

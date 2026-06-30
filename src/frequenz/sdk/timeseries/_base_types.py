@@ -162,7 +162,7 @@ _T = TypeVar("_T", bound=Comparable | None)
 
 @dataclass(frozen=True)
 class Bounds(Generic[_T]):
-    """Lower and upper bound values.
+    """A pair of lower and upper bound values.
 
     Depending on the generic type `_T`, the lower and upper bounds can be `None`, in
     which case it means that there is no lower or upper bound, respectively.
@@ -177,14 +177,13 @@ class Bounds(Generic[_T]):
     """Upper bound."""
 
     def __contains__(self, item: _T) -> bool:
-        """
-        Check if the value is within the range of the container.
+        """Return whether the value is within the range of the container.
 
         Args:
             item: The value to check. Can't be `None` even if `_T` can be `None`.
 
         Returns:
-            bool: True if value is within the range, otherwise False.
+            True if value is within the range, otherwise False.
         """
         assert item is not None, "Can't check if `None` is within the bounds."
         if self.lower is None and self.upper is None:
@@ -222,14 +221,13 @@ class SystemBounds:
     """
 
     def __contains__(self, item: Power) -> bool:
-        """
-        Check if the value is within the range of the container.
+        """Return whether the value is within the range of the container.
 
         Args:
             item: The value to check.
 
         Returns:
-            bool: True if value is within the range, otherwise False.
+            True if value is within the range, otherwise False.
         """
         if not self.inclusion_bounds or item not in self.inclusion_bounds:
             return False

@@ -38,7 +38,7 @@ _logger = logging.getLogger(__name__)
 
 
 class Matryoshka(BaseAlgorithm):
-    """The matryoshka algorithm."""
+    """An implementation of the matryoshka algorithm."""
 
     def __init__(
         self, max_proposal_age: timedelta, default_power: DefaultPower

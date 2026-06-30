@@ -66,7 +66,7 @@ requests and will be able to keep up with higher request rates in larger install
 
 @dataclass
 class _ActorInfo:
-    """Holds instances of core data pipeline actors and their request channels."""
+    """A holder for instances of core data pipeline actors and their request channels."""
 
     actor: Actor
     """The actor instance."""
@@ -620,7 +620,7 @@ def new_ev_charger_pool(
     The priority value is used to resolve conflicts when multiple actors are trying to
     propose different power values for the same set of EV chargers.
 
-    !!! note
+    Note:
         When specifying priority, bigger values indicate higher priority.
 
         It is recommended to reuse the same instance of the `EVChargerPool` within the
@@ -659,7 +659,7 @@ def new_battery_pool(
     The priority value is used to resolve conflicts when multiple actors are trying to
     propose different power values for the same set of batteries.
 
-    !!! note
+    Note:
         When specifying priority, bigger values indicate higher priority.
 
         It is recommended to reuse the same instance of the `BatteryPool` within the
@@ -698,7 +698,7 @@ def new_pv_pool(
     The priority value is used to resolve conflicts when multiple actors are trying to
     propose different power values for the same set of PV inverters.
 
-    !!! note
+    Note:
         When specifying priority, bigger values indicate higher priority.
 
         It is recommended to reuse the same instance of the `PVPool` within the same

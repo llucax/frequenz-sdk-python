@@ -29,7 +29,7 @@ _logger = logging.getLogger(__name__)
 
 
 class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
-    """Status tracker for PV inverters.
+    """A status tracker for PV inverters.
 
     It reports a PV inverter as `WORKING` or `NOT_WORKING` based on
     the status in the received component data from the microgrid API.

@@ -143,7 +143,7 @@ class Formula3Phase(BackgroundService, Generic[QuantityT]):
 
 
 class Formula3PhaseBuilder(Generic[QuantityT]):
-    """Builder for three-phase formulas."""
+    """A builder for three-phase formulas."""
 
     def __init__(
         self,

@@ -1,8 +1,7 @@
 # License: MIT
 # Copyright © 2023 Frequenz Energy-as-a-Service GmbH
 
-"""
-A feature extractor for historical timeseries data.
+"""A feature extractor for historical timeseries data.
 
 It creates a profile from periodically occurring windows in a buffer of
 historical data.
@@ -28,8 +27,7 @@ _logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class RelativePositions:
-    """
-    Holds the relative positions of a window in a buffer.
+    """A holder for the relative positions of a window in a buffer.
 
     When calculating a profile the user has to pass two datetime objects which
     are determining a window. It's allowed that this window is not contained in
@@ -48,8 +46,7 @@ class RelativePositions:
 
 
 class PeriodicFeatureExtractor:
-    """
-    A feature extractor for historical timeseries data.
+    """A feature extractor for historical timeseries data.
 
     This class is creating a profile from periodically occurring windows in a
     buffer of historical data.
@@ -108,8 +105,7 @@ class PeriodicFeatureExtractor:
         moving_window: MovingWindow,
         period: timedelta,
     ) -> None:
-        """
-        Initialize a PeriodicFeatureExtractor object.
+        """Initialize a PeriodicFeatureExtractor object.
 
         Args:
             moving_window: The MovingWindow that is used for the average calculation.
@@ -149,8 +145,7 @@ class PeriodicFeatureExtractor:
         return self._moving_window._buffer  # pylint: disable=protected-access
 
     def _timestamp_to_rel_index(self, timestamp: datetime) -> int:
-        """
-        Get the index of a timestamp relative to the oldest sample in the MovingWindow.
+        """Get the index of a timestamp relative to the oldest sample in the MovingWindow.
 
         In other words consider an integer axis where the zero is defined as the
         oldest element in the MovingWindow. This function returns the index of
@@ -181,8 +176,7 @@ class PeriodicFeatureExtractor:
     def _reshape_np_array(
         self, array: NDArray[np.float64], window_size: int
     ) -> NDArray[np.float64]:
-        """
-        Reshape a numpy array to a 2D array where each row represents a window.
+        """Reshape a numpy array to a 2D array where each row represents a window.
 
         There are three cases to consider:
 
@@ -232,8 +226,7 @@ class PeriodicFeatureExtractor:
     def _get_relative_positions(
         self, start: datetime, window_size: int
     ) -> RelativePositions:
-        """
-        Return relative positions of the MovingWindow.
+        """Return relative positions of the MovingWindow.
 
         This method calculates the shifted relative positions of the start
         timestamp, the end timestamps as well as the next position that is
@@ -289,8 +282,7 @@ class PeriodicFeatureExtractor:
     def _get_buffer_bounds(
         self, start: datetime, end: datetime
     ) -> tuple[int, int, int]:
-        """
-        Get the bounds of the ringbuffer used for further operations.
+        """Get the bounds of the ringbuffer used for further operations.
 
         This method uses the given start and end timestamps to calculate the
         part of the ringbuffer that can be used for further operations, like
@@ -361,8 +353,7 @@ class PeriodicFeatureExtractor:
     def _get_reshaped_np_array(
         self, start: datetime, end: datetime
     ) -> tuple[NDArray[np.float64], int]:
-        """
-        Create a reshaped numpy array from the MovingWindow.
+        """Create a reshaped numpy array from the MovingWindow.
 
         The reshaped array is a two dimensional array, where one dimension is
         the window_size and the other the number of windows returned by the
@@ -392,8 +383,7 @@ class PeriodicFeatureExtractor:
     def avg(
         self, start: datetime, end: datetime, weights: list[float] | None = None
     ) -> NDArray[np.float64]:
-        """
-        Create the average window out of the window defined by `start` and `end`.
+        """Create the average window out of the window defined by `start` and `end`.
 
         This method calculates the average of a window by averaging over all
         windows fully inside the MovingWindow having the period

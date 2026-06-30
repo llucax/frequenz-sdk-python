@@ -22,7 +22,7 @@ from ._component_status import (
 
 
 class ComponentPoolStatusTracker:
-    """Track status of components of a given category.
+    """A tracker for the status of components of a given category.
 
     Send a set of working and uncertain components, when the status of any of the
     tracked components changes.

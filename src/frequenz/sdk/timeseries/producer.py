@@ -16,7 +16,7 @@ from .formulas._formula_pool import FormulaPool
 
 
 class Producer:
-    """Calculate high level producer metrics in a microgrid.
+    """A calculator for high-level producer metrics in a microgrid.
 
     Under normal circumstances this is expected to correspond to the gross
     production of the site's active parts excluding EV chargers and batteries.
@@ -26,7 +26,7 @@ class Producer:
     be used like normal `Receiver`s, but can also be composed to form
     higher-order formula streams.
 
-    !!! note
+    Note:
         `Producer` instances are not meant to be created directly by users.
         Use the [`microgrid.producer`][frequenz.sdk.microgrid.producer] method
         for creating `Producer` instances.
@@ -75,7 +75,7 @@ class Producer:
 
     @property
     def power(self) -> Formula[Power]:
-        """Fetch the producer power for the microgrid.
+        """The producer power for the microgrid.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -84,9 +84,6 @@ class Producer:
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream producer power.
         """
         return self._formula_pool.from_power_formula(
             "producer_power",

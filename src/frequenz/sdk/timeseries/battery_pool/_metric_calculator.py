@@ -42,7 +42,7 @@ T = TypeVar("T", Sample[Percentage], Sample[Energy], SystemBounds, Sample[Temper
 
 
 class MetricCalculator(ABC, Generic[T]):
-    """Define how to calculate high level metrics from many components data.
+    """A calculator for high level metrics from many components data.
 
     It specifies:
         * what components and metrics it needs to calculate the results,
@@ -60,22 +60,15 @@ class MetricCalculator(ABC, Generic[T]):
     @classmethod
     @abstractmethod
     def name(cls) -> str:
-        """Return name of the formula.
-
-        Returns:
-            Name of the formula
-        """
+        """Return the name of the calculator."""
 
     @property
     def batteries(self) -> Set[ComponentId]:
-        """Return set of batteries that should be used to calculate the metrics.
+        """The set of batteries that should be used to calculate the metrics.
 
         Some batteries given in constructor can be discarded
         because of the failing preconditions. This method returns set of
         batteries that can be used in the calculator.
-
-        Returns:
-            Set of batteries that should be used.
         """
         return self._batteries
 
@@ -84,22 +77,14 @@ class MetricCalculator(ABC, Generic[T]):
     def battery_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each battery.
-
-        Returns:
-            Map between battery ID and set of required metric IDs.
-        """
+        """The metrics needed for each battery, indexed by battery ID."""
 
     @property
     @abstractmethod
     def inverter_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each inverter.
-
-        Returns:
-            Map between inverter ID and set of required metric IDs.
-        """
+        """The metrics needed for each inverter, indexed by inverter ID."""
 
     @abstractmethod
     def calculate(
@@ -126,7 +111,7 @@ class MetricCalculator(ABC, Generic[T]):
 
 
 class CapacityCalculator(MetricCalculator[Sample[Energy]]):
-    """Define how to calculate Capacity metrics."""
+    """A calculator for Capacity metrics."""
 
     def __init__(self, batteries: Set[ComponentId]) -> None:
         """Create class instance.
@@ -145,11 +130,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
     @classmethod
     @override
     def name(cls) -> str:
-        """Return name of the calculator.
-
-        Returns:
-            Name of the calculator
-        """
+        """Return the name of the calculator."""
         return "Capacity"
 
     @property
@@ -157,11 +138,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
     def battery_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each battery.
-
-        Returns:
-            Map between battery ID and set of required metric IDs.
-        """
+        """The metrics needed for each battery, indexed by battery ID."""
         return {bid: self._metrics for bid in self._batteries}
 
     @property
@@ -169,11 +146,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
     def inverter_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each inverter.
-
-        Returns:
-            Map between inverter ID and set of required metric IDs.
-        """
+        """The metrics needed for each inverter, indexed by inverter ID."""
         return {}
 
     @override
@@ -226,7 +199,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
 
 
 class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
-    """Define how to calculate temperature metrics."""
+    """A calculator for temperature metrics."""
 
     def __init__(self, batteries: Set[ComponentId]) -> None:
         """Create class instance.
@@ -243,11 +216,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
     @classmethod
     @override
     def name(cls) -> str:
-        """Return name of the calculator.
-
-        Returns:
-            Name of the calculator
-        """
+        """Return the name of the calculator."""
         return "temperature"
 
     @property
@@ -255,11 +224,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
     def battery_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each battery.
-
-        Returns:
-            Map between battery ID and set of required metric IDs.
-        """
+        """The metrics needed for each battery, indexed by battery ID."""
         return {bid: self._metrics for bid in self._batteries}
 
     @property
@@ -267,11 +232,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
     def inverter_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each inverter.
-
-        Returns:
-            Map between inverter ID and set of required metric IDs.
-        """
+        """The metrics needed for each inverter, indexed by inverter ID."""
         return {}
 
     @override
@@ -321,7 +282,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
 
 
 class SoCCalculator(MetricCalculator[Sample[Percentage]]):
-    """Define how to calculate SoC metrics."""
+    """A calculator for SoC metrics."""
 
     def __init__(self, batteries: Set[ComponentId]) -> None:
         """Create class instance.
@@ -341,11 +302,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
     @classmethod
     @override
     def name(cls) -> str:
-        """Return name of the calculator.
-
-        Returns:
-            Name of the calculator
-        """
+        """Return the name of the calculator."""
         return "SoC"
 
     @property
@@ -353,11 +310,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
     def battery_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each battery.
-
-        Returns:
-            Map between battery ID and set of required metric IDs.
-        """
+        """The metrics needed for each battery, indexed by battery ID."""
         return {bid: self._metrics for bid in self._batteries}
 
     @property
@@ -365,11 +318,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
     def inverter_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each inverter.
-
-        Returns:
-            Map between inverter ID and set of required metric IDs.
-        """
+        """The metrics needed for each inverter, indexed by inverter ID."""
         return {}
 
     @override
@@ -464,7 +413,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
 
 
 class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
-    """Define how to calculate PowerBounds metrics."""
+    """A calculator for PowerBounds metrics."""
 
     def __init__(
         self,
@@ -517,11 +466,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
     @classmethod
     @override
     def name(cls) -> str:
-        """Return name of the calculator.
-
-        Returns:
-            Name of the calculator
-        """
+        """Return the name of the calculator."""
         return "PowerBounds"
 
     @property
@@ -529,11 +474,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
     def battery_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each battery.
-
-        Returns:
-            Map between battery ID and set of required metric IDs.
-        """
+        """The metrics needed for each battery, indexed by battery ID."""
         return {bid: self._battery_metrics for bid in set(self._bat_inv_map.keys())}
 
     @property
@@ -541,11 +482,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
     def inverter_metrics(
         self,
     ) -> Mapping[ComponentId, list[Metric | TransitionalMetric]]:
-        """Return what metrics are needed for each inverter.
-
-        Returns:
-            Map between inverter ID and set of required metric IDs.
-        """
+        """The metrics needed for each inverter, indexed by inverter ID."""
         return {
             inverter_id: self._inverter_metrics
             for inverters in set(self._bat_inv_map.values())

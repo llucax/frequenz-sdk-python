@@ -23,7 +23,7 @@ from frequenz.sdk.timeseries.formulas._formula_pool import FormulaPool
 
 
 class ComponentPoolReferenceStore(ABC):
-    """Abstract base class for pool reference stores."""
+    """An abstract base class for pool reference stores."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -105,21 +105,21 @@ class ComponentPoolReferenceStore(ABC):
     @staticmethod
     @abstractmethod
     def get_component_class() -> Type[Component]:
-        """Class of the component type."""
+        """Return the class of the component type."""
 
     @staticmethod
     @abstractmethod
     def get_pool_type_name() -> str:
-        """Name of the pool type, for display purposes."""
+        """Return the name of the pool type, for display purposes."""
 
     @staticmethod
     @abstractmethod
     def get_component_type_name_plural() -> str:
-        """Name of the component type, for display purposes."""
+        """Return the name of the component type, for display purposes."""
 
     @abstractmethod
     def get_namespace(self) -> str:
-        """Namespace to use with the data pipeline."""
+        """Return the namespace to use with the data pipeline."""
 
     @abstractmethod
     def create_bounds_tracker(self) -> None:

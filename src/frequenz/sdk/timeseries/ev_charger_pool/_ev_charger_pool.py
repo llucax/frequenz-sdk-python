@@ -63,7 +63,7 @@ class EVChargerPool(ComponentPool[EVChargerPoolReferenceStore, EVChargerPoolRepo
 
     @property
     def current_per_phase(self) -> Formula3Phase[Current]:
-        """Fetch the total current for the EV Chargers in the pool.
+        """The total current for the EV Chargers in the pool.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -72,10 +72,6 @@ class EVChargerPool(ComponentPool[EVChargerPoolReferenceStore, EVChargerPoolRepo
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream the total current of all EV
-                Chargers.
         """
         return self._pool_ref_store.formula_pool.from_current_3_phase_formula(
             "ev_charger_total_current",
@@ -87,7 +83,7 @@ class EVChargerPool(ComponentPool[EVChargerPoolReferenceStore, EVChargerPoolRepo
     @property
     @override
     def power(self) -> Formula[Power]:
-        """Fetch the total power for the EV Chargers in the pool.
+        """The total power for the EV Chargers in the pool.
 
         This formula produces values that are in the Passive Sign Convention (PSC).
 
@@ -96,10 +92,6 @@ class EVChargerPool(ComponentPool[EVChargerPoolReferenceStore, EVChargerPoolRepo
 
         A receiver from the formula can be created using the `new_receiver`
         method.
-
-        Returns:
-            A Formula that will calculate and stream the total power of all EV
-                Chargers.
         """
         return self._pool_ref_store.formula_pool.from_power_formula(
             "ev_charger_power",

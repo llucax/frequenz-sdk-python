@@ -15,7 +15,7 @@ from ...microgrid._old_component_data import TransitionalMetric
 
 @dataclass(frozen=True, eq=False)
 class ComponentMetricsData:
-    """Store values of the component metrics."""
+    """A container for the values of the component metrics."""
 
     component_id: ComponentId
     """The component ID the data is for."""

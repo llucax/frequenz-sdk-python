@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Token:
-    """Base class for all tokens."""
+    """A base class for all tokens."""
 
     span: tuple[int, int]
     """The span (start, end) of the token in the input string."""

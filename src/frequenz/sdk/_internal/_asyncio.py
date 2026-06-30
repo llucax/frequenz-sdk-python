@@ -37,7 +37,7 @@ async def cancel_and_await(task: asyncio.Task[Any]) -> None:
 
 
 def is_loop_running() -> bool:
-    """Check if the event loop is running."""
+    """Return whether the event loop is running."""
     try:
         asyncio.get_running_loop()
         return True

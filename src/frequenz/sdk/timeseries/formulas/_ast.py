@@ -44,7 +44,7 @@ class TelemetryStream(AstNode[QuantityT]):
 
     @property
     def latest_sample(self) -> Sample[QuantityT] | None:
-        """Return the latest fetched sample for this component."""
+        """The latest fetched sample for this component."""
         return self._latest_sample
 
     @override
@@ -129,7 +129,7 @@ class Constant(AstNode[QuantityT]):
 
 @dataclass(kw_only=True)
 class Add(AstNode[QuantityT]):
-    """Addition operation node."""
+    """An addition operation node."""
 
     left: AstNode[QuantityT]
     """The left operand."""
@@ -206,7 +206,7 @@ class Add(AstNode[QuantityT]):
 
 @dataclass(kw_only=True)
 class Sub(AstNode[QuantityT]):
-    """Subtraction operation node."""
+    """A subtraction operation node."""
 
     left: AstNode[QuantityT]
     """The left operand."""
@@ -283,7 +283,7 @@ class Sub(AstNode[QuantityT]):
 
 @dataclass(kw_only=True)
 class Mul(AstNode[QuantityT]):
-    """Multiplication operation node."""
+    """A multiplication operation node."""
 
     left: AstNode[QuantityT]
     """The left operand."""
@@ -357,7 +357,7 @@ class Mul(AstNode[QuantityT]):
 
 @dataclass(kw_only=True)
 class Div(AstNode[QuantityT]):
-    """Division operation node."""
+    """A division operation node."""
 
     left: AstNode[QuantityT]
     """The left operand."""

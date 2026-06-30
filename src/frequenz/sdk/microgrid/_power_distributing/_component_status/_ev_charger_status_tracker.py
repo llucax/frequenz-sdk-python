@@ -29,7 +29,7 @@ _logger = logging.getLogger(__name__)
 
 
 class EVChargerStatusTracker(ComponentStatusTracker, BackgroundService):
-    """Status tracker for EV chargers.
+    """A status tracker for EV chargers.
 
     It reports an EV charger as `WORKING` when an EV is connected to it,
     and power can be allocated to it, and `NOT_WORKING` otherwise.

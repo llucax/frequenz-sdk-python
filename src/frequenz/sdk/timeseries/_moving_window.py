@@ -26,8 +26,7 @@ _logger = logging.getLogger(__name__)
 
 
 class MovingWindow(BackgroundService):
-    """
-    A data window that moves with the latest datapoints of a data stream.
+    """A data window that moves with the latest datapoints of a data stream.
 
     After initialization the `MovingWindow` can be accessed by an integer
     index or a timestamp. A sub window can be accessed by using a slice of
@@ -139,8 +138,7 @@ class MovingWindow(BackgroundService):
         align_to: datetime = UNIX_EPOCH,
         name: str | None = None,
     ) -> None:
-        """
-        Initialize the MovingWindow.
+        """Initialize the MovingWindow.
 
         This method creates the underlying ring buffer and starts a
         new task that updates the ring buffer with new incoming samples.
@@ -204,51 +202,31 @@ class MovingWindow(BackgroundService):
 
     @property
     def sampling_period(self) -> timedelta:
-        """
-        Return the sampling period of the MovingWindow.
-
-        Returns:
-            The sampling period of the MovingWindow.
-        """
+        """The sampling period of the MovingWindow."""
         return self._sampling_period
 
     @property
     def oldest_timestamp(self) -> datetime | None:
-        """
-        Return the oldest timestamp of the MovingWindow.
-
-        Returns:
-            The oldest timestamp of the MovingWindow or None if the buffer is empty.
-        """
+        """The oldest timestamp of the MovingWindow, or None if the buffer is empty."""
         return self._buffer.oldest_timestamp
 
     @property
     def newest_timestamp(self) -> datetime | None:
-        """
-        Return the newest timestamp of the MovingWindow.
-
-        Returns:
-            The newest timestamp of the MovingWindow or None if the buffer is empty.
-        """
+        """The newest timestamp of the MovingWindow, or None if the buffer is empty."""
         return self._buffer.newest_timestamp
 
     @property
     def capacity(self) -> int:
-        """
-        Return the capacity of the MovingWindow.
+        """The capacity of the MovingWindow.
 
         Capacity is the maximum number of samples that can be stored in the
         MovingWindow.
-
-        Returns:
-            The capacity of the MovingWindow.
         """
         return self._buffer.maxlen
 
     # pylint before 3.0 only accepts names with 3 or more chars
     def at(self, key: int | datetime) -> float:  # pylint: disable=invalid-name
-        """
-        Return the sample at the given index or timestamp.
+        """Return the sample at the given index or timestamp.
 
         In contrast to the [`window`][frequenz.sdk.timeseries.MovingWindow.window] method,
         which expects a slice as argument, this method expects a single index as argument
@@ -295,8 +273,7 @@ class MovingWindow(BackgroundService):
         force_copy: bool = True,
         fill_value: float | None = np.nan,
     ) -> ArrayLike:
-        """
-        Return an array containing the samples in the given time interval.
+        """Return an array containing the samples in the given time interval.
 
         In contrast to the [`at`][frequenz.sdk.timeseries.MovingWindow.at] method,
         which expects a single index as argument, this method expects a slice as argument
@@ -456,8 +433,7 @@ class MovingWindow(BackgroundService):
     def __getitem__(  # noqa: DOC503
         self, key: SupportsIndex | datetime | slice
     ) -> float | ArrayLike:
-        """
-        Return a sub window of the `MovingWindow`.
+        """Return a sub window of the `MovingWindow`.
 
         The `MovingWindow` is accessed either by timestamp or by index
         or by a slice of timestamps or integers.
@@ -476,13 +452,13 @@ class MovingWindow(BackgroundService):
         Args:
             key: Either an integer or a timestamp or a slice of timestamps or integers.
 
-        Raises:
-            IndexError: when requesting an out of range timestamp or index
-            ValueError: when requesting a slice with a step other than 1
-
         Returns:
             A float if the key is a number or a timestamp.
             a numpy array if the key is a slice.
+
+        Raises:
+            IndexError: when requesting an out of range timestamp or index
+            ValueError: when requesting a slice with a step other than 1
         """
         if isinstance(key, slice):
             if not (key.step is None or key.step == 1):

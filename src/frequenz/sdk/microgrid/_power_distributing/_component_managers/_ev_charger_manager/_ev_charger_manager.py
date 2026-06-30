@@ -39,7 +39,7 @@ _logger = logging.getLogger(__name__)
 
 
 class EVChargerManager(ComponentManager):
-    """Manage ev chargers for the power distributor."""
+    """A manager of EV chargers for the power distributor."""
 
     @override
     def __init__(

@@ -38,7 +38,7 @@ def create_request(component_id: ComponentId) -> ComponentMetricRequest:
 
 
 class GridFrequency:
-    """Grid Frequency."""
+    """A fetcher for the grid frequency of the microgrid."""
 
     def __init__(
         self,
@@ -73,11 +73,7 @@ class GridFrequency:
 
     @property
     def source(self) -> Component:
-        """The component that is used to fetch the grid frequency.
-
-        Returns:
-            The component that is used for grid frequency.
-        """
+        """The component that is used to fetch the grid frequency."""
         return self._source_component
 
     def new_receiver(self) -> Receiver[Sample[Frequency]]:

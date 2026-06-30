@@ -25,7 +25,7 @@ _logger = logging.getLogger(__name__)
 
 
 class ConnectionManager(ABC):
-    """Creates and stores core features."""
+    """A manager that creates and stores core microgrid features."""
 
     def __init__(self, server_url: str) -> None:
         """Create object instance.
@@ -48,40 +48,24 @@ class ConnectionManager(ABC):
     @property
     @abstractmethod
     def api_client(self) -> MicrogridApiClient:
-        """Get the MicrogridApiClient.
-
-        Returns:
-            The microgrid API client used by this connection manager.
-        """
+        """The microgrid API client used by this connection manager."""
 
     @property
     @abstractmethod
     def component_graph(
         self,
     ) -> ComponentGraph:
-        """Get component graph.
-
-        Returns:
-            component graph
-        """
+        """The component graph of the microgrid."""
 
     @property
     @abstractmethod
     def microgrid_id(self) -> MicrogridId | None:
-        """Get the ID of the microgrid if available.
-
-        Returns:
-            the ID of the microgrid if available, None otherwise.
-        """
+        """The ID of the microgrid, or None if not available."""
 
     @property
     @abstractmethod
     def location(self) -> Location | None:
-        """Get the location of the microgrid if available.
-
-        Returns:
-            the location of the microgrid if available, None otherwise.
-        """
+        """The location of the microgrid, or None if not available."""
 
     async def _update_client(self, server_url: str) -> None:
         self._server_url = server_url
@@ -120,28 +104,17 @@ class _InsecureConnectionManager(ConnectionManager):
 
     @property
     def microgrid_id(self) -> MicrogridId | None:
-        """Get the ID of the microgrid if available.
-
-        Returns:
-            the ID of the microgrid if available, None otherwise.
-        """
+        """The ID of the microgrid, or None if not available."""
         return self._microgrid.id
 
     @property
     def location(self) -> Location | None:
-        """Get the location of the microgrid if available.
-
-        Returns:
-            the location of the microgrid if available, None otherwise.
-        """
+        """The location of the microgrid, or None if not available."""
         return self._microgrid.location
 
     @property
     def component_graph(self) -> ComponentGraph:
-        """Get component graph.
-
-        Returns:
-            component graph
+        """The component graph of the microgrid.
 
         Raises:
             RuntimeError: If the microgrid is not initialized yet.
@@ -212,14 +185,14 @@ def get() -> ConnectionManager:
 
     This function should be only called after initialize().
 
+    Returns:
+        MicrogridApi instance.
+
     Raises:
         RuntimeError: Raised when:
             * If `initialize()` method was not called before this call.
             * If `initialize()` methods was called but was not awaited and instance was
                 not created yet.
-
-    Returns:
-        MicrogridApi instance.
     """
     if _CONNECTION_MANAGER is None:
         raise RuntimeError(

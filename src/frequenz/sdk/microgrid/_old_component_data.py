@@ -1390,7 +1390,7 @@ class EVChargerData(ComponentData):  # pylint: disable=too-many-instance-attribu
         )
 
     def is_ev_connected(self) -> bool:
-        """Check whether an EV is connected to the charger.
+        """Return whether an EV is connected to the charger.
 
         Returns:
             When the charger is not in an error state, whether an EV is connected to
@@ -1429,14 +1429,14 @@ def _bound_ranges_to_inclusion_exclusion(
 ) -> tuple[float, float, float, float]:
     """Convert a list of bounds to inclusion and exclusion bounds.
 
-        Args:
-            bounds: A list of bounds.
-    name: The name of the metric (for logging purposes).
-            sample: The sample containing the bounds (for logging purposes).
+    Args:
+        bounds: A list of bounds.
+        name: The name of the metric (for logging purposes).
+        sample: The sample containing the bounds (for logging purposes).
 
-        Returns:
-            A tuple containing the inclusion lower bound, inclusion upper bound,
-                exclusion lower bound, and exclusion upper bound.
+    Returns:
+        A tuple containing the inclusion lower bound, inclusion upper bound,
+            exclusion lower bound, and exclusion upper bound.
     """
     match bounds:
         case []:

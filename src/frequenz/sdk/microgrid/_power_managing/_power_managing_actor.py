@@ -37,7 +37,7 @@ _logger = logging.getLogger(__name__)
 
 
 class PowerManagingActor(Actor):
-    """The power manager."""
+    """A power manager."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,

@@ -15,7 +15,7 @@ from ...microgrid._old_component_data import TransitionalMetric
 
 
 class ResampledStreamFetcher:
-    """Fetches telemetry streams for components."""
+    """A fetcher of resampled telemetry streams for components."""
 
     def __init__(
         self,

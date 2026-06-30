@@ -48,7 +48,7 @@ def _get_nearest_possible_power(
 
 
 class ShiftingMatryoshka(BaseAlgorithm):
-    """The ShiftingMatryoshka algorithm.
+    """An implementation of the ShiftingMatryoshka algorithm.
 
     When there are multiple actors trying to control the same set of components, this
     algorithm will reconcile the different proposals and calculate the target power.

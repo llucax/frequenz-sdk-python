@@ -59,7 +59,7 @@ class _ComponentStreamStatus:
 
 
 class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
-    """Class for tracking if battery is working.
+    """A background service that tracks whether a battery is working.
 
     Status updates are sent out only when there is a status change.
     """
@@ -164,11 +164,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
 
     @property
     def battery_id(self) -> ComponentId:
-        """Get battery id.
-
-        Returns:
-            Battery id
-        """
+        """The ID of the battery."""
         return self._battery.component_id
 
     def _handle_status_battery(self, bat_data: BatteryData) -> None:
@@ -343,7 +339,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         return ComponentStatusEnum.WORKING
 
     def _is_capacity_present(self, msg: BatteryData) -> bool:
-        """Check whether the battery capacity is NaN or not.
+        """Return whether the battery capacity is NaN or not.
 
         If battery capacity is missing, then we can't work with it.
 
@@ -363,7 +359,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         return True
 
     def _no_critical_error(self, msg: BatteryData | InverterData) -> bool:
-        """Check if battery or inverter message has any critical error.
+        """Return whether the battery or inverter message has any critical error.
 
         Args:
             msg: message.
@@ -383,7 +379,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         return True
 
     def _is_inverter_state_correct(self, msg: InverterData) -> bool:
-        """Check if inverter is in correct state from message.
+        """Return whether the inverter is in correct state from message.
 
         Args:
             msg: message.
@@ -406,7 +402,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         return True
 
     def _is_battery_state_correct(self, msg: BatteryData) -> bool:
-        """Check if battery is in correct state from message.
+        """Return whether the battery is in correct state from message.
 
         Args:
             msg: message.
@@ -454,7 +450,7 @@ class BatteryStatusTracker(ComponentStatusTracker, BackgroundService):
         return diff > self._max_data_age
 
     def _is_message_reliable(self, message: ComponentData) -> bool:
-        """Check if message is too old to be considered as reliable.
+        """Return whether the message is too old to be considered as reliable.
 
         Args:
             message: message to check.

@@ -14,8 +14,7 @@ _logger = logging.getLogger(__name__)
 async def run(*actors: Actor) -> None:
     """Await the completion of all actors.
 
-    !!! info
-
+    Info:
         Please read the [`actor` module documentation][frequenz.sdk.actor] for more
         comprehensive guide on how to use and implement actors properly.
 
