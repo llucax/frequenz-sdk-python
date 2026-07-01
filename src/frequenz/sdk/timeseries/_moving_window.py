@@ -310,7 +310,7 @@ class MovingWindow(BackgroundService):
             n: The number of samples to wait for.
 
         Raises:
-            ValueError: If `n` is less than or equal to 0 or greater than the capacity
+            ValueError: If `n` is less than 0 or greater than the capacity
                 of the MovingWindow.
         """
         if n == 0:

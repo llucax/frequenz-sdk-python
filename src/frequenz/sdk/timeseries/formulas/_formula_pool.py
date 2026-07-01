@@ -68,6 +68,7 @@ class FormulaPool:
 
         self._string_formulas: dict[tuple[str, Metric], Formula[Quantity]] = {}
         self.power_formulas: dict[str, Formula[Power]] = {}
+        """The cache of power formulas, keyed by their channel key."""
         self._reactive_power_formulas: dict[str, Formula[ReactivePower]] = {}
         self._current_formulas: dict[str, Formula3Phase[Current]] = {}
 

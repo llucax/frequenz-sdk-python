@@ -14,7 +14,14 @@ class FormulaSyntaxError(FormulaError):
     def __init__(
         self, *, formula: str, span: tuple[int, int] | None, message: str
     ) -> None:
-        """Initialize this instance."""
+        """Initialize this instance.
+
+        Args:
+            formula: The formula string that contains the syntax error.
+            span: The start and end positions of the error within the formula,
+                or `None` if not applicable.
+            message: The message describing the syntax error.
+        """
         self._formula: str = formula
         self._span: tuple[int, int] | None = span
         self._message: str = message

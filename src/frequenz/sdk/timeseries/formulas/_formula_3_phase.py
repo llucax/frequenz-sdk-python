@@ -58,7 +58,14 @@ class Formula3Phase(BackgroundService, Generic[QuantityT]):
         )
 
     def new_receiver(self, *, max_size: int = 50) -> Receiver[Sample3Phase[QuantityT]]:
-        """Subscribe to the output of this formula."""
+        """Subscribe to the output of this formula.
+
+        Args:
+            max_size: The maximum number of messages to buffer for the receiver.
+
+        Returns:
+            A receiver that yields the output samples of this formula.
+        """
         if not self._evaluator.is_running:
             self.start()
         return self._channel.new_receiver(limit=max_size)

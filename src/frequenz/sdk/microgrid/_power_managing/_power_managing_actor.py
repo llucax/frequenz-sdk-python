@@ -183,6 +183,12 @@ class PowerManagingActor(Actor):
         component_ids: frozenset[ComponentId],
         proposal: Proposal | None,
     ) -> None:
+        """Calculate and send the updated target power for the given components.
+
+        Args:
+            component_ids: The components to calculate and send the target power for.
+            proposal: The proposal to use when calculating the target power, if any.
+        """
         target_power = self._algorithm.calculate_target_power(
             component_ids,
             proposal,

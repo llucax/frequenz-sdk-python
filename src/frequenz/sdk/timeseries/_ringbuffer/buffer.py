@@ -94,7 +94,7 @@ class OrderedRingBuffer(Generic[FloatArray]):
     def gaps(self) -> list[Gap]:
         """The list of ranges for which no values were provided.
 
-        See definition of dataclass @Gaps for more info.
+        See definition of dataclass `Gap` for more info.
         """
         return self._gaps
 

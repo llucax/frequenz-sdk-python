@@ -55,7 +55,14 @@ class TelemetryStream(AstNode[QuantityT]):
 
     @override
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the telemetry stream node."""
+        """Return a string representation of the telemetry stream node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the telemetry stream node.
+        """
         return f"{self.source}"
 
     async def _fetch_next(self) -> None:
@@ -115,7 +122,14 @@ class Constant(AstNode[QuantityT]):
 
     @override
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the constant node."""
+        """Return a string representation of the constant node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the constant node.
+        """
         return str(self.value.base_value)
 
     @override
@@ -143,7 +157,12 @@ class Add(AstNode[QuantityT]):
 
     @override
     async def evaluate(self) -> Sample[QuantityT] | QuantityT | None:
-        """Evaluate the addition of the left and right nodes."""
+        """Evaluate the addition of the left and right nodes.
+
+        Returns:
+            The sum of the left and right operands, or `None` if it could not
+                be evaluated.
+        """
         left, right = await self._synchronizer.evaluate([self.left, self.right])
         match left, right:
             case Sample(), Sample():
@@ -181,7 +200,14 @@ class Add(AstNode[QuantityT]):
 
     @override
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the addition node."""
+        """Return a string representation of the addition node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the addition node.
+        """
         expr = f"{self.left} + {self.right}"
         if wrap:
             expr = f"({expr})"
@@ -220,7 +246,12 @@ class Sub(AstNode[QuantityT]):
 
     @override
     async def evaluate(self) -> Sample[QuantityT] | QuantityT | None:
-        """Evaluate the subtraction of the right node from the left node."""
+        """Evaluate the subtraction of the right node from the left node.
+
+        Returns:
+            The result of subtracting the right operand from the left operand,
+                or `None` if it could not be evaluated.
+        """
         left, right = await self._synchronizer.evaluate([self.left, self.right])
         match left, right:
             case Sample(), Sample():
@@ -258,7 +289,14 @@ class Sub(AstNode[QuantityT]):
 
     @override
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the subtraction node."""
+        """Return a string representation of the subtraction node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the subtraction node.
+        """
         expr = f"{self.left} - {self.right.format(True)}"
         if wrap:
             expr = f"({expr})"
@@ -297,7 +335,12 @@ class Mul(AstNode[QuantityT]):
 
     @override
     async def evaluate(self) -> Sample[QuantityT] | QuantityT | None:
-        """Evaluate the multiplication of the left and right nodes."""
+        """Evaluate the multiplication of the left and right nodes.
+
+        Returns:
+            The product of the left and right operands, or `None` if it could
+                not be evaluated.
+        """
         left, right = await self._synchronizer.evaluate([self.left, self.right])
         match left, right:
             case Sample(), Sample():
@@ -335,7 +378,14 @@ class Mul(AstNode[QuantityT]):
 
     @override
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the multiplication node."""
+        """Return a string representation of the multiplication node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the multiplication node.
+        """
         return f"{self.left.format(True)} * {self.right.format(True)}"
 
     @override
@@ -371,7 +421,12 @@ class Div(AstNode[QuantityT]):
 
     @override
     async def evaluate(self) -> Sample[QuantityT] | QuantityT | None:
-        """Evaluate the division of the left node by the right node."""
+        """Evaluate the division of the left node by the right node.
+
+        Returns:
+            The result of dividing the left operand by the right operand, or
+                `None` if it could not be evaluated.
+        """
         left, right = await self._synchronizer.evaluate([self.left, self.right])
         match left, right:
             case Sample(), Sample():
@@ -410,7 +465,14 @@ class Div(AstNode[QuantityT]):
 
     @override
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the division node."""
+        """Return a string representation of the division node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the division node.
+        """
         return f"{self.left.format(True)} / {self.right.format(True)}"
 
     @override

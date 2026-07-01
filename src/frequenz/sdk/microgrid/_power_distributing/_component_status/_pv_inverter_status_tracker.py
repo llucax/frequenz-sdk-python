@@ -59,7 +59,7 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
             max_data_age: Max duration to wait for, before marking a component as
                 NOT_WORKING, unless new data arrives.
             max_blocking_duration: Max duration to wait for, before marking a component
-                as BLOCKING, unless new data arrives.
+                as UNCERTAIN, unless new data arrives.
             status_sender: Sender to send the status of the PV inverter.
             set_power_result_receiver: Receiver for the power assignment result.
         """
@@ -103,7 +103,14 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
     def _handle_set_power_result(
         self, set_power_result: SetPowerResult
     ) -> ComponentStatusEnum:
-        """Handle a new set power result."""
+        """Handle a new set power result.
+
+        Args:
+            set_power_result: The set power result to handle.
+
+        Returns:
+            The new status of the PV inverter.
+        """
         if self._component_id in set_power_result.succeeded:
             return ComponentStatusEnum.WORKING
 
@@ -117,7 +124,14 @@ class PVInverterStatusTracker(ComponentStatusTracker, BackgroundService):
         return ComponentStatusEnum.UNCERTAIN
 
     def _handle_pv_inverter_data(self, pv_data: InverterData) -> ComponentStatusEnum:
-        """Handle new PV inverter data."""
+        """Handle new PV inverter data.
+
+        Args:
+            pv_data: The PV inverter data to handle.
+
+        Returns:
+            The new status of the PV inverter.
+        """
         if self._is_stale(pv_data):
             if self._last_status == ComponentStatusEnum.WORKING:
                 _logger.warning(

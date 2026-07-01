@@ -51,6 +51,7 @@ class LoggerConfig(RootLoggerConfig):
             },
         },
     )
+    """The name of the logger affected by this configuration."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -198,7 +199,11 @@ class LoggingConfigUpdatingActor(Actor):
                 assert_never(unexpected)
 
     def _update_logging(self, config: LoggingConfig) -> None:
-        """Configure the logging level."""
+        """Configure the logging level.
+
+        Args:
+            config: The new logging configuration to apply.
+        """
         # If the logger is not in the new config, set it to NOTSET
         old_names = {old.name for old in self._current_config.loggers.values()}
         new_names = {new.name for new in config.loggers.values()}

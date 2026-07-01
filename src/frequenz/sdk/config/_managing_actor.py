@@ -124,7 +124,8 @@ class ConfigManagingActor(Actor):
         """Read the contents of the configuration file.
 
         Returns:
-            A dictionary containing configuration variables.
+            A dictionary containing configuration variables, or `None` if none of
+                the configuration files could be read.
         """
         error_count = 0
         config: dict[str, Any] = {}

@@ -27,15 +27,28 @@ class FunCall(AstNode[QuantityT]):
     """A function call in the formula."""
 
     function: Function[QuantityT]
+    """The function to call."""
 
     @override
     async def evaluate(self) -> Sample[QuantityT] | QuantityT | None:
-        """Evaluate the function call with its arguments."""
+        """Evaluate the function call with its arguments.
+
+        Returns:
+            The result of evaluating the function call, or `None` if it could
+                not be evaluated.
+        """
         return await self.function()
 
     @override
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the function call node."""
+        """Return a string representation of the function call node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the function call node.
+        """
         return self.function.format()
 
     @override
@@ -54,6 +67,8 @@ class Function(abc.ABC, Generic[QuantityT]):
     """A function that can be called in a formula expression."""
 
     params: list[AstNode[QuantityT]]
+    """The parameters passed to the function."""
+
     _synchronizer: NodeSynchronizer[QuantityT] = field(
         init=False, default_factory=NodeSynchronizer
     )
@@ -86,7 +101,15 @@ class Function(abc.ABC, Generic[QuantityT]):
 
     @classmethod
     def function_class_by_name(cls, name: str) -> type[Function[QuantityT]] | None:
-        """Return the function class corresponding to the given name."""
+        """Return the function class corresponding to the given name.
+
+        Args:
+            name: The name of the function to look up.
+
+        Returns:
+            The function class corresponding to the given name, or `None` if no
+                such function exists.
+        """
         known_functions: dict[str, type[Function[QuantityT]]] = {
             "COALESCE": Coalesce,
             "MAX": Max,

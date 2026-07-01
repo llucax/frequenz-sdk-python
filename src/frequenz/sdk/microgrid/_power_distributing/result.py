@@ -117,6 +117,7 @@ Example: Handling power distribution results
     )
     from frequenz.sdk.actor.power_distributing.request import Request
     from frequenz.sdk.actor.power_distributing.result import PowerBounds
+    from frequenz.client.common.microgrid.components import ComponentId
     from frequenz.quantities import Power
 
     def handle_power_request_result(result: Result) -> None:

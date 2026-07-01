@@ -26,11 +26,23 @@ class AstNode(abc.ABC, Generic[QuantityT]):
 
     @abc.abstractmethod
     async def evaluate(self) -> Sample[QuantityT] | QuantityT | None:
-        """Evaluate the expression and return its numerical value."""
+        """Evaluate the expression and return its numerical value.
+
+        Returns:
+            The evaluated value of the expression, or `None` if it could not be
+                evaluated.
+        """
 
     @abc.abstractmethod
     def format(self, wrap: bool = False) -> str:
-        """Return a string representation of the node."""
+        """Return a string representation of the node.
+
+        Args:
+            wrap: Whether to wrap the representation in parentheses.
+
+        Returns:
+            The string representation of the node.
+        """
 
     @override
     def __str__(self) -> str:

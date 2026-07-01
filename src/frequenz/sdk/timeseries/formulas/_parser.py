@@ -285,6 +285,15 @@ class _Parser(Generic[QuantityT]):
         return None
 
     def parse(self) -> Formula[QuantityT]:
+        """Parse the formula string into a formula AST.
+
+        Returns:
+            The parsed formula.
+
+        Raises:
+            FormulaSyntaxError: If the formula is empty or contains an
+                unexpected token.
+        """
         expr = self._parse_term()
         if expr is None:
             raise FormulaSyntaxError(

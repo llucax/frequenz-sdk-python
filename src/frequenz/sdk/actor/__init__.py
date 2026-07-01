@@ -43,7 +43,8 @@ the traditional actor programming model but also has some unique features:
   [`asyncio`][]. You can create and manage tasks within the actor, and the
   [`Actor`][frequenz.sdk.actor.Actor] class handles task cancellation and cleanup.
 
-- **Simplified lifecycle management:** Actors are [async context managers] and also
+- **Simplified lifecycle management:** Actors are
+  [async context managers][async context manager] and also
   a [`run()`][frequenz.sdk.actor.run] function is provided to easily run a group of
   actors and wait for them to finish.
 
@@ -86,7 +87,7 @@ logged.
                 print("Hello World!")
                 await asyncio.sleep(1)
 
-    await asyncio.run(MyActor()) # (1)!
+    asyncio.run(run(MyActor())) # (1)!
     ```
 
     1. This line will block until the actor completes its execution or is manually stopped.
@@ -460,8 +461,7 @@ This example shows how to create an actor that receives messages from multiple
 ```python title="select.py"
 import asyncio
 
-from frequenz.channels import Broadcast, Receiver, Sender
-from frequenz.channels.util import select, selected_from
+from frequenz.channels import Broadcast, Receiver, Sender, select, selected_from
 from frequenz.sdk.actor import Actor, run
 
 
@@ -555,7 +555,7 @@ if __name__ == "__main__":  # (7)!
 10. The [`select()`][frequenz.channels.select] function will get the first message
     available from the two channels. The order in which they will be handled is
     unknown, but in this example we assume that the first message will be from
-    `input_channel_1` (`True`) and the second from `input_channel_1` (`False`).
+    `input_channel_1` (`True`) and the second from `input_channel_2` (`False`).
 
 11. The [`selected_from()`][frequenz.channels.selected_from] function will return
     `True` for the `input_channel_1` receiver. `selected.value` holds the received

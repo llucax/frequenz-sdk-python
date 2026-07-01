@@ -106,7 +106,7 @@ class MetricCalculator(ABC, Generic[T]):
 
         Returns:
             High level metric calculated from the given metrics.
-            Return None if there are no component metrics.
+            The result will contain `None` if there are no component metrics.
         """
 
 
@@ -169,7 +169,7 @@ class CapacityCalculator(MetricCalculator[Sample[Energy]]):
 
         Returns:
             High level metric calculated from the given metrics.
-            Return None if there are no component metrics.
+            The result will contain `None` if there are no component metrics.
         """
         timestamp = _MIN_TIMESTAMP
         total_capacity = 0.0
@@ -255,7 +255,7 @@ class TemperatureCalculator(MetricCalculator[Sample[Temperature]]):
 
         Returns:
             High level metric calculated from the given metrics.
-            Return None if there are no component metrics.
+            The result will contain `None` if there are no component metrics.
         """
         timestamp = _MIN_TIMESTAMP
         temperature_sum: float = 0.0
@@ -341,7 +341,7 @@ class SoCCalculator(MetricCalculator[Sample[Percentage]]):
 
         Returns:
             High level metric calculated from the given metrics.
-            Return None if there are no component metrics.
+            The result will contain `None` if there are no component metrics.
         """
         timestamp = _MIN_TIMESTAMP
         usable_capacity_x100: float = 0.0
@@ -508,7 +508,7 @@ class PowerBoundsCalculator(MetricCalculator[SystemBounds]):
 
         Returns:
             High level metric calculated from the given metrics.
-            Return None if there are no component metrics.
+            The result will contain `None` if there are no component metrics.
         """
         timestamp = _MIN_TIMESTAMP
         loop_timestamp = _MIN_TIMESTAMP

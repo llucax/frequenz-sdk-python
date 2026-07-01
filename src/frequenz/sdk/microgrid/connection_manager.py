@@ -153,7 +153,7 @@ _CONNECTION_MANAGER: ConnectionManager | None = None
 
 
 async def initialize(server_url: str) -> None:
-    """Initialize the MicrogridApi. This function should be called only once.
+    """Initialize the connection manager. This function should be called only once.
 
     Args:
         server_url: The location of the microgrid API server in the form of a URL.
@@ -181,12 +181,12 @@ async def initialize(server_url: str) -> None:
 
 
 def get() -> ConnectionManager:
-    """Get the MicrogridApi instance created by initialize().
+    """Get the connection manager instance created by initialize().
 
     This function should be only called after initialize().
 
     Returns:
-        MicrogridApi instance.
+        The connection manager instance.
 
     Raises:
         RuntimeError: Raised when:

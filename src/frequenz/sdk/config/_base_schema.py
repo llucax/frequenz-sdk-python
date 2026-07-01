@@ -18,3 +18,4 @@ class BaseConfigSchema(QuantitySchema):
         """Meta options for the schema."""
 
         unknown = marshmallow.EXCLUDE
+        """The behavior for unknown fields (excluded by default)."""

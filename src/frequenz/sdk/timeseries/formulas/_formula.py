@@ -30,7 +30,15 @@ _logger = logging.getLogger(__name__)
 def metric_fetcher(
     formula: Formula[QuantityT],
 ) -> Callable[[], Coroutine[None, None, Receiver[Sample[QuantityT]]]]:
-    """Fetch a receiver for the formula's output samples."""
+    """Fetch a receiver for the formula's output samples.
+
+    Args:
+        formula: The formula whose output samples should be fetched.
+
+    Returns:
+        A callable that, when awaited, starts the formula and returns a receiver
+            for its output samples.
+    """
 
     async def fetcher(f: Formula[QuantityT]) -> Receiver[Sample[QuantityT]]:
         f.start()
@@ -85,7 +93,14 @@ class Formula(BackgroundService, Generic[QuantityT]):
         return f"[{self._name}]({self._root})"
 
     def new_receiver(self, *, max_size: int = 50) -> Receiver[Sample[QuantityT]]:
-        """Subscribe to the formula evaluator to get evaluated samples."""
+        """Subscribe to the formula evaluator to get evaluated samples.
+
+        Args:
+            max_size: The maximum number of messages to buffer for the receiver.
+
+        Returns:
+            A receiver that yields the evaluated samples of this formula.
+        """
         if not self._evaluator.is_running:
             self.start()
         return self._channel.new_receiver(limit=max_size)

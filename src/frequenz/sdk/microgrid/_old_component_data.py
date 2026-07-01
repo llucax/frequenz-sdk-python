@@ -133,11 +133,26 @@ class ComponentData(ABC):
 
     @abstractmethod
     def to_samples(self: Self) -> ComponentDataSamples:
-        """Convert the component data to a component data object."""
+        """Convert the component data to a component data object.
+
+        Returns:
+            The samples representing this component data.
+        """
 
     @staticmethod
     def _from_samples(class_: type[T], /, samples: ComponentDataSamples) -> T:
-        """Create a new instance from a component data object."""
+        """Create a new instance from a component data object.
+
+        Args:
+            class_: The class to instantiate.
+            samples: The component data samples to create the instance from.
+
+        Returns:
+            A new instance created from the given samples.
+
+        Raises:
+            ValueError: If the samples contain no metrics and no states.
+        """
         if not samples.metric_samples and not samples.states:
             raise ValueError("No metrics and no states in the samples.")
 
@@ -185,7 +200,14 @@ class ComponentData(ABC):
     @classmethod
     @abstractmethod
     def from_samples(cls, samples: ComponentDataSamples) -> Self:
-        """Create a new instance from a component data object."""
+        """Create a new instance from a component data object.
+
+        Args:
+            samples: The component data samples to create the instance from.
+
+        Returns:
+            A new instance created from the given samples.
+        """
 
     @classmethod
     def _check_category(cls, component_id: ComponentId) -> None:
@@ -222,7 +244,16 @@ class ComponentData(ABC):
         *,
         buffer_size: int = DATA_STREAM_BUFFER_SIZE,
     ) -> Receiver[Self]:
-        """Subscribe to the component data stream."""
+        """Subscribe to the component data stream.
+
+        Args:
+            api_client: The microgrid API client used to subscribe to the stream.
+            component_id: The ID of the component to subscribe to.
+            buffer_size: The maximum number of samples to buffer in the receiver.
+
+        Returns:
+            A receiver that streams the data of the component.
+        """
         cls._check_category(component_id)
 
         def _is_valid(messages: Self | Exception) -> TypeGuard[Self]:
@@ -338,7 +369,14 @@ class MeterData(ComponentData):
     @classmethod
     # pylint: disable-next=too-many-branches
     def from_samples(cls, samples: ComponentDataSamples) -> Self:
-        """Create a new instance from a component data object."""
+        """Create a new instance from a component data object.
+
+        Args:
+            samples: The component data samples to create the instance from.
+
+        Returns:
+            A new instance created from the given samples.
+        """
         self = cls._from_samples(cls, samples)
 
         active_power_per_phase: list[float] = [0.0, 0.0, 0.0]
@@ -396,7 +434,11 @@ class MeterData(ComponentData):
 
     @override
     def to_samples(self) -> ComponentDataSamples:
-        """Convert the component data to a component data object."""
+        """Convert the component data to a component data object.
+
+        Returns:
+            The samples representing this component data.
+        """
         return ComponentDataSamples(
             component_id=self.component_id,
             metric_samples=[
@@ -509,6 +551,7 @@ class BatteryData(ComponentData):  # pylint: disable=too-many-instance-attribute
     """The (average) temperature reported by the battery, in Celsius (°C)."""
 
     CATEGORY: ClassVar[ComponentCategory] = ComponentCategory.BATTERY
+    """The category of this component."""
 
     METRICS: ClassVar[frozenset[Metric]] = frozenset(
         [
@@ -523,7 +566,14 @@ class BatteryData(ComponentData):  # pylint: disable=too-many-instance-attribute
     @override
     @classmethod
     def from_samples(cls, samples: ComponentDataSamples) -> Self:
-        """Create a new instance from a component data object."""
+        """Create a new instance from a component data object.
+
+        Args:
+            samples: The component data samples to create the instance from.
+
+        Returns:
+            A new instance created from the given samples.
+        """
         self = cls._from_samples(cls, samples)
 
         for sample in samples.metric_samples:
@@ -572,7 +622,11 @@ class BatteryData(ComponentData):  # pylint: disable=too-many-instance-attribute
 
     @override
     def to_samples(self) -> ComponentDataSamples:
-        """Convert the component data to a component data object."""
+        """Convert the component data to a component data object.
+
+        Returns:
+            The samples representing this component data.
+        """
         return ComponentDataSamples(
             component_id=self.component_id,
             metric_samples=[
@@ -712,6 +766,7 @@ class InverterData(ComponentData):  # pylint: disable=too-many-instance-attribut
     """AC frequency, in Hertz (Hz)."""
 
     CATEGORY: ClassVar[ComponentCategory] = ComponentCategory.INVERTER
+    """The category of this component."""
 
     METRICS: ClassVar[frozenset[Metric]] = frozenset(
         [
@@ -738,7 +793,14 @@ class InverterData(ComponentData):  # pylint: disable=too-many-instance-attribut
     @classmethod
     # pylint: disable-next=too-many-branches
     def from_samples(cls, samples: ComponentDataSamples) -> Self:
-        """Create a new instance from a component data object."""
+        """Create a new instance from a component data object.
+
+        Args:
+            samples: The component data samples to create the instance from.
+
+        Returns:
+            A new instance created from the given samples.
+        """
         self = cls._from_samples(cls, samples)
 
         active_power_per_phase: list[float] = [0.0, 0.0, 0.0]
@@ -805,7 +867,11 @@ class InverterData(ComponentData):  # pylint: disable=too-many-instance-attribut
 
     @override
     def to_samples(self) -> ComponentDataSamples:
-        """Convert the component data to a component data object."""
+        """Convert the component data to a component data object.
+
+        Returns:
+            The samples representing this component data.
+        """
         return ComponentDataSamples(
             component_id=self.component_id,
             metric_samples=[
@@ -971,6 +1037,7 @@ class ChpData(ComponentData):  # pylint: disable=too-many-instance-attributes
     """AC frequency, in Hertz (Hz)."""
 
     CATEGORY: ClassVar[ComponentCategory] = ComponentCategory.CHP
+    """The category of this component."""
 
     METRICS: ClassVar[frozenset[Metric]] = frozenset(
         [
@@ -997,7 +1064,14 @@ class ChpData(ComponentData):  # pylint: disable=too-many-instance-attributes
     @classmethod
     # pylint: disable-next=too-many-branches
     def from_samples(cls, samples: ComponentDataSamples) -> Self:
-        """Create a new instance from a component data object."""
+        """Create a new instance from a component data object.
+
+        Args:
+            samples: The component data samples to create the instance from.
+
+        Returns:
+            A new instance created from the given samples.
+        """
         self = cls._from_samples(cls, samples)
 
         active_power_per_phase: list[float] = [0.0, 0.0, 0.0]
@@ -1064,7 +1138,11 @@ class ChpData(ComponentData):  # pylint: disable=too-many-instance-attributes
 
     @override
     def to_samples(self) -> ComponentDataSamples:
-        """Convert the component data to a component data object."""
+        """Convert the component data to a component data object.
+
+        Returns:
+            The samples representing this component data.
+        """
         return ComponentDataSamples(
             component_id=self.component_id,
             metric_samples=[
@@ -1257,7 +1335,14 @@ class EVChargerData(ComponentData):  # pylint: disable=too-many-instance-attribu
     @classmethod
     # pylint: disable-next=too-many-branches
     def from_samples(cls, samples: ComponentDataSamples) -> Self:
-        """Create a new instance from a component data object."""
+        """Create a new instance from a component data object.
+
+        Args:
+            samples: The component data samples to create the instance from.
+
+        Returns:
+            A new instance created from the given samples.
+        """
         self = cls._from_samples(cls, samples)
 
         active_power_per_phase: list[float] = [0.0, 0.0, 0.0]
@@ -1324,7 +1409,11 @@ class EVChargerData(ComponentData):  # pylint: disable=too-many-instance-attribu
 
     @override
     def to_samples(self) -> ComponentDataSamples:
-        """Convert the component data to a component data object."""
+        """Convert the component data to a component data object.
+
+        Returns:
+            The samples representing this component data.
+        """
         return ComponentDataSamples(
             component_id=self.component_id,
             metric_samples=[

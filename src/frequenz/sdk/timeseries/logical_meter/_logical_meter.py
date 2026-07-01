@@ -21,8 +21,8 @@ class LogicalMeter:
     """A logical meter for calculating high level metrics in a microgrid.
 
     LogicalMeter provides methods for fetching power values from different points in the
-    microgrid.  These methods return `FormulaReceiver` objects, which can be used like
-    normal `Receiver`s, but can also be composed to form higher-order formula streams.
+    microgrid.  These methods return `Formula` objects, which can be used to create
+    receivers, but can also be composed to form higher-order formula streams.
 
     !!! note
         `LogicalMeter` instances are not meant to be created directly by users.  Use the

@@ -410,8 +410,8 @@ class MicrogridApiSource:
                 certain component.
 
         Returns:
-            A dictionary of output metric names to channel senders from the channel
-                registry.
+            A list of pairs, each with a data extraction method and the channel
+                senders from the channel registry for a requested metric.
         """
         return [
             (

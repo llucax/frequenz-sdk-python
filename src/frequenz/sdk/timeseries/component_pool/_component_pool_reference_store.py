@@ -60,11 +60,22 @@ class ComponentPoolReferenceStore(ABC):
                 are unknown to the component graph.
         """
         self.channel_registry = channel_registry
+        """The channel registry shared with the resampling actor."""
+
         self.resampler_subscription_sender = resampler_subscription_sender
+        """The sender for sending metric requests to the resampling actor."""
+
         self.status_receiver = status_receiver
+        """The receiver that streams the status of the components in the pool."""
+
         self.power_manager_requests_sender = power_manager_requests_sender
+        """The sender for sending power requests to the power managing actor."""
+
         self.power_manager_bounds_subs_sender = power_manager_bounds_subs_sender
+        """The sender for sending power bounds subscription requests to the power managing actor."""
+
         self.power_distribution_results_fetcher = power_distribution_results_fetcher
+        """The fetcher for the results from the power distributing actor."""
 
         graph = connection_manager.get().component_graph
         all_components = frozenset(
@@ -76,6 +87,7 @@ class ComponentPoolReferenceStore(ABC):
 
         if component_ids is not None:
             self.component_ids: frozenset[ComponentId] = frozenset(component_ids)
+            """The IDs of the components belonging to this pool."""
             if not self.component_ids.issubset(all_components):
                 unknown_ids = self.component_ids - all_components
                 raise ValueError(
@@ -87,19 +99,26 @@ class ComponentPoolReferenceStore(ABC):
             self.component_ids = all_components
 
         self.power_bounds_subs: dict[str, asyncio.Task[None]] = {}
+        """The running power bounds subscription tasks, keyed by their identifier."""
 
         self.namespace = self.get_namespace()
+        """The namespace to use with the data pipeline."""
+
         self.formula_pool = FormulaPool(
             self.namespace,
             self.channel_registry,
             self.resampler_subscription_sender,
         )
+        """The formula pool for this component pool."""
+
         self.bounds_channel: Broadcast[SystemBounds] = Broadcast(
             name=f"System Bounds for {self.get_component_type_name_plural()}: {self.component_ids}",
             resend_latest=True,
         )
+        """The channel for broadcasting the system bounds of the pool."""
 
         self.bounds_tracker: BackgroundService | None = None
+        """The background service that tracks the system bounds of the pool."""
         self.create_bounds_tracker()
 
     @staticmethod

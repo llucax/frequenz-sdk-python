@@ -203,7 +203,14 @@ class PVManager(ComponentManager):
     def _unreachable_power_formula(
         self, component_ids: collections.abc.Set[ComponentId]
     ) -> str:
-        """Return the formula for the active power of the given PV inverters."""
+        """Return the formula for the active power of the given PV inverters.
+
+        Args:
+            component_ids: The IDs of the PV inverters to get the formula for.
+
+        Returns:
+            The formula for the active power of the given PV inverters.
+        """
         return connection_manager.get().component_graph.pv_formula(component_ids)
 
     def _get_pv_inverter_ids(self) -> collections.abc.Set[ComponentId]:

@@ -43,7 +43,12 @@ class Matryoshka(BaseAlgorithm):
     def __init__(
         self, max_proposal_age: timedelta, default_power: DefaultPower
     ) -> None:
-        """Create a new instance of the matryoshka algorithm."""
+        """Create a new instance of the matryoshka algorithm.
+
+        Args:
+            max_proposal_age: The maximum age of a proposal before it is dropped.
+            default_power: The default power to use when a target power is reset.
+        """
         self._max_proposal_age_sec = max_proposal_age.total_seconds()
         self._default_power = default_power
         self._component_buckets: dict[frozenset[ComponentId], set[Proposal]] = {}

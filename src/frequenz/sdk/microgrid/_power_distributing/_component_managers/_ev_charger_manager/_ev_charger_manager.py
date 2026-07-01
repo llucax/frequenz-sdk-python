@@ -306,8 +306,8 @@ class EVChargerManager(ComponentManager):
             to_deallocate: The amount of power to reduce the total allocated power by.
 
         Returns:
-            A list of new (reduced) charging current limits for a subset of EV
-                chargers, required to bring down the consumption by the given value.
+            A mapping of EV charger component IDs to their new (reduced) charging
+                powers, required to bring down the consumption by the given value.
         """
         voltage = self._voltage_cache.get().min()
         if voltage is None:
@@ -353,8 +353,8 @@ class EVChargerManager(ComponentManager):
             throttle_by: The amount of power to reduce the total EV charging power by.
 
         Returns:
-            A list of new (reduced) charging current limits for a subset of EV
-                chargers, required to bring down the consumption by the given value.
+            A mapping of EV charger component IDs to their new (reduced) charging
+                powers, required to bring down the consumption by the given value.
         """
         min_power = Power.zero()
         voltage = self._voltage_cache.get().min()

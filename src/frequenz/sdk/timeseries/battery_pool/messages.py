@@ -67,6 +67,7 @@ class BatteryPoolReport(ComponentPoolReport, typing.Protocol):
 
         Example:
             ```python
+            from frequenz.quantities import Power
             from frequenz.sdk import microgrid
 
             power_status_rx = microgrid.new_battery_pool(
