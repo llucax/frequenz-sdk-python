@@ -220,8 +220,8 @@ class BackgroundService(abc.ABC):
 
         Raises:
             BaseExceptionGroup: If any of the tasks spawned by this service raised an
-                exception (`CancelledError` is not considered an error and not returned in
-                the exception group).
+                exception ([`CancelledError`][asyncio.CancelledError] is not
+                considered an error and not returned in the exception group).
         """
         # We need to account for tasks that were created between when we started
         # awaiting and we finished awaiting.

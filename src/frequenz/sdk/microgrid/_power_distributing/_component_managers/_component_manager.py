@@ -29,7 +29,7 @@ def _quantity_sample_to_power(sample: Sample[Quantity]) -> Sample[Power]:
         sample: The sample produced by an unreachable-power formula.
 
     Returns:
-        The same sample with its value expressed as `Power`.
+        The same sample with its value expressed as [`Power`][frequenz.quantities.Power].
     """
     return Sample[Power](
         sample.timestamp,

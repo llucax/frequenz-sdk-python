@@ -21,7 +21,7 @@ class DataSourcingActor(Actor):
         *,
         name: str | None = None,
     ) -> None:
-        """Create a `DataSourcingActor` instance.
+        """Create a [`DataSourcingActor`][frequenz.sdk.actor.DataSourcingActor] instance.
 
         Args:
             request_receiver: A channel receiver to accept metric requests from.

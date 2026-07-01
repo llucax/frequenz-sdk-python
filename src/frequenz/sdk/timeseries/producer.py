@@ -22,9 +22,10 @@ class Producer:
     production of the site's active parts excluding EV chargers and batteries.
 
     Producer provides methods for fetching power values from different points
-    in the microgrid. These methods return `Formula` objects, which can be used
-    to create receivers, but can also be composed to form higher-order formula
-    streams.
+    in the microgrid. These methods return
+    [`Formula`][frequenz.sdk.timeseries.formulas.Formula] objects, which can be
+    used to create receivers, but can also be composed to form higher-order
+    formula streams.
 
     Note:
         `Producer` instances are not meant to be created directly by users.
@@ -82,7 +83,8 @@ class Producer:
         It will start the formula to calculate producer power if it is not
         already running.
 
-        A receiver from the formula can be created using the `new_receiver`
+        A receiver from the formula can be created using the
+        [`new_receiver`][frequenz.sdk.timeseries.formulas.Formula.new_receiver]
         method.
         """
         return self._formula_pool.from_power_formula(

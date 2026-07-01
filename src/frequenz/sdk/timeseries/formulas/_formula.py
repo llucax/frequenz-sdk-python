@@ -59,14 +59,14 @@ class Formula(BackgroundService, Generic[QuantityT]):
         sub_formulas: list[Formula[QuantityT]] | None = None,
         metric_fetcher: ResampledStreamFetcher | None = None,
     ) -> None:
-        """Create a `Formula` instance.
+        """Create a [`Formula`][frequenz.sdk.timeseries.formulas.Formula] instance.
 
         Args:
             name: The name of the formula.
             root: The root node of the formula AST.
             create_method: A method to generate the output values with.  If the
                 formula is for generating power values, this would be
-                `Power.from_watts`, for example.
+                [`Power.from_watts`][frequenz.quantities.Power.from_watts], for example.
             sub_formulas: Any sub-formulas that this formula depends on.
             metric_fetcher: An optional metric fetcher that needs to be started
                 before the formula can be evaluated.
@@ -186,7 +186,7 @@ class FormulaBuilder(Generic[QuantityT]):
             formula: The initial formula to build upon.
             create_method: A method to generate the output values with.  If the
                 formula is for generating power values, this would be
-                `Power.from_watts`, for example.
+                [`Power.from_watts`][frequenz.quantities.Power.from_watts], for example.
             streams: The telemetry streams that the formula depends on.
             sub_formulas: Any sub-formulas that this formula depends on.
         """
@@ -389,13 +389,13 @@ class FormulaBuilder(Generic[QuantityT]):
         self,
         name: str,
     ) -> Formula[QuantityT]:
-        """Build a `Formula` instance.
+        """Build a [`Formula`][frequenz.sdk.timeseries.formulas.Formula] instance.
 
         Args:
             name: The name of the formula.
 
         Returns:
-            A `Formula` instance.
+            A [`Formula`][frequenz.sdk.timeseries.formulas.Formula] instance.
         """
         return Formula(
             name=name,

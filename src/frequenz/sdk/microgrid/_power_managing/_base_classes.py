@@ -75,8 +75,9 @@ class _Report:
         priorities.
 
         There might be exclusion zones within these bounds. If necessary, the
-        `adjust_to_bounds` method may be used to check if a desired power value fits the
-        bounds, or to get the closest possible power values that do fit the bounds.
+        [`adjust_to_bounds`][..adjust_to_bounds] method may be used to check if a
+        desired power value fits the bounds, or to get the closest possible power values
+        that do fit the bounds.
         """
         return self._inclusion_bounds
 

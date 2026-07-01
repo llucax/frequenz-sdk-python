@@ -299,7 +299,7 @@ class ClocksInfo:
 
 @dataclass(frozen=True, kw_only=True)
 class TickInfo:
-    """Information about a `WallClockTimer` tick."""
+    """Information about a [`WallClockTimer`][frequenz.sdk.timeseries.WallClockTimer] tick."""
 
     expected_tick_time: datetime
     """The expected time when the timer should have triggered."""

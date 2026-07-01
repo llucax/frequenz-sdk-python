@@ -19,8 +19,8 @@ The SDK creates the formulas by analysing the configuration of components in the
 
 The
 [`Formula.new_receiver()`][frequenz.sdk.timeseries.formulas.Formula.new_receiver]
-method can be used to create a [Receiver][frequenz.channels.Receiver] that streams the
-[Sample][frequenz.sdk.timeseries.Sample]s calculated by the evaluation of the formula.
+method can be used to create a [`Receiver`][frequenz.channels.Receiver] that streams the
+[`Sample`][frequenz.sdk.timeseries.Sample]s calculated by the evaluation of the formula.
 
 ```python
 from frequenz.sdk import microgrid
@@ -33,16 +33,16 @@ async for power in battery_pool.power.new_receiver():
 
 ## Composition
 
-Composite `Formula`s can be built using arithmetic operations on `Formula`s
-streaming the same type of data.
+Composite [`Formula`][.Formula]s can be built using arithmetic operations on
+[`Formula`][.Formula]s streaming the same type of data.
 
 For example, if you're interested in a particular composite metric that can be
 calculated by subtracting
 [`new_battery_pool().power`][frequenz.sdk.timeseries.battery_pool.BatteryPool.power]
 and
-[`new_ev_charger_pool().power`][frequenz.sdk.timeseries.ev_charger_pool.EVChargerPool]
+[`new_ev_charger_pool().power`][frequenz.sdk.timeseries.ev_charger_pool.EVChargerPool.power]
 from the [`grid().power`][frequenz.sdk.timeseries.grid.Grid.power], we can build
-a `Formula` that provides a stream of this calculated metric as follows:
+a [`Formula`][.Formula] that provides a stream of this calculated metric as follows:
 
 ```python
 from frequenz.sdk import microgrid
@@ -75,8 +75,8 @@ etc.) are implemented as 3-phase formulas.
 
 The
 [`Formula3Phase.new_receiver()`][frequenz.sdk.timeseries.formulas.Formula3Phase.new_receiver]
-method can be used to create a [Receiver][frequenz.channels.Receiver] that
-streams the [Sample3Phase][frequenz.sdk.timeseries.Sample3Phase] values
+method can be used to create a [`Receiver`][frequenz.channels.Receiver] that
+streams the [`Sample3Phase`][frequenz.sdk.timeseries.Sample3Phase] values
 calculated by 3-phase formulas.
 
 ```python
@@ -90,8 +90,8 @@ async for sample in ev_charger_pool.current_per_phase.new_receiver():
 
 ## Composition
 
-`Formula3Phase` instances can be composed together, just like `Formula`
-instances.
+[`Formula3Phase`][.Formula3Phase] instances can be composed together, just like
+[`Formula`][.Formula] instances.
 
 ```python
 from frequenz.sdk import microgrid

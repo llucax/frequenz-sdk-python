@@ -19,7 +19,7 @@ T = typing.TypeVar("T")
 
 
 class ReceiverFetcher(typing.Generic[T_co], typing.Protocol):
-    """An interface that just exposes a `new_receiver` method."""
+    """An interface that just exposes a [`new_receiver`][.new_receiver] method."""
 
     @abc.abstractmethod
     def new_receiver(self, *, limit: int = 50) -> Receiver[T_co]:

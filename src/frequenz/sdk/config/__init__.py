@@ -13,8 +13,8 @@ configurations from the manager.
 
 # Setup
 
-To use the `ConfigManager`, you need to create an instance of it and pass the
-paths to the configuration files. The configuration files must be in the TOML
+To use the [`ConfigManager`][.ConfigManager], you need to create an instance of it and
+pass the paths to the configuration files. The configuration files must be in the TOML
 format.
 
 When specifying multiple files order matters, as the configuration will be read and
@@ -31,13 +31,14 @@ async with ConfigManager(["base-config.toml", "overrides.toml"]) as config_manag
 
 # Logging
 
-The `ConfigManager` can also instantiate
+The [`ConfigManager`][.ConfigManager] can also instantiate
 a [`LoggingConfigUpdatingActor`][frequenz.sdk.config.LoggingConfigUpdatingActor] to
 monitor logging configurations. This actor will listen for logging configuration changes
 and update the logging configuration accordingly.
 
 This feature is enabled by default using the key `logging` in the configuration file. To
-disable it you can pass `logging_config_key=None` to the `ConfigManager`.
+disable it you can pass `logging_config_key=None` to the
+[`ConfigManager`][.ConfigManager].
 
 # Receiving configurations
 

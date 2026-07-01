@@ -74,7 +74,7 @@ class ComponentPoolStatusTracker:
     async def join(self) -> None:
         """Wait and return when the instance's task completes.
 
-        It will not terminate the instance, which can be done with the `stop` method.
+        It will not terminate the instance, which can be done with the [`stop`][..stop] method.
         """
         await self._task
 

@@ -38,15 +38,15 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
 
     Provides:
       - properties for fetching reporting streams of instantaneous
-        [power][frequenz.sdk.timeseries.battery_pool.BatteryPool.power],
-        [soc][frequenz.sdk.timeseries.battery_pool.BatteryPool.soc],
-        [capacity][frequenz.sdk.timeseries.battery_pool.BatteryPool.capacity] values and
+        [`power`][.power],
+        [`soc`][.soc],
+        [`capacity`][.capacity] values and
         available power bounds and other status through
-        [power_status][frequenz.sdk.timeseries.battery_pool.BatteryPool.power_status].
+        [`power_status`][.power_status].
       - control methods for proposing power values, namely:
-        [propose_power][frequenz.sdk.timeseries.battery_pool.BatteryPool.propose_power],
-        [propose_charge][frequenz.sdk.timeseries.battery_pool.BatteryPool.propose_charge] and
-        [propose_discharge][frequenz.sdk.timeseries.battery_pool.BatteryPool.propose_discharge].
+        [`propose_power`][.propose_power],
+        [`propose_charge`][.propose_charge] and
+        [`propose_discharge`][.propose_discharge].
     """
 
     async def propose_charge(self, power: Power | None) -> None:
@@ -55,13 +55,14 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
         Power values need to be positive values, indicating charge power.
 
         When using the Passive Sign Convention, the
-        [`propose_power`][frequenz.sdk.timeseries.battery_pool.BatteryPool.propose_power]
+        [`propose_power`][..propose_power]
         method might be more convenient.
 
         If the same batteries are shared by multiple actors, the behaviour is the same
-        as that of the `propose_power` method, when calling it with `None` bounds.  The
-        bounds for lower priority actors can't be specified with this method.  If that's
-        required, use the `propose_power` method instead.
+        as that of the [`propose_power`][..propose_power] method, when calling it with
+        `None` bounds.  The bounds for lower priority actors can't be specified with
+        this method.  If that's required, use the [`propose_power`][..propose_power]
+        method instead.
 
         Args:
             power: The unsigned charge power to propose for the batteries in the pool.
@@ -90,13 +91,14 @@ class BatteryPool(ComponentPool[BatteryPoolReferenceStore, BatteryPoolReport]):
         Power values need to be positive values, indicating discharge power.
 
         When using the Passive Sign Convention, the
-        [`propose_power`][frequenz.sdk.timeseries.battery_pool.BatteryPool.propose_power]
+        [`propose_power`][..propose_power]
         method might be more convenient.
 
         If the same batteries are shared by multiple actors, the behaviour is the same
-        as that of the `propose_power` method, when calling it with `None` bounds.  The
-        bounds for lower priority actors can't be specified with this method.  If that's
-        required, use the `propose_power` method instead.
+        as that of the [`propose_power`][..propose_power] method, when calling it with
+        `None` bounds.  The bounds for lower priority actors can't be specified with
+        this method.  If that's required, use the [`propose_power`][..propose_power]
+        method instead.
 
         Args:
             power: The unsigned discharge power to propose for the batteries in the

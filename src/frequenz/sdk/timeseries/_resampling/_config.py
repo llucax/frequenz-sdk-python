@@ -140,24 +140,25 @@ class ResamplerConfig:
     closed: WindowSide = WindowSide.RIGHT
     """Indicates which side of the resampling window is closed.
 
-    If `WindowSide.RIGHT` (default), the resampling window is closed on the
-    right side and open on the left, meaning it includes samples with timestamps
-    within the range (start, end], where `start` and `end` are the boundaries of
-    the window.
+    If [`WindowSide.RIGHT`][frequenz.sdk.timeseries.WindowSide.RIGHT] (default),
+    the resampling window is closed on the right side and open on the left,
+    meaning it includes samples with timestamps within the range (start, end],
+    where `start` and `end` are the boundaries of the window.
 
-    If `WindowSide.LEFT`, the resampling window is closed on the left side and
-    open on the right, meaning it includes samples with timestamps within the
-    range [start, end), where `start` and `end` are the boundaries of the
-    window.
+    If [`WindowSide.LEFT`][frequenz.sdk.timeseries.WindowSide.LEFT], the
+    resampling window is closed on the left side and open on the right, meaning
+    it includes samples with timestamps within the range [start, end), where
+    `start` and `end` are the boundaries of the window.
     """
 
     label: WindowSide = WindowSide.RIGHT
     """Indicates the timestamp label of the resampled data.
 
-    If `WindowSide.RIGHT` (default), the timestamp of the resampled data
-    corresponds to the right boundary of the resampling window. If
-    `WindowSide.LEFT`, the timestamp corresponds to the left boundary of the
-    resampling window.
+    If [`WindowSide.RIGHT`][frequenz.sdk.timeseries.WindowSide.RIGHT] (default),
+    the timestamp of the resampled data corresponds to the right boundary of the
+    resampling window. If
+    [`WindowSide.LEFT`][frequenz.sdk.timeseries.WindowSide.LEFT], the timestamp
+    corresponds to the left boundary of the resampling window.
     """
 
     initial_buffer_len: int = DEFAULT_BUFFER_LEN_INIT

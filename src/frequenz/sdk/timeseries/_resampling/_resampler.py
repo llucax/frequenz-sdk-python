@@ -32,21 +32,24 @@ class Resampler:
 
     In general timeseries [`Source`][frequenz.sdk.timeseries.Source]s don't
     necessarily come at periodic intervals. You can use this class to normalize
-    timeseries to produce `Sample`s at regular periodic intervals.
+    timeseries to produce [`Sample`][frequenz.sdk.timeseries.Sample]s at regular
+    periodic intervals.
 
     This class uses
     a [`ResamplingFunction`][frequenz.sdk.timeseries._resampling.ResamplingFunction]
     to produce a new sample from samples received in the past. If there are no
     samples coming to a resampled timeseries for a while, eventually the
-    `Resampler` will produce `Sample`s with `None` as value, meaning there is
-    no way to produce meaningful samples with the available data.
+    `Resampler` will produce [`Sample`][frequenz.sdk.timeseries.Sample]s with
+    `None` as value, meaning there is no way to produce meaningful samples with
+    the available data.
     """
 
     def __init__(self, config: ResamplerConfig) -> None:
         """Initialize an instance.
 
         Args:
-            config: The configuration for the resampler. If a `ResamplerConfig2` is
+            config: The configuration for the resampler. If a
+                [`ResamplerConfig2`][frequenz.sdk.timeseries.ResamplerConfig2] is
                 provided, the resampler will use a
                 [`WallClockTimer`][frequenz.sdk.timeseries.WallClockTimer] instead of a
                 [`Timer`][frequenz.channels.timer.Timer].

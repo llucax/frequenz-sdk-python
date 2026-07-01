@@ -70,7 +70,8 @@ class EVChargerPool(ComponentPool[EVChargerPoolReferenceStore, EVChargerPoolRepo
         If a formula to calculate EV Charger current is not already running, it
         will be started.
 
-        A receiver from the formula can be created using the `new_receiver`
+        A receiver from the formula can be created using the
+        [`new_receiver`][frequenz.sdk.timeseries.formulas.Formula3Phase.new_receiver]
         method.
         """
         return self._pool_ref_store.formula_pool.from_current_3_phase_formula(
@@ -90,7 +91,8 @@ class EVChargerPool(ComponentPool[EVChargerPoolReferenceStore, EVChargerPoolRepo
         If a formula to calculate EV Charger power is not already running, it
         will be started.
 
-        A receiver from the formula can be created using the `new_receiver`
+        A receiver from the formula can be created using the
+        [`new_receiver`][frequenz.sdk.timeseries.formulas.Formula.new_receiver]
         method.
         """
         return self._pool_ref_store.formula_pool.from_power_formula(

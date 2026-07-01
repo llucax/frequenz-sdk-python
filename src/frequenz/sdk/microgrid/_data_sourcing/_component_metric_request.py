@@ -21,7 +21,7 @@ class ComponentMetricRequest:
     Requesters use this class to specify which component's metric they want to subscribe
     to, including the component ID, metric ID, and an optional start time. The
     `namespace` is defined by the requester and influences the construction of the
-    channel name via the `get_channel_name()` method.
+    channel name via the [`get_channel_name()`][.get_channel_name] method.
 
     The `namespace` allows differentiation of data streams for the same component and
     metric. For example, requesters can use different `namespace` values to subscribe to
@@ -32,8 +32,8 @@ class ComponentMetricRequest:
 
     The requester and provider must use the same channel name so that they can
     independently retrieve the same channel from the `ChannelRegistry`.  This is
-    achieved by using the `get_channel_name` method to generate the name on both sides
-    based on parameters set by the requesters.
+    achieved by using the [`get_channel_name`][.get_channel_name] method to generate the
+    name on both sides based on parameters set by the requesters.
     """
 
     namespace: str

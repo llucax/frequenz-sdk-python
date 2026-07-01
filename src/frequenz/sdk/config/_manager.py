@@ -150,8 +150,8 @@ class ConfigManager(BackgroundService):
 
         Raises:
             BaseExceptionGroup: If any of the tasks spawned by this service raised an
-                exception (`CancelledError` is not considered an error and not returned in
-                the exception group).
+                exception ([`CancelledError`][asyncio.CancelledError] is not
+                considered an error and not returned in the exception group).
         """
         exceptions: list[BaseException] = []
         if self.logging_actor:
